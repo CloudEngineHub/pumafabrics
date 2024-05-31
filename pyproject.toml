@@ -1,0 +1,48 @@
+[tool.poetry]
+name = "PUMA_fabrics"
+version = "0.1.0"
+description = ""
+authors = ["Saray Bakker <saraybakker@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8, <3.10"
+texttable = "^1.6.6"
+latextable ="^1.0.0"
+urdfenvs = "^0.8.6"
+#grasp-planning = "^0.5.7"
+#forwardkinematics = "^1.1.4, <1.2.0"
+casadi = ">=3.5.5, <3.6.4"
+fabrics  = "0.9.4"
+seaborn = "^0.12.2"
+pytest = "<=7.4.0"
+pylint = "^2.17.5"
+pytest-cov = "^4.1.0"
+scipy = "^1.6"
+pickle4 = "^0.0.1"
+matplotlib = "^3.5.2"
+torch = "^1.11.0"
+tensorboard = "==2.5.0"
+simple-parsing = "^0.0.19"
+optuna = "^2.10.0"
+similaritymeasures = "^0.4.4"
+torchvision = "^0.12.0"
+protobuf = "3.20.0"
+plotly = "^5.17.0"
+spatialmath-python = "^1.1.8"
+tk = "^0.1.0"
+pyqt5 = "5.9.2"
+spatial-casadi = "^1.1.0"
+pytorch-kinematics = "^0.6.1"
+drake = "1.26"
+grasp-planning = {git = "https://github.com/TomasMerva/gomp.git", rev = "main"}
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
