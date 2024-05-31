@@ -1,0 +1,41 @@
+#robot:
+dof: 7
+dim_task: 7
+dim_pos: 3
+robot_name: "iiwa14"
+root_link: "iiwa_link_0"
+end_links: ["iiwa_link_7"]
+collision_links: ["iiwa_link_3", "iiwa_link_4", "iiwa_link_5", "iiwa_link_6", "iiwa_link_7"]
+collision_radii: {3: 0.1, 4: 0.1, 5: 0.1, 6: 0.1, 7: 0.1}
+vel_limits_degrees: [86, 85, 100, 75, 130, 135, 135]
+vel_limits: [1.50098316, 1.48352986, 1.74532925, 1.30899694, 2.26892803, 2.35619449, 2.35619449]
+iiwa_limits: [
+    [-2.96705973, 2.96705973],
+    [-2.0943951, 2.0943951],
+    [-2.96705973, 2.96705973],
+    [-2.0943951, 2.0943951],
+    [-2.96705973, 2.96705973],
+    [-2.0943951, 2.0943951],
+    [-3.05432619, 3.05432619],
+  ]
+#default settings:
+render: True
+bool_energy_regulator: True
+bool_speed_control: True
+bool_extensive_concretize: True
+mode: "vel"        # mode of fabrics (vel or acc)
+mode_NN: "1st"
+mode_env: "vel"
+dt: 0.00769
+nr_obst: 0
+positions_obstacles: [[0.5, -0.25, 0.5], [0.24355761, 0.45252747, 0.2]]
+nr_obst_dyn: 0
+goal_reached_threshold: 0.02
+n_steps: 2000
+init_pos: [-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010]
+goal_pos: [0.60829608, 0.04368581, 0.252421]
+orientation_goal: [ 0.61566569, -0.37995015,  0.67837375, -0.12807299]
+dim_pos: 3
+dim_task: 7
+params_name_1st: "1st_order_R3S3_converge"
+params_name_2nd: "2nd_order_R3S3_saray"
