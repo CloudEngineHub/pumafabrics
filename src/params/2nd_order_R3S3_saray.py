@@ -6,7 +6,7 @@ import numpy as np
 class Params:
     """ General parameters """
     dataset_name: str = 'kuka'  # selects dataset, options: LASA, LAIR, optitrack, interpolation, joint_space, ABB_R3S3
-    results_path: str = 'results/2nd_order_R3S3_saray/'
+    results_path: str = 'results/2nd_order_R3S3_saray2/'
     multi_motion: bool = False  # true when learning multiple motions together
     selected_primitives_ids: str = '2'  # id number from dataset_keys.py, e.g., '2' or '4,0,6'
     manifold_dimensions: int = 6  # dimensionality of the data manifold
