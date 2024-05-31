@@ -99,6 +99,7 @@ kuka = ['pouring',
         'demo_cart_19apr',
         'place_16_05_2024',
         'sweeping_16_05_2024',
+        'pick_tomato_31may'
         ]
 
 dataset_keys_dic = {'LASA': LASA,
