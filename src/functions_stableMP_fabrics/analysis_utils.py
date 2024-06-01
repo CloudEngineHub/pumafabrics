@@ -11,7 +11,7 @@ class UtilsAnalysis():
         self.collision_links = collision_links
         self.collision_radii = collision_radii
         self.fk = forward_kinematics
-        self.goal_reach_thr = 0.02
+        self.goal_reach_thr = 0.045
         self.kuka_kinematics = KinematicsKuka()
 
     def vel_error_with_SMP(self):
@@ -33,7 +33,7 @@ class UtilsAnalysis():
             )
             for obstacle in obstacles:
                 dist = np.linalg.norm(pose_link_i[:3, 3] - np.array(obstacle["position"])) - obstacle["size"] - \
-                       self.collision_radii[int(collision_link[-1])] + 0.04
+                       self.collision_radii[int(collision_link[-1])] #+ 0.04
                 if dist < self.min_dist:
                     self.min_dist = dist
 

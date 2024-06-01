@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from agent.utils.normalizations_2 import normalization_functions
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from functions_stableMP_fabrics.parametrized_planner_extended import ParameterizedFabricPlannerExtended
 from functions_stableMP_fabrics.environments import trial_environments
@@ -7,9 +8,12 @@ from functions_stableMP_fabrics.analysis_utils import UtilsAnalysis
 from functions_stableMP_fabrics.kinematics_kuka import KinematicsKuka
 import yaml
 import time
+import importlib
 from scipy.spatial.transform import Rotation as R
 import pytorch_kinematics as pk
 import torch
+from initializer import initialize_framework
+import copy
 
 class example_kuka_fabrics():
     def __init__(self):
@@ -18,7 +22,7 @@ class example_kuka_fabrics():
         self.time_to_goal = -1
         self.obstacles = []
         self.solver_times = []
-        with open("config/kuka_fabrics.yaml", "r") as setup_stream:
+        with open("config/kuka_stableMP_fabrics_2nd.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
@@ -44,6 +48,32 @@ class example_kuka_fabrics():
     def initialize_environment(self):
         envir_trial = trial_environments()
         (self.env, self.goal) = envir_trial.initialize_environment_kuka(params=self.params)
+
+    def integrate_to_vel(self, qdot, action_acc, dt):
+        qdot_action = action_acc *dt +qdot
+        return qdot_action
+
+    def vel_NN_rescale(self, transition_info, offset_orientation, xee_orientation, normalizations, kuka_kinematics):
+        action_t_gpu = transition_info["desired velocity"]
+        action_stableMP = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN="1st") #because we use velocity action!
+        action_quat_vel = action_stableMP[3:]
+        action_quat_vel_sys = kuka_kinematics.quat_vel_with_offset(quat_vel_NN=action_quat_vel,
+                                                                   quat_offset=offset_orientation)
+        xdot_pos_quat = np.append(action_stableMP[:3], action_quat_vel_sys)
+
+        # --- if necessary, also get rpy velocities corresponding to quat vel ---#
+        vel_rpy = kuka_kinematics.quat_vel_to_angular_vel(angle_quaternion=xee_orientation,
+                                                            vel_quaternion=xdot_pos_quat[3:7]) / self.params["dt"]  # action_quat_vel
+        return xdot_pos_quat, vel_rpy
+
+    def acc_NN_rescale(self, transition_info, offset_orientation, xee_orientation, normalizations, kuka_kinematics):
+        action_t_gpu = transition_info["desired acceleration"]
+        action_stableMP = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN="2nd") #because we use velocity action!
+        action_quat_acc = action_stableMP[3:]
+        action_quat_acc_sys = kuka_kinematics.quat_vel_with_offset(quat_vel_NN=action_quat_acc,
+                                                                   quat_offset=offset_orientation)
+        xddot_pos_quat = np.append(action_stableMP[:3], action_quat_acc_sys)
+        return xddot_pos_quat
 
     def check_goal_reached(self, x_ee, x_goal):
         dist = np.linalg.norm(x_ee - x_goal)
@@ -122,13 +152,55 @@ class example_kuka_fabrics():
         self.rot_matrix = pk.quaternion_to_matrix(torch.FloatTensor(self.params["orientation_goal"]).cuda()).cpu().detach().numpy()
 
     def run_kuka_example(self):
+        # --- parameters --- #
+        n_steps = self.params["n_steps"]
+        orientation_goal = np.array(self.params["orientation_goal"])
+        offset_orientation = np.array(self.params["orientation_goal"])
+        goal_pos = self.params["goal_pos"]
+        dof = self.params["dof"]
+        action = np.zeros(dof)
+        ob, *_ = self.env.step(action)
+
+        # Construct classes:
+        results_base_directory = './'
+
+        # Parameters
+        if self.params["mode_NN"] == "1st":
+            self.params_name = self.params["params_name_1st"]
+        else:
+            self.params_name = self.params["params_name_2nd"]
+        print("self.params_name:", self.params_name)
+        q_init = ob['robot_0']["joint_state"]["position"][0:dof]
+
+        # Load parameters
+        Params = getattr(importlib.import_module('params.' + self.params_name), 'Params')
+        params = Params(results_base_directory)
+        params.results_path += params.selected_primitives_ids + '/'
+        params.load_model = True
+
+        # Initialize framework
+        learner, _, data = initialize_framework(params, self.params_name, verbose=False)
+        goal_NN = data['goals training'][0]
+
+        # Normalization class
+        normalizations = normalization_functions(x_min=data["x min"], x_max=data["x max"], dof_task=self.params["dim_task"], dt=self.params["dt"], mode_NN=self.params["mode_NN"], learner=learner)
+
+        # Translation of goal:
+        translation_gpu, translation_cpu = normalizations.translation_goal(state_goal = np.append(goal_pos, orientation_goal), goal_NN=goal_NN)
+
+        # initial state:
+        x_t_init = self.kuka_kinematics.get_initial_state_task(q_init=q_init, qdot_init=np.zeros((dof, 1)), offset_orientation=offset_orientation, mode_NN=self.params["mode_NN"])
+        x_init_gpu = normalizations.normalize_state_to_NN(x_t=[x_t_init], translation_cpu=translation_cpu, offset_orientation=offset_orientation)
+        dynamical_system = learner.init_dynamical_system(initial_states=x_init_gpu, delta_t=1)
+
         ob, *_ = self.env.step(np.zeros(self.dof))
-        x_t_init = self.kuka_kinematics.get_initial_state_task(q_init=ob["robot_0"]["joint_state"]["position"][0:self.dof],
-                                                          offset_orientation=self.offset_orientation,
-                                                          mode_NN="1st")
+
+        quat_prev = copy.deepcopy(x_t_init[3:7])
+        Jac_dot_prev = np.zeros((7, 7))
+        Jac_prev = np.zeros((7, 7))
         quat_prev = x_t_init[3:7]
         xee_list = []
-        vee_list = []
+        qdot_diff_list = []
 
         for w in range(self.params["n_steps"]):
             # --- state from observation --- #
@@ -141,16 +213,41 @@ class example_kuka_fabrics():
             else:
                 self.obstacles = []
 
+            # --- end-effector states and normalized states --- #
+            x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, quat_prev, mode_NN=self.params["mode_NN"], qdot=qdot)
+            quat_prev = copy.deepcopy(xee_orientation)
+            x_t_gpu = normalizations.normalize_state_to_NN(x_t=x_t, translation_cpu=translation_cpu, offset_orientation=offset_orientation)
+
+            # --- action by NN --- #
+            time0 = time.perf_counter()
+            transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu)
+
+            # # -- transform to configuration space --#
+            # --- rescale velocities and pose (correct offset and normalization) ---#
+            xdot_pos_quat, euler_vel = self.vel_NN_rescale(transition_info, offset_orientation, xee_orientation, normalizations, self.kuka_kinematics)
+            xddot_pos_quat = self.acc_NN_rescale(transition_info, offset_orientation, xee_orientation, normalizations, self.kuka_kinematics)
+            x_t_action = normalizations.reverse_transformation_pos_quat(state_gpu=transition_info["desired state"], offset_orientation=offset_orientation)
+
+            # ---- velocity action_stableMP: option 1 ---- #
+            qdot_stableMP_pulled = self.kuka_kinematics.inverse_diff_kinematics_quat(xdot=xdot_pos_quat,
+                                                                                    angle_quaternion=xee_orientation).numpy()[0]
+            #### --------------- directly from acceleration!! -----#
+            qddot_stableMP, Jac_prev, Jac_dot_prev = self.kuka_kinematics.inverse_2nd_kinematics_quat(q=q, qdot=qdot_stableMP_pulled, xddot=xddot_pos_quat, angle_quaternion=xee_orientation, Jac_prev=Jac_prev)
+            qddot_stableMP = qddot_stableMP.numpy()[0]
+
             # ----- Fabrics action ----#
             action, _, _, _ = self.compute_action_fabrics(q=q, ob_robot=ob_robot, nr_obst=self.params["nr_obst"], obstacles=self.obstacles)
 
+            if self.params["mode_env"] == "vel" and self.params["mode"]=="acc":  # todo: fix nicely or mode == "acc"): #mode_NN=="2nd":
+                action = self.integrate_to_vel(qdot=qdot, action_acc=action, dt=self.params["dt"])
+            else:
+                action = action
             ob, *_ = self.env.step(action)
 
             # result analysis:
             x_ee, _ = self.utils_analysis._request_ee_state(q, quat_prev)
-            vel_ee,_ = self.kuka_kinematics.get_state_velocity(q=q, qdot=qdot)
             xee_list.append(x_ee[0])
-            vee_list.append(vel_ee)
+            qdot_diff_list.append(np.mean(np.absolute(qddot_stableMP  - action)))
             self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q, obstacles=self.obstacles)
             self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, quat_prev, x_goal=self.goal_pos)
 
@@ -170,7 +267,7 @@ class example_kuka_fabrics():
             "goal_reached": self.GOAL_REACHED,
             "time_to_goal": self.time_to_goal,
             "xee_list": xee_list,
-            "vee_list": vee_list,
+            "qdot_diff_list": qdot_diff_list,
             "solver_times": self.solver_times,
             "solver_time": np.mean(self.solver_times),
             "solver_time_std": np.std(self.solver_times),

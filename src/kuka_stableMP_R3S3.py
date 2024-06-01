@@ -99,7 +99,6 @@ class example_kuka_stableMP_R3S3():
         # Normalization class
         self.normalizations = normalization_functions(x_min=data["x min"], x_max=data["x max"], dof_task=self.params["dim_task"], dt=self.params["dt"], mode_NN=self.params["mode_NN"])
 
-
     def run_kuka_example(self):
         # --- parameters --- #
         offset_orientation = np.array(self.params["orientation_goal"])
@@ -117,6 +116,7 @@ class example_kuka_stableMP_R3S3():
 
         # Initialize lists
         xee_list = []
+        vee_list = []
         quat_prev = copy.deepcopy(x_t_init[3:])
 
         for w in range(self.params["n_steps"]):
@@ -154,6 +154,8 @@ class example_kuka_stableMP_R3S3():
                 action_quat_vel_sys = self.kuka_kinematics.quat_vel_with_offset(quat_vel_NN=action_quat_vel,
                                                                            quat_offset=offset_orientation)
                 action_safeMP_pulled = self.kuka_kinematics.inverse_diff_kinematics_quat(xdot=np.append(action_safeMP[:3], action_quat_vel_sys), angle_quaternion=xee_orientation).numpy()[0]
+                action_nullspace = self.kuka_kinematics._nullspace_control(q=q, orientation=xee_orientation, order=self.params["mode_NN"])
+                action_safeMP_pulled = action_nullspace + action_safeMP_pulled
 
                 # ---- option 2: with PD controller ------ #
                 """
@@ -184,16 +186,15 @@ class example_kuka_stableMP_R3S3():
 
             ob, *_ = self.env.step(action)
 
-            print("desired orientation: ", offset_orientation)
-            print("current orientation:", xee_orientation)
-
             # result analysis:
             x_ee, _ = self.utils_analysis._request_ee_state(q, quat_prev)
             xee_list.append(x_ee[0])
+            vee_list.append(vel_ee)
             self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q, obstacles=self.obstacles)
             self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, quat_prev, x_goal=goal_pos)
 
             if self.GOAL_REACHED:
+                print("q:", q)
                 self.time_to_goal = w*self.params["dt"]
                 break
 
@@ -209,6 +210,7 @@ class example_kuka_stableMP_R3S3():
             "goal_reached": self.GOAL_REACHED,
             "time_to_goal": self.time_to_goal,
             "xee_list": xee_list,
+            "vee_list": vee_list,
             "solver_times": self.solver_times,
             "solver_time": np.mean(self.solver_times),
             "solver_time_std": np.std(self.solver_times),
@@ -234,6 +236,13 @@ if __name__ == "__main__":
     # r = R.from_euler("xyz", goal_orientation)
     # goal_matrix = r.as_matrix()
     # goal_quat = pk.matrix_to_quaternion(torch.FloatTensor(goal_matrix).cuda()).cpu().detach()
+
+    # for tomato picking:
+    goal_pos = [0.6074601910902159, -0.1853228239439982, 0.13506059171020995]
+    goal_orientation = [-1.8447808590020023, 0.06510057558816745, -1.583051841221027] #[-1.9324251838286546, 0.0007190047982087813, -1.8194494440602234]
+    r = R.from_euler("xyz", goal_orientation)
+    goal_matrix = r.as_matrix()
+    goal_quat = pk.matrix_to_quaternion(torch.FloatTensor(goal_matrix).cuda()).cpu().detach()
 
     # example_class.overwrite_defaults(goal_pos=goal_pos, orientation_goal=goal_quat, params_name_1st=params_name_1st)
     example_class.construct_example()

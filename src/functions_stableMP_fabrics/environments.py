@@ -250,20 +250,20 @@ class trial_environments():
         # Definition of the obstacle.
         static_obst_dict = {
             "type": "sphere",
-            "geometry": {"position": positions_obstacles[0], "radius": 0.1},
+            "geometry": {"position": positions_obstacles[0], "radius": 0.05},
             "rgba": [1, 0, 0, 1]
             # todo: IMPORTANT when z=0.5: fabrics becomes unstable/local minima
         }
         obst1 = SphereObstacle(name="staticObst", content_dict=static_obst_dict)
         static_obst_dict = {
             "type": "sphere",
-            "geometry": {"position": positions_obstacles[1], "radius": 0.1},
+            "geometry": {"position": positions_obstacles[1], "radius": 0.05},
             "rgba": [1, 0, 0, 1]
         }
         obst2 = SphereObstacle(name="staticObst", content_dict=static_obst_dict)
         dynamic_obst_dict = {
             "type": "sphere",
-            "geometry": {"trajectory": ["-1 + t * 0.1", "-0.6", "0.4"], "radius": 0.1},
+            "geometry": {"trajectory": ["-1 + t * 0.1", "-0.6", "0.4"], "radius": 0.05},
         }
         obst0_dyn = DynamicSphereObstacle(name="dynamicObst", content_dict=dynamic_obst_dict)
         #Definition of the goal.
@@ -327,6 +327,6 @@ class trial_environments():
                     shape_type="sphere",
                     sphere_on_link_index=0,
                     # link_transformation=link_transformation,
-                    size=[0.1],#[dict_collision_links['radi'][dict_collision_links['link_nr_urdf'].index(link)]]
+                    size=[list(params["collision_radii"].values())[i_link]],#[dict_collision_links['radi'][dict_collision_links['link_nr_urdf'].index(link)]]
                 )
         return (env, goal)

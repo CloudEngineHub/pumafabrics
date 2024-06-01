@@ -79,7 +79,6 @@ class CartesianImpedanceController:
 
         qdot = np.matmul(np.linalg.pinv(J[0][:, :]), xdot_PD)
 
-        """
         # Get ee's jacobian
         J = self.robot.jacob0(q, end='iiwa_link_7', start='iiwa_link_0')
 
@@ -93,7 +92,6 @@ class CartesianImpedanceController:
         tau = tau_ee + tau_nullspace
         
         return tau
-        """
         return qdot
 
     def get_pose_error(self, position, orientation, position_d, orientation_d):
@@ -149,7 +147,7 @@ class CartesianImpedanceController:
 
 
 
-    """
+
     def _elbow_cartesian_impedance_controller(self, elbow_pose, elbow_velocity, q):
         # Get elbow position and orientation from its pose
         position_elbow = elbow_pose[:3]
@@ -185,7 +183,7 @@ class CartesianImpedanceController:
         # Map elbow's torque to ee's nullspace
         nullspace_torque = np.matmul(nullspace, torque)
         return nullspace_torque
-        """
+
 
     def quat_vel_to_angular_vel(self, angle_quaternion, vel_quaternion):
         """

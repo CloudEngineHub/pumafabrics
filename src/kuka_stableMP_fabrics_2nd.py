@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import importlib
 from initializer import initialize_framework
 from functions_stableMP_fabrics.analysis_utils import UtilsAnalysis
+from functions_stableMP_fabrics.filters import PDController
 import copy
 import time
 
@@ -27,7 +28,7 @@ class example_kuka_stableMP_fabrics():
             self.params = yaml.safe_load(setup_stream)
         self.robot_name = self.params["robot_name"]
 
-    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None):
+    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None):
         if render is not None:
             self.params["render"] = render
         if init_pos is not None:
@@ -40,6 +41,8 @@ class example_kuka_stableMP_fabrics():
             self.params["nr_obst"] = nr_obst
         if bool_energy_regulator is not None:
             self.params["bool_energy_regulator"] = bool_energy_regulator
+        if bool_combined is not None:
+            self.params["bool_combined"] = bool_combined
         if positions_obstacles is not None:
             self.params["positions_obstacles"] = positions_obstacles
         if params_name_1st is not None:
@@ -151,14 +154,6 @@ class example_kuka_stableMP_fabrics():
         xddot_pos_quat = np.append(action_stableMP[:3], action_quat_acc_sys)
         return xddot_pos_quat
 
-    def relationship_dq_dx(self, offset_orientation, translation_cpu, kuka_kinematics, normalizations, fk):
-        qq = ca.SX.sym("q", 7, 1)
-        x_pose = kuka_kinematics.forward_kinematics_symbolic(end_link_name="iiwa_link_7", fk=fk)
-        x_NN = normalizations.normalize_pose_to_NN([x_pose], translation_cpu, offset_orientation)
-        dxdq = ca.jacobian(x_NN[0], qq)
-        self.dxdq_fun = ca.Function("q_to_x", [qq], [dxdq], ["q"], ["dxdq"])
-        return self.dxdq_fun
-
     def construct_example(self):
         self.initialize_environment()
         self.planner_avoidance, self.fk = self.set_planner(goal=None)
@@ -166,6 +161,7 @@ class example_kuka_stableMP_fabrics():
         self.utils_analysis = UtilsAnalysis(forward_kinematics=self.forward_kinematics,
                                             collision_links=self.params["collision_links"],
                                             collision_radii=self.params["collision_radii"])
+        self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
 
     def run_kuka_example(self): #, n_steps=2000, goal_pos=[-0.24355761, -0.75252747, 0.5], mode="acc", mode_NN = "1st", dt=0.01, mode_env=None):
         # --- parameters --- #
@@ -182,9 +178,9 @@ class example_kuka_stableMP_fabrics():
 
         # Parameters
         if self.params["mode_NN"] == "1st":
-            self.params_name = '1st_order_R3S3_converge'
+            self.params_name = self.params["params_name_1st"]
         else:
-            self.params_name = '2nd_order_R3S3_saray'
+            self.params_name = self.params["params_name_2nd"]
         print("self.params_name:", self.params_name)
         q_init = ob['robot_0']["joint_state"]["position"][0:dof]
 
@@ -215,6 +211,7 @@ class example_kuka_stableMP_fabrics():
 
         # Initialize lists
         xee_list = []
+        qdot_diff_list = []
         quat_prev = copy.deepcopy(x_t_init[3:7])
         Jac_dot_prev = np.zeros((7, 7))
         Jac_prev = np.zeros((7, 7))
@@ -232,7 +229,6 @@ class example_kuka_stableMP_fabrics():
             # --- end-effector states and normalized states --- #
             x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, quat_prev, mode_NN=self.params["mode_NN"], qdot=qdot)
             quat_prev = copy.deepcopy(xee_orientation)
-            vel_ee, Jac_current = self.kuka_kinematics.get_state_velocity(q=q, qdot=qdot)
             x_t_gpu = normalizations.normalize_state_to_NN(x_t=x_t, translation_cpu=translation_cpu, offset_orientation=offset_orientation)
 
             # --- action by NN --- #
@@ -251,6 +247,11 @@ class example_kuka_stableMP_fabrics():
             #### --------------- directly from acceleration!! -----#
             qddot_stableMP, Jac_prev, Jac_dot_prev = self.kuka_kinematics.inverse_2nd_kinematics_quat(q=q, qdot=qdot_stableMP_pulled, xddot=xddot_pos_quat, angle_quaternion=xee_orientation, Jac_prev=Jac_prev)
             qddot_stableMP = qddot_stableMP.numpy()[0]
+            q_neutral = [-0.05005962,  0.73218803,  0.10586678, -1.91864885, -0.28571441, -0.83566051, -0.62113737]
+            action_nullspace = self.kuka_kinematics._nullspace_control(q=q, q_neutral=q_neutral, orientation=xee_orientation,
+                                                                       order="1st")
+            qddot_stableMP = action_nullspace + qddot_stableMP
+            #qddot_stableMP = self.pdcontroller.control(desired_velocity=qdot_stableMP_pulled, current_velocity=qdot)
 
             if self.params["bool_combined"] == True:
                 # ----- Fabrics action ----#
@@ -265,9 +266,9 @@ class example_kuka_stableMP_fabrics():
                                                                                           transition_info=transition_info)
                 else:
                     # --- get action by a simpler combination, sum of dissipative systems ---#
-                    action_combined = 0.5*qddot_stableMP + action_avoidance
+                    action_combined = qddot_stableMP + action_avoidance
             else: #otherwise only apply action by stable MP
-                action_combined = 0.5*qddot_stableMP
+                action_combined = qddot_stableMP
 
             if self.params["mode_env"] is not None:
                 if self.params["mode_env"] == "vel": # todo: fix nicely or mode == "acc"): #mode_NN=="2nd":
@@ -282,6 +283,9 @@ class example_kuka_stableMP_fabrics():
             # result analysis:
             x_ee, _ = self.utils_analysis._request_ee_state(q, quat_prev)
             xee_list.append(x_ee[0])
+            # vel_ee_action = self.kuka_kinematics.diff_kinematics_quat(q, xee_orientation) @ qdot
+            # vel_ee, _ = self.kuka_kinematics.get_state_velocity(q=q, qdot=action)
+            qdot_diff_list.append(np.mean(np.absolute(qddot_stableMP   - action_combined)))
             self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q, obstacles=self.obstacles)
             self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, quat_prev, x_goal=goal_pos)
             if self.GOAL_REACHED:
@@ -299,6 +303,7 @@ class example_kuka_stableMP_fabrics():
             "goal_reached": self.GOAL_REACHED,
             "time_to_goal": self.time_to_goal,
             "xee_list": xee_list,
+            "qdot_diff_list": qdot_diff_list,
             "solver_times": self.solver_times,
             "solver_time": np.mean(self.solver_times),
             "solver_time_std": np.std(self.solver_times),
@@ -307,7 +312,33 @@ class example_kuka_stableMP_fabrics():
 
 
 if __name__ == "__main__":
+    q_init_list = [
+        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
+        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
+        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
+        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
+        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+        np.array((-0.50, 0.6, -0.02, -1.5, 0.01, -0.5, -0.010)),
+        np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
+        np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
+        np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
+        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+    ]
+    positions_obstacles_list = [
+        [[0.5, 0., 0.65], [0.5, 0., 10.1]],
+        [[0.5, 0.2, 0.05], [0.5, 0.2, 0.15]],
+        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
+        [[0.5, 0.02, 0.1], [0.24, 0.45, 10.2]],
+        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
+        [[0.5, -0.1, 0.3], [0.5, 0.2, 10.25]],
+        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
+        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
+        [[0.5, 0.25, 0.45], [0.5, 0.2, 10.4]],
+        [[0.5, 0.25, 0.45], [0.5, 0.2, 10.4]],
+    ]
+    init_pos = [0.5312149701934061, 0.8355097803551061, 0.0700492926199493, -1.6651880968294615, 0.2936679665237496, -0.8774234085561443, -0.24231138029250487]
     example_class = example_kuka_stableMP_fabrics()
+    example_class.overwrite_defaults(init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0])
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

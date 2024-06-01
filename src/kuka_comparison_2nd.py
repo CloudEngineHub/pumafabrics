@@ -4,9 +4,10 @@ This file is to generate a comparison plot between safeMP and safeMP+fabrics and
 
 import numpy as np
 from functions_stableMP_fabrics.environments import trial_environments
-from kuka_fabrics import example_kuka_fabrics
-from kuka_stableMP_R3S3 import example_kuka_stableMP_R3S3
-from kuka_stableMP_fabrics_theoremIII_5_2nd import example_kuka_stableMP_fabrics
+from kuka_fabrics_comparison import example_kuka_fabrics
+# from kuka_stableMP_R3S3 import example_kuka_stableMP_R3S3
+# from kuka_stableMP_fabrics_theoremIII_5_2nd import example_kuka_stableMP_fabrics
+from kuka_stableMP_fabrics_2nd import example_kuka_stableMP_fabrics
 from texttable import Texttable
 import latextable
 import copy
@@ -15,7 +16,7 @@ from scipy import interpolate
 
 LOAD_RESULTS = False
 cases = ["PUMA", "PUMA$_{obst}$", "GF", "GM", "CM"]
-results = {"min_distance": [], "collision": [], "goal_reached": [], "time_to_goal": [], "xee_list": [], "vee_list": [],
+results = {"min_distance": [], "collision": [], "goal_reached": [], "time_to_goal": [], "xee_list": [], "qdot_diff_list": [],
            "dist_to_NN": [],  "vel_to_NN": [], "solver_times": [], "solver_time": [], "solver_time_std": []}
 q_init_list = [
     np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
@@ -30,16 +31,16 @@ q_init_list = [
     np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
 ]
 positions_obstacles_list = [
-    [[0.5, -0.25, 10.5], [0.24, 0.45, 10.2]],
-    [[0.5, -0.2, 10.45], [0.24, 0.45, 10.2]],
-    [[0.6, -0.1, 10.6], [0.24, 0.45, 10.2]],
-    [[0.5, -0.2, 10.3], [0.24, 0.45, 10.2]],
-    [[0.5, -0.0, 10.5], [0.3, -0.1, 10.5]],
-    [[0.5, -0.3, 10.5], [0.5, 0.2, 10.25]],
-    [[0.5, -0.4, 10.5], [0.5, 0.2, 10.4]],
-    [[0.5, -0.15, 10.55], [0.24, 0.45, 10.2]],
-    [[0.5, -0.4, 10.5], [0.5, 0.2, 10.4]],
-    [[0.5, -0.2, 10.5], [0.24, 0.45, 10.2]],
+    [[0.5, 0., 0.55], [0.5, 0., 10.1]],
+    [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
+    [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
+    [[0.5, 0.02, 0.1], [0.24, 0.45, 10.2]],
+    [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
+    [[0.5, -0.1, 0.3], [0.5, 0.2, 10.25]],
+    [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
+    [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
+    [[0.5, 0.25, 0.45], [0.5, 0.2, 10.4]],
+    [[0.5, 0.25, 0.45], [0.5, 0.2, 10.4]],
 ]
 n_runs = len(q_init_list)
 #goal_pose = np.array([0.60829608, 0.04368581, 0.352421, 0.61566569, -0.37995015, 0.67837375, -0.12807299])
@@ -84,12 +85,9 @@ def run_i(example_class, case:str, q_init_list:list, results_stableMP=None):
         results_i = example_class.run_kuka_example()
         if results_stableMP is None:
             distances, _, _ = distance_to_NN(results_i["xee_list"], results_i["xee_list"])
-            vel_distances, _, _ = distance_to_NN(results_i["vee_list"], results_i["vee_list"])
         else:
             distances, _, _ = distance_to_NN(results_stableMP["xee_list"][i_run], results_i["xee_list"])
-            vel_distances, _, _ = distance_to_NN(results_stableMP["vee_list"][i_run], results_i["vee_list"])
         results_tot["dist_to_NN"].append(distances)
-        results_tot["vel_to_NN"].append(vel_distances)
         for key in results_i:
             results_tot[key].append(results_i[key])
     with open("simulation_kuka_"+case+".pkl", 'wb') as f:
@@ -99,11 +97,13 @@ def run_i(example_class, case:str, q_init_list:list, results_stableMP=None):
 def KukaComparison():
 
     # --- run safe MP (only) example ---#
-    results_stableMP = run_i(example_kuka_stableMP_R3S3(), case=cases[0], q_init_list=q_init_list, results_stableMP=None)
+    class_SMP = example_kuka_stableMP_fabrics()
+    class_SMP.overwrite_defaults(bool_combined=False, nr_obst=0)
+    results_stableMP = run_i(class_SMP, case=cases[0], q_init_list=q_init_list, results_stableMP=None)
 
     # --- run safe MP (only) example ---#
-    class_SMP_obst = example_kuka_stableMP_R3S3()
-    class_SMP_obst.overwrite_defaults(nr_obst=2)
+    class_SMP_obst = example_kuka_stableMP_fabrics()
+    class_SMP_obst.overwrite_defaults(bool_combined=False, nr_obst=2)
     results_stableMP_obst = run_i(class_SMP_obst, case=cases[1], q_init_list=q_init_list, results_stableMP=None)
 
     # --- run fabrics (only) example ---#
@@ -116,12 +116,12 @@ def KukaComparison():
 
     # run safe MP + fabrics example ---#
     class_GM = example_kuka_stableMP_fabrics()
-    class_GM.overwrite_defaults(bool_energy_regulator=False)
+    class_GM.overwrite_defaults(bool_energy_regulator=False, bool_combined=True)
     results_stableMP_fabrics = run_i(class_GM, case=cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP)
 
     # run theorem III.5 ---#
     class_CM = example_kuka_stableMP_fabrics()
-    class_CM.overwrite_defaults(bool_energy_regulator=True)
+    class_CM.overwrite_defaults(bool_energy_regulator=True, bool_combined=True)
     results_CM = run_i(class_CM, case=cases[4], q_init_list=q_init_list, results_stableMP=results_stableMP)
 
     results = {cases[0]: results_stableMP, cases[1]: results_stableMP_obst, cases[2]: results_fabrics, cases[3]: results_stableMP_fabrics, cases[4]: results_CM}
@@ -137,7 +137,7 @@ def KukaComparisonLoad():
 def table_results(results):
     # --- create and plot table --- #
     rows = []
-    title_row = [' ','Success-Rate', 'Time-to-Success [s]', "Min Clearance [m]", "Computation time [ms]", 'Path difference to SMP [m]', "vel difference to SMP [m/s]"]
+    title_row = [' ','Success-Rate', 'Time-to-Success [s]', "Min Clearance [m]", "Computation time [ms]", 'Path difference to SMP [m]', "Input difference to SMP"]
     nr_column = len(title_row)
     rows.append(title_row)
     for case in cases:
@@ -152,13 +152,13 @@ def table_results(results):
                 np.round(np.nanstd(results[case]["min_distance"]), decimals=2))
 
         rows.append([case,
-                     str(np.sum(results[case]["goal_reached"]) / n_runs), #+ "+-" + str(np.round(np.nanstd(results[case]["goal_reached"]), decimals=4)),
+                     str(np.round(np.sum(results[case]["goal_reached"]) / n_runs, decimals=1)), #+ "+-" + str(np.round(np.nanstd(results[case]["goal_reached"]), decimals=4)),
                      str(np.round(np.nanmean(results[case]["time_to_goal"]), decimals=4)) + " $\pm$ " + str(np.round(np.nanstd(results[case]["time_to_goal"]), decimals=4)),
                      # collision_episodes_rate_str,
                      min_clearance_str,
                      str(np.round(np.nanmean(results[case]["solver_times"])*1000, decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(results[case]["solver_times"])*1000, decimals=2)),
                      str(np.round(np.nanmean(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)),
-                     str(np.round(np.nanmean(np.concatenate(results[case]["vel_to_NN"], axis=0)), decimals=8)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["vel_to_NN"], axis=0)), decimals=8)),
+                     str(np.round(np.nanmean(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)),
                      ])
     table = Texttable()
     table.set_cols_align(["c"] * nr_column)

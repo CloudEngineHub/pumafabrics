@@ -48,7 +48,7 @@ class energy_regulation():
         else:
             return potential_torch, grad_potential
 
-    def compute_energy_regulator(self, x_t_NN, qdot, M, beta=1, mode_NN="2nd", dxdq=None, q=None):
+    def compute_energy_regulator(self, x_t_NN, qdot, M, beta=0., alpha=0.05, mode_NN="2nd", dxdq=None, q=None):
         """get energy regulator by NN via theorem III.5 in https://arxiv.org/pdf/2309.07368.pdf"""
         _, grad_potential = self.compute_potential_and_gradient(x_t_NN, mode_NN=mode_NN, dxdq=dxdq, q=q)
 
@@ -56,8 +56,8 @@ class energy_regulation():
         if fraction_denominator == 0:
             fraction_term = (np.outer(qdot, qdot)) / 1
         else:
-            fraction_term = 0.1*(np.outer(qdot, qdot)) / fraction_denominator
-        energy_regulator = -fraction_term @ grad_potential[0:self.dim_task] - beta * qdot
+            fraction_term = (np.outer(qdot, qdot)) / fraction_denominator
+        energy_regulator = -alpha * fraction_term @ grad_potential[0:self.dim_task] - beta * qdot
         return energy_regulator
 
 
@@ -66,7 +66,7 @@ class energy_regulation():
         Energize a random system with (xddot + f() = 0) where f can change every timestep.
         Using proposition III.3 in https://arxiv.org/pdf/2309.07368.pdf
         """
-        denumerator = qdot @ M_lambda @ qdot * 0.00001
+        denumerator = qdot @ M_lambda @ qdot + 0.00001
         if denumerator == 0:
             alpha_f = 0
         else:

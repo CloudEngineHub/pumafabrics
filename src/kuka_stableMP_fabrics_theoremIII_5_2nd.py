@@ -192,6 +192,7 @@ class example_kuka_stableMP_fabrics():
 
         # Initialize lists
         xee_list = []
+        vee_list = []
         quat_prev = copy.deepcopy(x_t_init[3:7])
 
         for w in range(n_steps):
@@ -273,6 +274,7 @@ class example_kuka_stableMP_fabrics():
             # result analysis:
             x_ee, _ = self.utils_analysis._request_ee_state(q, quat_prev)
             xee_list.append(x_ee[0])
+            vee_list.append(vel_ee)
             self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q, obstacles=self.obstacles)
             self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, quat_prev, x_goal=goal_pos)
 
@@ -292,6 +294,7 @@ class example_kuka_stableMP_fabrics():
             "goal_reached": self.GOAL_REACHED,
             "time_to_goal": self.time_to_goal,
             "xee_list": xee_list,
+            "vee_list": vee_list,
             "solver_times": self.solver_times,
             "solver_time": np.mean(self.solver_times),
             "solver_time_std": np.std(self.solver_times),
