@@ -46,7 +46,7 @@ class example_kuka_stableMP_R3S3():
         dim_pos = 3
         dim_task = 7
         vel_limits = np.array([86, 85, 100, 75, 130, 135, 135])*np.pi/180
-        orientation_goal = np.array([ 0.61566569, -0.37995015,  0.67837375, -0.12807299])
+        orientation_goal = np.array([ 0.4426, -0.5459,  0.5806, -0.4112])
         #np.array([0.64611803, 0.20264371, 0.40471341, -0.61455193])  #np.array([1., 0., 0., 0]) # start orientation: np.array([0.49533057,  0.3304898 , 0.5092156 , -0.62138844])
         offset_orientation = copy.deepcopy(orientation_goal)
 
@@ -136,44 +136,12 @@ class example_kuka_stableMP_R3S3():
             # rot_matrixx = kuka_kinematics.rpy_to_rot_matrix(RPY_angles)
             # print("rot_matrix:", rot_matrixx)
             # desired_rot_matrix = kuka_kinematics.quat_to_rot_matrix(x_t_action[3:7])
-            desired_rot_matrix = kuka_kinematics.quat_to_rot_matrix(orientation_goal)
-            q_d = drake_class.main(translation=x_t_action[0:3], rot_matrix=desired_rot_matrix, q0=q)
+            desired_rot_matrix = kuka_kinematics.quat_to_rot_matrix(list(orientation_goal))
+            q_d = drake_class.main(translation=goal_pos, rot_matrix=desired_rot_matrix, q0=q)
             # q_d = drake_class.main(translation=goal_pos, rot_matrix=desired_rot_matrix, q0=q)
             print("q_d:", q_d)
             print("q:", q)
-            action = 0.1*pdcontroller.control(desired_velocity=q_d, current_velocity=q)
-            # # # -- transform to configuration space --#
-            # if mode_NN == "1st":
-            #     # ---- option 1 -----#
-            #     action_quat_vel = action_safeMP[3:]
-            #     action_quat_vel_sys = kuka_kinematics.quat_vel_with_offset(quat_vel_NN=action_quat_vel,
-            #                                                                quat_offset=offset_orientation)
-            #     action_safeMP_pulled = kuka_kinematics.inverse_diff_kinematics_quat(xdot=np.append(action_safeMP[:3], action_quat_vel_sys), angle_quaternion=xee_orientation).numpy()[0]
-            #
-            #     # ---- option 2: with PD controller ------ #
-            #     euler_vel = kuka_kinematics.quat_vel_to_angular_vel(angle_quaternion=xee_orientation,
-            #                                                               vel_quaternion=action_quat_vel_sys)
-            #     """
-            #     ee_velocity_NN = np.append(action_safeMP[0:3], euler_vel)
-            #     ee_vel_quat_d = kuka_kinematics.angular_vel_to_quat_vel(angle_quaternion=xee_orientation, vel_angular=vel_ee[3:])
-            #     action_safeMP_pulled, action_quat_vel, euler_vel = cartesian_controller.control_law(position_d=x_t_action[:3], #state_goal,
-            #                                                                                         orientation_d=x_t_action[3:], #orientation_goal,
-            #                                                                                         ee_pose=x_t[0],
-            #                                                                                         ee_velocity=vel_ee,
-            #                                                                                         ee_velocity_d=ee_velocity_NN,
-            #                                                                                         ee_vel_quat = action_quat_vel_sys,
-            #                                                                                         ee_vel_quat_d = ee_vel_quat_d,
-            #                                                                                         J=Jac_current,
-            #                                                                                         dt=dt)
-            #     """
-            # else:
-            #     print("not implemented!!")
-            #
-            # if mode == "acc" and mode_NN == "1st":
-            #     # ---- get a decent acceleration based on the velocity command ---#
-            #     action = pdcontroller.control(desired_velocity=action_safeMP_pulled, current_velocity=qdot)
-            # else:
-            #     action = action_safeMP_pulled
+            action = pdcontroller.control_pos_vel(x=q, xdot=qdot, x_d=q_d)
 
             self.check_goal_reached(x_ee=x_t[0][0:3], x_goal=goal_pos)
             # if self.GOAL_REACHED == True:
@@ -203,19 +171,51 @@ class example_kuka_stableMP_R3S3():
 
 if __name__ == "__main__":
     render = True
+    robot_name = "iiwa14"
     dof = 7
     mode = "vel"
     mode_NN = "1st"
-    dt = 0.01
+    mode_env = "vel"
+    dt = 0.02
     nr_obst = 0
+    nr_obst_dyn = 0
+    end_links = ["iiwa_link_7"]
     init_pos = np.array([0.9, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06])
     #np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)) #np.zeros((dof,))
-    goal_pos = [0.60829608, 0.04368581, 0.452421  ] #[-0.24355761, -0.55252747, 0.5] #[-0.07311596, -0.6, 0.4]
+    goal_pos = [0.58, -0.214,  0.115] #[-0.24355761, -0.55252747, 0.5] #[-0.07311596, -0.6, 0.4]
+
+    q_init_list = [
+        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
+        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
+        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
+        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
+        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+        np.array((-0.50, 0.6, -0.02, -1.5, 0.01, -0.5, -0.010)),
+        np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
+        np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
+        np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
+        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+    ]
+    positions_obstacles_list = [
+        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
+        [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
+        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
+        [[0.5, 0.02, 0.1], [0.24, 0.45, 10.2]],
+        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
+        [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
+        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
+        [[0.5, -0.0, 0.28], [0.5, 0.2, 10.4]],
+        [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
+        [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
+    ]
 
     # --- generate environment --- #
     envir_trial = trial_environments()
-    (env, goal) = envir_trial.initialize_environment_kuka(render, mode=mode, dt=dt, init_pos=init_pos,
-                                                              goal_pos=goal_pos, nr_obst=nr_obst)
+    params = {"render": True, "mode": mode, "dt":dt, "init_pos": init_pos, "goal_pos": goal_pos,
+              "nr_obst": nr_obst, "robot_name": robot_name, "mode_env": mode_env, "end_links": end_links, "nr_obst_dyn": nr_obst_dyn,
+              "positions_obstacles":positions_obstacles_list[0], "collision_links": None}
+    (env, goal) = envir_trial.initialize_environment_kuka(params) #render, mode=mode, dt=dt, init_pos=init_pos,
+                                                            #  goal_pos=goal_pos, nr_obst=nr_obst)
     example_class = example_kuka_stableMP_R3S3()
     res = example_class.run_kuka_example(n_steps=1000, env=env, goal_pos=goal_pos,
                                dt=dt, mode=mode, mode_NN=mode_NN)

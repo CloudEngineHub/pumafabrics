@@ -22,24 +22,25 @@ class IKGomp():
         URDF_FILE = absolute_path + urdf_path #"/examples/urdfs/iiwa14.urdf"
 
         # Create IK solver
-        self.planner = IK_OPTIM(urdf=URDF_FILE,
-                           root_link = "world",
-                           end_link  = 'iiwa_link_ee')
-        # self.planner.set_home_config(self.q_home)
-        self.planner.set_init_guess(self.q_home)
-        self.planner.set_boundary_conditions() # joint limits
+        planner = IK_OPTIM(urdf=URDF_FILE,
+                           root_link='world',
+                           end_link='iiwa_link_ee')
+        planner.set_init_guess(self.q_home)
+        planner.set_boundary_conditions()  # joint limits
 
-        self.planner.add_objective_function()
-        self.planner.add_position_constraint(tolerance=0.0)
-        self.planner.add_orientation_constraint(tolerance=0.01)
+        planner.add_objective_function(name="objective")
+        planner.add_position_constraint(name="g_position", tolerance=0)
+        planner.add_orientation_constraint(name="g_rotation", tolerance=0.01)
+
         # Define collision constraint for each link
         active_links = [f'iiwa_link_{i}' for i in range(8)]
         active_links.append('iiwa_link_ee')
-        self.planner.add_collision_constraint(name="sphere_col",
+        planner.add_collision_constraint(name="sphere_col",
                                          link_names=active_links,
-                                         r_link=0.1,
-                                         r_obst=radii_obsts[0],
+                                         r_link=0.2,
+                                         r_obst=0.2,
                                          tolerance=0.01)
+        planner.param_ca_dict["sphere_col"]["num_param"] = T_W_Obst[:3, 3]
         # Formulate problem
         self.planner.setup_problem(verbose=False)
         return

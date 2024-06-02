@@ -143,7 +143,7 @@ class example_kuka_fabrics():
 
             # ----- Fabrics action ----#
             action, _, _, _ = self.compute_action_fabrics(q=q, ob_robot=ob_robot, nr_obst=self.params["nr_obst"], obstacles=self.obstacles)
-
+            action = np.clip(action, -1 * np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
             ob, *_ = self.env.step(action)
 
             # result analysis:
@@ -193,18 +193,18 @@ if __name__ == "__main__":
         np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
     ]
     positions_obstacles_list = [
-        [[0.5,  0., 0.2], [0.24, 0.45, 10.2]],
-        [[0.5, 0.2, 0.05], [0.24, 0.45, 10.2]],
+        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
+        [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
         [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
         [[0.5, 0.02, 0.1], [0.24, 0.45, 10.2]],
         [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
-        [[0.5, -0.1, 0.3], [0.5, 0.2, 10.25]],
+        [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
         [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
-        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
-        [[0.5, 0.25, 0.45], [0.5, 0.2, 10.4]],
-        [[0.5, 0.25, 0.45], [0.5, 0.2, 10.4]],
+        [[0.5, -0.0, 0.28], [0.5, 0.2, 10.4]],
+        [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
+        [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
-    example_class.overwrite_defaults(init_pos=q_init_list[9], positions_obstacles=positions_obstacles_list[9])
+    example_class.overwrite_defaults(init_pos=q_init_list[1], positions_obstacles=positions_obstacles_list[1])
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

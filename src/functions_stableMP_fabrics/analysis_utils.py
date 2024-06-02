@@ -11,7 +11,7 @@ class UtilsAnalysis():
         self.collision_links = collision_links
         self.collision_radii = collision_radii
         self.fk = forward_kinematics
-        self.goal_reach_thr = 0.045
+        self.goal_reach_thr = 0.05
         self.kuka_kinematics = KinematicsKuka()
 
     def vel_error_with_SMP(self):

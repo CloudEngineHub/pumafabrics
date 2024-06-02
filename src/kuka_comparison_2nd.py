@@ -15,7 +15,7 @@ import pickle
 from scipy import interpolate
 
 LOAD_RESULTS = False
-cases = ["PUMA", "PUMA$_{obst}$", "GF", "GM", "CM"]
+cases = ["PUMA$_{free}$", "PUMA$_{obst}$", "GF", "GM", "CM"]
 results = {"min_distance": [], "collision": [], "goal_reached": [], "time_to_goal": [], "xee_list": [], "qdot_diff_list": [],
            "dist_to_NN": [],  "vel_to_NN": [], "solver_times": [], "solver_time": [], "solver_time_std": []}
 q_init_list = [
@@ -36,11 +36,11 @@ positions_obstacles_list = [
     [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
     [[0.5, 0.02, 0.1], [0.24, 0.45, 10.2]],
     [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
-    [[0.5, -0.1, 0.3], [0.5, 0.2, 10.25]],
+    [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
     [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
-    [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
-    [[0.5, 0.25, 0.45], [0.5, 0.2, 10.4]],
-    [[0.5, 0.25, 0.45], [0.5, 0.2, 10.4]],
+    [[0.5, -0.0, 0.28], [0.5, 0.2, 10.4]],
+    [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
+    [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
 ]
 n_runs = len(q_init_list)
 #goal_pose = np.array([0.60829608, 0.04368581, 0.352421, 0.61566569, -0.37995015, 0.67837375, -0.12807299])
@@ -139,7 +139,7 @@ def KukaComparisonLoad():
 def table_results(results):
     # --- create and plot table --- #
     rows = []
-    title_row = [' ','Success-Rate', 'Time-to-Success [s]', "Min Clearance [m]", "Computation time [ms]", 'Path difference to SMP [m]', "Input difference to SMP"]
+    title_row = [' ','Success-Rate', 'Time-to-Success [s]', "Min Clearance [m]", "Computation time [ms]", 'Path difference to PUMA', "Input difference to PUMA"]
     nr_column = len(title_row)
     rows.append(title_row)
     for case in cases:

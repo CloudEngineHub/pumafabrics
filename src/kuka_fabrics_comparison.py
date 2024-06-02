@@ -155,7 +155,6 @@ class example_kuka_fabrics():
 
     def run_kuka_example(self):
         # --- parameters --- #
-        n_steps = self.params["n_steps"]
         orientation_goal = np.array(self.params["orientation_goal"])
         offset_orientation = np.array(self.params["orientation_goal"])
         goal_pos = self.params["goal_pos"]
@@ -197,8 +196,6 @@ class example_kuka_fabrics():
 
         ob, *_ = self.env.step(np.zeros(self.dof))
 
-        quat_prev = copy.deepcopy(x_t_init[3:7])
-        Jac_dot_prev = np.zeros((7, 7))
         Jac_prev = np.zeros((7, 7))
         quat_prev = x_t_init[3:7]
         xee_list = []
@@ -238,6 +235,7 @@ class example_kuka_fabrics():
             qddot_stableMP = qddot_stableMP.numpy()[0]
             action_nullspace = self.controller_nullspace._nullspace_control(q=q, qdot=qdot)
             qddot_stableMP = qddot_stableMP + action_nullspace
+            qddot_stableMP = np.zeros((7,))
 
             # ----- Fabrics action ----#
             action, _, _, _ = self.compute_action_fabrics(q=q, ob_robot=ob_robot, nr_obst=self.params["nr_obst"], obstacles=self.obstacles)
@@ -295,18 +293,18 @@ if __name__ == "__main__":
         np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
     ]
     positions_obstacles_list = [
-        [[0.5,  0., 0.2], [0.24, 0.45, 10.2]],
-        [[0.5, 0.2, 0.05], [0.24, 0.45, 10.2]],
+        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
+        [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
         [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
         [[0.5, 0.02, 0.1], [0.24, 0.45, 10.2]],
         [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
-        [[0.5, -0.1, 0.3], [0.5, 0.2, 10.25]],
+        [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
         [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
-        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
-        [[0.5, 0.25, 0.45], [0.5, 0.2, 10.4]],
-        [[0.5, 0.25, 0.45], [0.5, 0.2, 10.4]],
+        [[0.5, -0.0, 0.28], [0.5, 0.2, 10.4]],
+        [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
+        [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
-    example_class.overwrite_defaults(init_pos=q_init_list[9], positions_obstacles=positions_obstacles_list[9])
+    example_class.overwrite_defaults(init_pos=q_init_list[1], positions_obstacles=positions_obstacles_list[1])
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

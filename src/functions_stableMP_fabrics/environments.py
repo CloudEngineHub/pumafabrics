@@ -279,7 +279,7 @@ class trial_environments():
                 "type": "staticSubGoal",
             },
             "subgoal1": {
-                "weight": 10.,
+                "weight": 1.,
                 "is_primary_goal": False,
                 "indices": [0, 1, 2],
                 "parent_link": "iiwa_link_7",
@@ -289,7 +289,7 @@ class trial_environments():
                 "type": "staticSubGoal",
             },
             "subgoal2": {
-                "weight": 10.,
+                "weight": 1.,
                 "is_primary_goal": False,
                 "indices": [0, 1, 2],
                 "parent_link": "iiwa_link_7",
