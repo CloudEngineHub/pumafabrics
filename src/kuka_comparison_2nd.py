@@ -83,6 +83,8 @@ def run_i(example_class, case:str, q_init_list:list, results_stableMP=None):
         example_class.overwrite_defaults(init_pos=q_init_list[i_run], positions_obstacles=positions_obstacles_list[i_run])
         example_class.construct_example()
         results_i = example_class.run_kuka_example()
+        if case == "GF" and results_i["goal_reached"] == False:
+            print("i_run:", i_run)
         if results_stableMP is None:
             distances, _, _ = distance_to_NN(results_i["xee_list"], results_i["xee_list"])
         else:
@@ -166,6 +168,7 @@ def table_results(results):
     table.add_rows(rows)
     print('\nTexttable Latex:')
     print(latextable.draw_latex(table)) #, caption="\small{Statistics for 50 simulated scenarios of our proposed methods \ac{gm} and \ac{cm} compared to 50 scenarios of \ac{gf} and \ac{smp}}"))
+    print("results[case][goal_reached]:", results["GF"]["goal_reached"])
 
 if __name__ == "__main__":
     if LOAD_RESULTS == False:

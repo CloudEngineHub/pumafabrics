@@ -36,6 +36,7 @@ spatial-casadi = "^1.1.0"
 pytorch-kinematics = "^0.6.1"
 drake = "1.26"
 grasp-planning = {git = "https://github.com/TomasMerva/gomp.git", rev = "main"}
+roboticstoolbox-python = "^1.1.1"
 
 [tool.poetry.group.dev]
 optional = true

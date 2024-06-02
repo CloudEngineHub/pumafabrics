@@ -7,6 +7,7 @@ Authors:
 import numpy as np
 from spatialmath import SO3
 
+
 class CartesianImpedanceController:
     def __init__(self, robot):
         # Parameters
@@ -127,3 +128,6 @@ class CartesianImpedanceController:
 
         # Add ee's tau with nullspace tau
         tau = tau_ee + tau_nullspace
+
+        return tau
+

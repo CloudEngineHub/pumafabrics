@@ -12,6 +12,7 @@ from functions_stableMP_fabrics.kinematics_kuka import KinematicsKuka
 from functions_stableMP_fabrics.energy_regulator import energy_regulation
 import matplotlib.pyplot as plt
 import importlib
+from functions_stableMP_fabrics.nullspace_controller import CartesianImpedanceController
 from initializer import initialize_framework
 from functions_stableMP_fabrics.analysis_utils import UtilsAnalysis
 from functions_stableMP_fabrics.filters import PDController
@@ -162,6 +163,7 @@ class example_kuka_stableMP_fabrics():
                                             collision_links=self.params["collision_links"],
                                             collision_radii=self.params["collision_radii"])
         self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
+        self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])
 
     def run_kuka_example(self): #, n_steps=2000, goal_pos=[-0.24355761, -0.75252747, 0.5], mode="acc", mode_NN = "1st", dt=0.01, mode_env=None):
         # --- parameters --- #
@@ -247,10 +249,8 @@ class example_kuka_stableMP_fabrics():
             #### --------------- directly from acceleration!! -----#
             qddot_stableMP, Jac_prev, Jac_dot_prev = self.kuka_kinematics.inverse_2nd_kinematics_quat(q=q, qdot=qdot_stableMP_pulled, xddot=xddot_pos_quat, angle_quaternion=xee_orientation, Jac_prev=Jac_prev)
             qddot_stableMP = qddot_stableMP.numpy()[0]
-            q_neutral = [-0.05005962,  0.73218803,  0.10586678, -1.91864885, -0.28571441, -0.83566051, -0.62113737]
-            action_nullspace = self.kuka_kinematics._nullspace_control(q=q, q_neutral=q_neutral, orientation=xee_orientation,
-                                                                       order="1st")
-            qddot_stableMP = action_nullspace + qddot_stableMP
+            action_nullspace = self.controller_nullspace._nullspace_control(q=q, qdot=qdot)
+            qddot_stableMP = qddot_stableMP + action_nullspace
             #qddot_stableMP = self.pdcontroller.control(desired_velocity=qdot_stableMP_pulled, current_velocity=qdot)
 
             if self.params["bool_combined"] == True:
@@ -273,6 +273,7 @@ class example_kuka_stableMP_fabrics():
             if self.params["mode_env"] is not None:
                 if self.params["mode_env"] == "vel": # todo: fix nicely or mode == "acc"): #mode_NN=="2nd":
                     action = self.integrate_to_vel(qdot=qdot, action_acc=action_combined, dt=self.params["dt"])
+                    action = np.clip(action, -1*np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
                 else:
                     action = action_combined
             else:
@@ -283,8 +284,6 @@ class example_kuka_stableMP_fabrics():
             # result analysis:
             x_ee, _ = self.utils_analysis._request_ee_state(q, quat_prev)
             xee_list.append(x_ee[0])
-            # vel_ee_action = self.kuka_kinematics.diff_kinematics_quat(q, xee_orientation) @ qdot
-            # vel_ee, _ = self.kuka_kinematics.get_state_velocity(q=q, qdot=action)
             qdot_diff_list.append(np.mean(np.absolute(qddot_stableMP   - action_combined)))
             self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q, obstacles=self.obstacles)
             self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, quat_prev, x_goal=goal_pos)

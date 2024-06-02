@@ -10,6 +10,7 @@ import yaml
 import time
 import importlib
 from scipy.spatial.transform import Rotation as R
+from functions_stableMP_fabrics.nullspace_controller import CartesianImpedanceController
 import pytorch_kinematics as pk
 import torch
 from initializer import initialize_framework
@@ -147,6 +148,7 @@ class example_kuka_fabrics():
         self.planner, fk = self.set_planner()
         self.utils_analysis = UtilsAnalysis(forward_kinematics=self.forward_kinematics, collision_links=self.params["collision_links"], collision_radii=self.params["collision_radii"])
         self.kuka_kinematics = KinematicsKuka()
+        self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])
 
         # rotation matrix for the goal orientation:
         self.rot_matrix = pk.quaternion_to_matrix(torch.FloatTensor(self.params["orientation_goal"]).cuda()).cpu().detach().numpy()
@@ -234,12 +236,15 @@ class example_kuka_fabrics():
             #### --------------- directly from acceleration!! -----#
             qddot_stableMP, Jac_prev, Jac_dot_prev = self.kuka_kinematics.inverse_2nd_kinematics_quat(q=q, qdot=qdot_stableMP_pulled, xddot=xddot_pos_quat, angle_quaternion=xee_orientation, Jac_prev=Jac_prev)
             qddot_stableMP = qddot_stableMP.numpy()[0]
+            action_nullspace = self.controller_nullspace._nullspace_control(q=q, qdot=qdot)
+            qddot_stableMP = qddot_stableMP + action_nullspace
 
             # ----- Fabrics action ----#
             action, _, _, _ = self.compute_action_fabrics(q=q, ob_robot=ob_robot, nr_obst=self.params["nr_obst"], obstacles=self.obstacles)
 
             if self.params["mode_env"] == "vel" and self.params["mode"]=="acc":  # todo: fix nicely or mode == "acc"): #mode_NN=="2nd":
                 action = self.integrate_to_vel(qdot=qdot, action_acc=action, dt=self.params["dt"])
+                action = np.clip(action, -1 * np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
             else:
                 action = action
             ob, *_ = self.env.step(action)
