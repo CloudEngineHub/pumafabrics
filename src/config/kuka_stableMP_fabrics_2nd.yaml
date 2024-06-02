@@ -24,7 +24,7 @@ collision_finsler: "0.01/(x**2) * xdot**2"
 #default settings:
 render: True
 bool_energy_regulator: True
-bool_combined: False
+bool_combined: True
 bool_speed_control: True
 bool_extensive_concretize: True
 mode: "acc"        # mode of fabrics (vel or acc)

@@ -17,7 +17,7 @@ class UtilsAnalysis():
     def vel_error_with_SMP(self):
         kkk=1
 
-    def check_distance_collision(self, q: np.ndarray, obstacles: list) -> bool:
+    def check_distance_collision(self, q: np.ndarray, obstacles: list, margin=0.0) -> bool:
         """
         Outputs if there is a collision: True, False
         Keeps track of the minimum distance to an obstacle
@@ -33,7 +33,7 @@ class UtilsAnalysis():
             )
             for obstacle in obstacles:
                 dist = np.linalg.norm(pose_link_i[:3, 3] - np.array(obstacle["position"])) - obstacle["size"] - \
-                       self.collision_radii[int(collision_link[-1])] #+ 0.04
+                       self.collision_radii[int(collision_link[-1])] + margin
                 if dist < self.min_dist:
                     self.min_dist = dist
 
