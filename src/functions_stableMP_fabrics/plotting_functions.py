@@ -98,3 +98,65 @@ class plotting_functions():
         plt.savefig("comparison_plot.jpg", format="jpg")  # , dpi=100)
         plt.show()
 
+    def comparison_plot_iiwa(self, results=dict, cases=dict, dt=0.02):
+        results_GM = results["GM"]
+        xee_list_GM = results_GM["xee_list"][0]
+        xee_GM = np.array(xee_list_GM).transpose()
+
+        time_x = np.arange(0.0, len(xee_list_GM) * dt, dt)
+        fig, ax = plt.subplots(1, 1)
+        fig.set_size_inches(8, 4)
+
+        # #--- plot fabrics ---#
+        # line_0, = ax.plot(q_list_0[0, :], q_list_0[1, :], "--", color="k")
+        # line_0.set_label("GFs")
+        #
+        #
+        # #--- plot safe MP ---#
+        # line_1, = ax.plot(q_list_1[0, :], q_list_1[1, :], "--", color="b")
+        # line_1.set_label("SMPs")
+        #
+        #
+        # # #--- plot hierarchical safe MP + fabrics ---#
+        # # ax.plot(q_list_2[0, :], q_list_2[1, :], color="m")
+        #
+        # #--- plot safeMP + fabrics
+        line_3, = ax.plot(xee_GM[0, :], xee_GM[1, :], color="cyan")
+        line_3.set_label("Geometric")
+        #
+        # #--- plot theorem III.5 ---#
+        # line_4, = ax.plot(q_list_4[0, :], q_list_4[1, :], color="m")
+        # line_4.set_label("Compatible")
+        #
+        # # initial and final position
+        # start_point = ax.scatter(q_start[0], q_start[1], marker="o", color="g", zorder=3, s=100)
+        # end_point = ax.scatter(q_goal[0], q_goal[1], marker="*", color="g", zorder=3, s=100)
+        # start_point.set_label("Start")
+        # end_point.set_label("Target")
+
+        # obstacles
+        # obstacle_1 = plt.Circle((0.0, -6.5), radius=0.9, color="r")
+        # ax.add_artist(obstacle_1)
+        # obstacle_1.set_label("Obstacles")
+        # obstacle_1 = plt.Circle((-2.0, -4.0), radius=1.2, color="r")
+        # ax.add_artist(obstacle_1)
+        # obstacle_1 = plt.Circle((5.0, -3.0), radius=1.0, color="lightgray")
+        # ax.add_artist(obstacle_1)
+
+        # plot background NN in gray:
+        # x_field, y_field, background_class = self.generate_background_NN()
+        # background_class.plot_backgroundNN(ax, x_field, y_field)
+
+        ax.grid()
+        # ax.set_xlim(scaling_room["x"][0], scaling_room["x"][1])
+        # ax.set_ylim(scaling_room["y"][0], scaling_room["y"][1])
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
+        ax.set(xlabel="x [m]", ylabel="y [m]") #, title="Trajectories of the proposed methods on a point-mass example", size=20)
+        ax.legend(loc="upper left", fontsize=9.5)
+        # ax.legend(["GFs", "SMPs", "Geometric", "Compatible", "Start", "Target", "Obstacles"], loc="upper left")
+        plt.suptitle("Trajectories of the proposed methods on a point-mass example", fontsize=13.5)
+        plt.savefig("comparison_plot.eps", format="eps") #, dpi=100)
+        plt.savefig("comparison_plot.jpg", format="jpg")  # , dpi=100)
+        plt.show()
+

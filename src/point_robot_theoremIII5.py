@@ -191,7 +191,9 @@ class example_point_robot_theoremIII_5():
 
         # Initialize energization class:
         #create function dxdq:
-        energy_regulation_class = energy_regulation(dim_task=2, mode_NN=mode_NN, dof=dof, dxdq_fun=None, dynamical_system=dynamical_system)
+        energy_regulation_class = energy_regulation(dim_task=2, mode_NN=mode_NN, dof=dof, dynamical_system=dynamical_system)
+        # energy_regulation_class.relationship_dq_dx(offset_orientation, translation_cpu, self.kuka_kinematics,
+        #                                            normalizations, self.fk)
 
         # Initialize trajectory plotter
         fig, ax = plt.subplots()

@@ -8,6 +8,7 @@ class energy_regulation():
         self.dof = dof
         self.mode_NN = mode_NN
         self.potential_NN = dynamical_system.model.potential_from_encoder
+        self.dxdq_fun = None
 
     def gpu_to_cpu(self, x_gpu):
         x_cpu = x_gpu.cpu().detach().numpy()
