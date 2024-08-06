@@ -8,7 +8,7 @@ from src.functions_stableMP_fabrics.plotting_functions2 import plotting_function
 
 # Parameters
 # params_name = "2nd_order_R3S3_tomato_31may"
-params_name = "1st_order_3D"
+params_name = "1st_order_2D"
 if params_name == '1st_order_2D':
     x_t_init = np.array([[0.5, 0.6], [-0.75, 0.9], [0.9, -0.9], [-0.9, -0.9], [0.9, 0.9], [0.9, 0.3], [-0.9, -0.1],
                          [-0.9, 0.0], [0.4, 0.4], [0.9, -0.1], [-0.9, -0.5], [0.9, -0.5]])  # initial states
@@ -39,8 +39,8 @@ elif params_name[0:14] == '2nd_order_R3S3':
                          [0.4, 0.4, 0., 1.0, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.], [0.9, -0.1, 0., 1.0, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
                          [-0.9, -0.5, 0., 1.0, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.], [0.9, -0.5, 0., 1.0, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]])
 
-obstacle_struct = {"centers": [[2.5, 2.0, 1.5]], #, 0., 0., 0., 0.]],
-                   "axes": [[0.01, 0.01, 0.01]], "safety_margins": [[1.0]]}
+obstacle_struct = {"centers": [[0.5, -0.5]],
+                   "axes": [[0.2, 0.3]], "safety_margins": [[1.0]]}
 simulation_length = 2000
 results_base_directory = './'
 
