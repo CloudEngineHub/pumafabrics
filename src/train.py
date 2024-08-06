@@ -1,4 +1,6 @@
 import importlib
+import time
+
 from simple_parsing import ArgumentParser
 from initializer import initialize_framework
 from torch.utils.tensorboard import SummaryWriter
@@ -22,6 +24,7 @@ log_name = args.params + '_' + params.selected_primitives_ids
 writer = SummaryWriter(log_dir='results/tensorboard_runs/' + log_name)
 
 # Train
+time1 = time.perf_counter()
 for iteration in range(params.max_iterations + 1):
     # Evaluate model
     if iteration % params.evaluation_interval == 0:
@@ -42,4 +45,6 @@ for iteration in range(params.max_iterations + 1):
     # Log losses in tensorboard
     for j in range(len(losses_names)):
         writer.add_scalar('losses/' + losses_names[j], loss_list[j], iteration)
+time2 = time.perf_counter()
+print("timer:", time2 - time1)
 

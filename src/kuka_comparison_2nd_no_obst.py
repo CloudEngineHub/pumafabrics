@@ -16,7 +16,7 @@ from scipy import interpolate
 from functions_stableMP_fabrics.plotting_functions import plotting_functions
 
 LOAD_RESULTS = False
-cases = ["PUMA$_free$", "PUMA$_obst$", "GF", "GM", "CM"]
+cases = ["PUMA", "GF", "GM", "CM"]
 results = {"min_distance": [], "collision": [], "goal_reached": [], "time_to_goal": [], "xee_list": [], "qdot_diff_list": [],
            "dist_to_NN": [],  "vel_to_NN": [], "solver_times": [], "solver_time": [], "solver_time_std": []}
 q_init_list = [
@@ -81,7 +81,7 @@ def run_i(example_class, case:str, q_init_list:list, results_stableMP=None):
     results_tot = copy.deepcopy(results)
     example_class.overwrite_defaults(render=False)
     for i_run in range(n_runs):
-        example_class.overwrite_defaults(init_pos=q_init_list[i_run], positions_obstacles=positions_obstacles_list[i_run])
+        example_class.overwrite_defaults(init_pos=q_init_list[i_run], positions_obstacles=positions_obstacles_list[i_run], nr_obst=0)
         example_class.construct_example()
         results_i = example_class.run_kuka_example()
         if case == "GF" and results_i["goal_reached"] == False:
@@ -104,13 +104,13 @@ def KukaComparison():
     class_SMP.overwrite_defaults(bool_combined=False, nr_obst=0)
     results_stableMP = run_i(class_SMP, case=cases[0], q_init_list=q_init_list, results_stableMP=None)
 
-    # --- run safe MP (only) example ---#
-    class_SMP_obst = example_kuka_stableMP_fabrics()
-    class_SMP_obst.overwrite_defaults(bool_combined=False, nr_obst=2)
-    results_stableMP_obst = run_i(class_SMP_obst, case=cases[1], q_init_list=q_init_list, results_stableMP=None)
+    # # --- run safe MP (only) example ---#
+    # class_SMP_obst = example_kuka_stableMP_fabrics()
+    # class_SMP_obst.overwrite_defaults(bool_combined=False, nr_obst=0)
+    # results_stableMP_obst = run_i(class_SMP_obst, case=cases[1], q_init_list=q_init_list, results_stableMP=None)
 
     # --- run fabrics (only) example ---#
-    results_fabrics = run_i(example_kuka_fabrics(), case=cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP)
+    results_fabrics = run_i(example_kuka_fabrics(), case=cases[1], q_init_list=q_init_list, results_stableMP=results_stableMP)
 
     # # --- hierarchical method ---#
     # # (env, goal) = envir_trial.initalize_environment_pointmass(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)
@@ -120,14 +120,14 @@ def KukaComparison():
     # run safe MP + fabrics example ---#
     class_GM = example_kuka_stableMP_fabrics()
     class_GM.overwrite_defaults(bool_energy_regulator=False, bool_combined=True)
-    results_stableMP_fabrics = run_i(class_GM, case=cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP)
+    results_stableMP_fabrics = run_i(class_GM, case=cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP)
 
     # run theorem III.5 ---#
     class_CM = example_kuka_stableMP_fabrics()
     class_CM.overwrite_defaults(bool_energy_regulator=True, bool_combined=True)
-    results_CM = run_i(class_CM, case=cases[4], q_init_list=q_init_list, results_stableMP=results_stableMP)
+    results_CM = run_i(class_CM, case=cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP)
 
-    results = {cases[0]: results_stableMP, cases[1]: results_stableMP_obst, cases[2]: results_fabrics, cases[3]: results_stableMP_fabrics, cases[4]: results_CM}
+    results = {cases[0]: results_stableMP, cases[1]: results_fabrics, cases[2]: results_stableMP_fabrics, cases[3]: results_CM}
     return results
 
 def KukaComparisonLoad():
@@ -140,7 +140,7 @@ def KukaComparisonLoad():
 def table_results(results):
     # --- create and plot table --- #
     rows = []
-    title_row = [' ','Success-Rate', 'Time-to-Success [s]', "Min Clearance [m]", "Computation time [ms]", 'Path difference to PUMA', "Input difference to PUMA"]
+    title_row = [' ','Success-Rate',  'Path difference to PUMA', "Input difference to PUMA"]
     nr_column = len(title_row)
     rows.append(title_row)
     for case in cases:
@@ -156,10 +156,10 @@ def table_results(results):
 
         rows.append([case,
                      str(np.round(np.sum(results[case]["goal_reached"]) / n_runs, decimals=1)), #+ "+-" + str(np.round(np.nanstd(results[case]["goal_reached"]), decimals=4)),
-                     str(np.round(np.nanmean(results[case]["time_to_goal"]), decimals=4)) + " $\pm$ " + str(np.round(np.nanstd(results[case]["time_to_goal"]), decimals=4)),
+                     #str(np.round(np.nanmean(results[case]["time_to_goal"]), decimals=4)) + " $\pm$ " + str(np.round(np.nanstd(results[case]["time_to_goal"]), decimals=4)),
                      # collision_episodes_rate_str,
-                     min_clearance_str,
-                     str(np.round(np.nanmean(results[case]["solver_times"])*1000, decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(results[case]["solver_times"])*1000, decimals=2)),
+                     #min_clearance_str,
+                     #str(np.round(np.nanmean(results[case]["solver_times"])*1000, decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(results[case]["solver_times"])*1000, decimals=2)),
                      str(np.round(np.nanmean(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)),
                      str(np.round(np.nanmean(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)),
                      ])

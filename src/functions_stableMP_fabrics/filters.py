@@ -13,7 +13,7 @@ class PDController:
         self.previous_error = error
         return control_value
 
-    def control_pos_vel(self, x, xdot, x_d, xdot_d=np.zeros((7,)), Kp=2, Kd=0.1):
+    def control_pos_vel(self, x, xdot, x_d, xdot_d=np.zeros((7,)), Kp=1, Kd=0.1):
         error_pos = x_d - x
         error_vel = xdot_d - xdot
         control_value = Kp * error_pos + Kd * (error_vel)

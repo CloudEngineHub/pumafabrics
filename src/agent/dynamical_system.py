@@ -261,19 +261,26 @@ class DynamicalSystem():
         """
         Ellipsoidal multi-obstacle avoidance (paper: https://cs.stanford.edu/people/khansari/ObstacleAvoidance.html)
         """
+        if self.dim_state == 7:
+            self.dim_state_obst = 3
+        else:
+            self.dim_state_obst = self.dim_state
         batch_size = dx_t.shape[0]
         n_obs = len(obstacles['centers'])
         # Reshape x
         x_t = x_t.view(batch_size, self.dim_state)
+        x_t_new = x_t[:, :self.dim_state_obst].clone()
 
         # Denorm delta x
         delta_x = dx_t * self.delta_t  # delta x
+        # delta_x_new = delta_x[:, :self.dim_state_obst].clone()
 
         if not obstacles['centers']:
             # Integrate in time
             x_t_d = x_t + delta_x
         else:
-            x_t = x_t.repeat_interleave(repeats=n_obs, dim=1).view(batch_size, self.dim_state, n_obs).transpose(1, 2)  # Repeat as many obstacles
+            x_t = x_t.repeat_interleave(repeats=n_obs, dim=1).view(batch_size, self.dim_state, n_obs).transpose(1, 2)
+            x_t_new = x_t_new.repeat_interleave(repeats=n_obs, dim=1).view(batch_size, self.dim_state_obst, n_obs).transpose(1, 2)  # Repeat as many obstacles
 
             # Obstacles
             obs = torch.FloatTensor(normalize_state(np.array(obstacles['centers']),
@@ -286,13 +293,18 @@ class DynamicalSystem():
                                                                   x_max=self.x_max)).repeat(batch_size, 1, 1).cuda()
 
             # Get modulation Ellipsoid
-            x_ell = x_t - obs
+            obs = obs[:, :, :self.dim_state_obst].clone()
+            a = a[:, :, :self.dim_state_obst].clone()
+            x_ell = x_t_new - obs
 
             # Get Gamma
             a = a * sf
             Gamma = torch.sum((x_ell / a)**2, dim=2)  # TODO: include p here, now p=1
 
             Gamma[Gamma < 1] = 1e3  # If inside obstacle, ignore obstacle
+            print("Gamma: ", Gamma)
+            # if Gamma <1:
+            #     print("I am in an obstacle!!")
 
             # Get weights
             Gamma_k = Gamma.view(batch_size, n_obs, 1).repeat(1, 1, n_obs)
@@ -303,33 +315,39 @@ class DynamicalSystem():
 
             # Get basis matrix
             nv = (2 / a) * (x_ell / a)  # TODO: extend to p > 1
-            E = torch.zeros(batch_size, n_obs, self.dim_state, self.dim_state).cuda()
+            E = torch.zeros(batch_size, n_obs, self.dim_state_obst, self.dim_state_obst).cuda()
             E[:, :, :, 0] = nv
-            E[:, :, 0, 1:self.dim_state] = nv[:, :, 1:self.dim_state]
+            E[:, :, 0, 1:self.dim_state_obst] = nv[:, :, 1:self.dim_state_obst]
 
-            I = torch.eye(self.dim_state-1).repeat(batch_size * n_obs, 1, 1).cuda()
-            e_last = nv.view(batch_size * n_obs, self.dim_state)[:, 0].view(batch_size * n_obs, 1)[:, :, None]
-            E[:, :, 1:self.dim_state, 1:self.dim_state] = (- I * e_last).view(batch_size, n_obs, self.dim_state-1, self.dim_state-1)
+            I = torch.eye(self.dim_state_obst-1).repeat(batch_size * n_obs, 1, 1).cuda()
+            e_last = nv.view(batch_size * n_obs, self.dim_state_obst)[:, 0].view(batch_size * n_obs, 1)[:, :, None]
+            E[:, :, 1:self.dim_state_obst, 1:self.dim_state_obst] = (- I * e_last).view(batch_size, n_obs, self.dim_state_obst-1, self.dim_state_obst-1)
 
-            D = torch.zeros(batch_size, n_obs, self.dim_state, self.dim_state).cuda()
+            D = torch.zeros(batch_size, n_obs, self.dim_state_obst, self.dim_state_obst).cuda()
 
             D[:, :, 0, 0] = 1 - (w / Gamma)
 
-            for i in range(self.dim_state-1):
+            for i in range(self.dim_state_obst-1):
                 D[:, :, i + 1, i + 1] = 1 + (w / Gamma)
 
             # Get modulation matrix
-            E = E.view(batch_size * n_obs, self.dim_state, self.dim_state)
-            D = D.view(batch_size * n_obs, self.dim_state, self.dim_state)
+            E = E.view(batch_size * n_obs, self.dim_state_obst, self.dim_state_obst)
+            D = D.view(batch_size * n_obs, self.dim_state_obst, self.dim_state_obst)
             M = torch.bmm(torch.bmm(E, D), torch.inverse(E))  # EDE^{-1}
-            M = M.view(batch_size, n_obs, self.dim_state, self.dim_state)
+            M = M.view(batch_size, n_obs, self.dim_state_obst, self.dim_state_obst)
 
             # Modulate DS
             delta_x_mod = delta_x.view(batch_size, self.dim_state, 1)
+            delta_x_mod_new = delta_x_mod[:, :self.dim_state_obst].clone()
 
             for i in range(n_obs):  # TODO: doable without for?
-                delta_x_mod = torch.bmm(M[:, i, :, :], delta_x_mod)
+                delta_x_mod_new = torch.bmm(M[:, i, :, :], delta_x_mod_new)
+                delta_x_mod[:, :self.dim_state_obst] = delta_x_mod_new
             delta_x_mod = delta_x_mod.view(batch_size, self.dim_state)
+
+            # print("delta_x", delta_x[:, :self.dim_state_obst])
+            # print("delta_x_mod", delta_x_mod_new)
+            # print("delta_x - delta_x_mod:", delta_x[:, :self.dim_state_obst].clone() - delta_x_mod_new)
 
             # Integrate in time
             x_t_d = x_t[:, 0, :] + delta_x_mod

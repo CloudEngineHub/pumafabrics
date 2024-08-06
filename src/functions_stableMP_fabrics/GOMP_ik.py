@@ -22,25 +22,28 @@ class IKGomp():
         URDF_FILE = absolute_path + urdf_path #"/examples/urdfs/iiwa14.urdf"
 
         # Create IK solver
-        planner = IK_OPTIM(urdf=URDF_FILE,
+        self.planner = IK_OPTIM(urdf=URDF_FILE,
                            root_link='world',
                            end_link='iiwa_link_ee')
-        planner.set_init_guess(self.q_home)
-        planner.set_boundary_conditions()  # joint limits
+        self.planner.set_init_guess(self.q_home)
+        self.planner.set_boundary_conditions()  # joint limits
 
-        planner.add_objective_function(name="objective")
-        planner.add_position_constraint(name="g_position", tolerance=0)
-        planner.add_orientation_constraint(name="g_rotation", tolerance=0.01)
+        self.planner.add_objective_function(name="objective")
+        self.planner.add_position_constraint(name="g_position", tolerance=0)
+        self.planner.add_orientation_constraint(name="g_rotation", tolerance=0.01)
 
         # Define collision constraint for each link
         active_links = [f'iiwa_link_{i}' for i in range(8)]
         active_links.append('iiwa_link_ee')
-        planner.add_collision_constraint(name="sphere_col",
-                                         link_names=active_links,
-                                         r_link=0.2,
-                                         r_obst=0.2,
-                                         tolerance=0.01)
-        planner.param_ca_dict["sphere_col"]["num_param"] = T_W_Obst[:3, 3]
+        # self.planner.add_collision_constraint(name="sphere_col",
+        #                                       link_names=active_links,
+        #                                       r_link=0.1,
+        #                                       r_obst=0.1,
+        #                                       tolerance=0.01)
+        # initial obstacle pose
+        # T_W_Obst = np.eye(4)
+        # T_W_Obst[:3, 3] = np.array([-1., 0.4, 0.15]).T
+        # self.planner.param_ca_dict["sphere_col"]["num_param"] = T_W_Obst[:3, 3]
         # Formulate problem
         self.planner.setup_problem(verbose=False)
         return
@@ -54,10 +57,10 @@ class IKGomp():
         # Call IK solver
         if q_init_guess is not None:
             self.planner.set_init_guess(q_init_guess)
-        self.planner.param_ca_dict["objective_param"]["num_param"] = q_home  # setting home configuration
-        self.planner.param_ca_dict["position_g_param"]["num_param"] = T_W_Ref
-        self.planner.param_ca_dict["orientation_g_param"]["num_param"] = T_W_Ref
-        self.planner.param_ca_dict["sphere_col"]["num_param"] = T_W_Obst
+        self.planner.param_ca_dict["objective"]["num_param"] = q_home  # setting home configuration
+        self.planner.param_ca_dict["g_position"]["num_param"] = T_W_Ref
+        self.planner.param_ca_dict["g_rotation"]["num_param"] = T_W_Ref
+        # self.planner.param_ca_dict["sphere_col"]["num_param"] = T_W_Obst[:3, 3]
 
         start = time.time()
         x, solver_flag = self.planner.solve()

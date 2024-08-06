@@ -105,15 +105,22 @@ class example_kuka_stableMP_fabrics():
 
     def compute_action_fabrics(self, q, ob_robot):
         nr_obst = self.params["nr_obst"]
-        arguments_dict = dict(
-            q=q,
-            qdot=ob_robot["joint_state"]["velocity"],
-            x_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['position'],
-            radius_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['size'],
-            x_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['position'],
-            radius_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['size'],
-            radius_body_links=self.params["collision_radii"],
-            constraint_0=np.array([0, 0, 1, 0.0]))
+        if nr_obst>0:
+            arguments_dict = dict(
+                q=q,
+                qdot=ob_robot["joint_state"]["velocity"],
+                x_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['position'],
+                radius_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['size'],
+                x_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['position'],
+                radius_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['size'],
+                radius_body_links=self.params["collision_radii"],
+                constraint_0=np.array([0, 0, 1, 0.0]))
+        else:
+            arguments_dict = dict(
+                q=q,
+                qdot=ob_robot["joint_state"]["velocity"],
+                radius_body_links=self.params["collision_radii"],
+                constraint_0=np.array([0, 0, 1, 0.0]))
 
         M_avoidance, f_avoidance, action_avoidance, xddot_speed_avoidance = self.planner_avoidance.compute_M_f_action_avoidance(
             **arguments_dict)
@@ -217,6 +224,7 @@ class example_kuka_stableMP_fabrics():
         quat_prev = copy.deepcopy(x_t_init[3:7])
         Jac_dot_prev = np.zeros((7, 7))
         Jac_prev = np.zeros((7, 7))
+        time_list = []
 
         for w in range(n_steps):
             # --- state from observation --- #
@@ -236,6 +244,8 @@ class example_kuka_stableMP_fabrics():
             # --- action by NN --- #
             time0 = time.perf_counter()
             transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu)
+            time00 = time.perf_counter()
+            time_list.append(time00 - time0)
 
             # # -- transform to configuration space --#
             # --- rescale velocities and pose (correct offset and normalization) ---#
@@ -296,6 +306,9 @@ class example_kuka_stableMP_fabrics():
                 break
         self.env.close()
 
+        print("time network average:", np.array(time_list).mean())
+        print("standard deviation", np.array(time_list).std())
+
         results = {
             "min_distance": self.utils_analysis.get_min_dist(),
             "collision": self.IN_COLLISION,
@@ -317,17 +330,17 @@ if __name__ == "__main__":
         np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
         np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
         np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        np.array((-0.50, 0.6, -0.02, -1.5, 0.01, -0.5, -0.010)),
+        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
         np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
         np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
         np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
         np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
     ]
     positions_obstacles_list = [
-        [[0.5, 0., 0.65], [0.5, 0., 10.1]],
+        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
         [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
         [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
-        [[0.5, 0.02, 0.1], [0.24, 0.45, 10.2]],
+        [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
         [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
         [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
         [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
@@ -337,7 +350,7 @@ if __name__ == "__main__":
     ]
     init_pos = [0.5312149701934061, 0.8355097803551061, 0.0700492926199493, -1.6651880968294615, 0.2936679665237496, -0.8774234085561443, -0.24231138029250487]
     example_class = example_kuka_stableMP_fabrics()
-    example_class.overwrite_defaults(init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0])
+    example_class.overwrite_defaults(init_pos=q_init_list[3], positions_obstacles=positions_obstacles_list[3], render=False)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

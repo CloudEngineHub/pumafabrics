@@ -92,7 +92,7 @@ class example_kuka_stableMP_R3S3():
         self.goal_NN = data['goals training'][0]
 
         # Initialize GOMP
-        self.gomp_class  = IKGomp() #q_home=q_init)
+        self.gomp_class  = IKGomp(q_home=self.params["init_pos"]) #q_home=q_init)
         self.gomp_class.construct_ik(radii_obsts=[0.1])
 
         # Normalization class
@@ -142,7 +142,9 @@ class example_kuka_stableMP_R3S3():
 
             # --- action by NN --- #
             time0 = time.perf_counter()
-            transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu)
+            obstacle_struct = {"centers": [[0.5, -0.25, 0.5, 0., 0., 0., 0.]],
+                               "axes": [[0.1, 0.1, 0.1, 0.01, 0.01, 0.01, 0.01]], "safety_margins": [[1.0]]}
+            transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu, obstacles=obstacle_struct)
             x_t_NN = transition_info["desired state"]
             if self.params["mode_NN"] == "2nd":
                 print("not implemented!!")

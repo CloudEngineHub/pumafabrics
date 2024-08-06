@@ -11,6 +11,7 @@ import pytorch_kinematics as pk
 import torch
 from roboticstoolbox.robot.ERobot import ERobot
 from functions_stableMP_fabrics.iiwa_robotics_toolbox import iiwa
+from spatialmath import SO3, UnitQuaternion
 
 class CartesianImpedanceController:
     def __init__(self, robot_name="iiwa14"):
@@ -118,6 +119,26 @@ class CartesianImpedanceController:
         error[:3] = position_d - position
         error[3:] = np.zeros((3,))
         return error
+
+    def control_law_vel(self, position_d, orientation_d, ee_pose, J=[]):
+        alpha = 30 #100 #100 #100
+        beta = np.eye(6)
+        beta[:3, :3] = 0.001*np.eye(3)
+        beta[3:, 3:] = 0. *np.eye(3)
+
+        # ---------------- initialize ----------------- #
+        # Get ee's current position and orientation's from ee's pose
+        x_t_pos = ee_pose[:3]
+        x_t_orient = UnitQuaternion(ee_pose[3:]) #in quaternions
+
+        # ------------- pure position error control ----------------#
+        error_position = self.get_pose_error(x_t_pos, x_t_orient, position_d, UnitQuaternion(orientation_d))
+
+        action = alpha*error_position
+        print("alpha*error_position: ", alpha*error_position)
+        qdot = np.matmul(np.linalg.pinv(J[0][:, :]), action)
+        return qdot
+
 
     # def control_law(self, position_d, orientation_d, ee_pose, ee_velocity, elbow_pose, elbow_velocity, q):
     #     # Get ee's positiona and orientation's from ee's pose

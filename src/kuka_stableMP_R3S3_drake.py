@@ -56,7 +56,7 @@ class example_kuka_stableMP_R3S3():
         # Construct classes:
         results_base_directory = './'
         kuka_kinematics = KinematicsKuka(dt=dt)
-        pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=dt)
+        pdcontroller = PDController(Kp=1.0, Kd=1.0, dt=dt)
         cartesian_controller = CartesianImpedanceController(robot=[])
         drake_class = iiwa_example_drake()
 
