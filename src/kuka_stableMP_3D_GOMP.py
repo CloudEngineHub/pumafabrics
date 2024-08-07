@@ -1,5 +1,7 @@
 import os
 import numpy as np
+import pybullet
+
 from functions_stableMP_fabrics.filters import ema_filter_deriv, PDController
 from agent.utils.normalizations_2 import normalization_functions
 from functions_stableMP_fabrics.environments import trial_environments
@@ -12,7 +14,6 @@ import copy
 import yaml
 from functions_stableMP_fabrics.GOMP_ik import IKGomp
 import time
-import pybullet
 
 class example_kuka_stableMP_R3S3():
     def __init__(self):
@@ -77,7 +78,7 @@ class example_kuka_stableMP_R3S3():
 
         # Parameters
         if self.params["mode_NN"] == "1st":
-            self.params_name = '1st_order_R3S3_converge'
+            self.params_name = "1st_order_3D_tomato_31may" ##'1st_order_R3S3_converge'
         else:
             print("not implemented!!")
             self.params_name = '2nd_order_R3S3_saray'
@@ -94,7 +95,7 @@ class example_kuka_stableMP_R3S3():
 
         # Initialize GOMP
         self.gomp_class  = IKGomp(q_home=self.params["init_pos"]) #q_home=q_init)
-        self.gomp_class.construct_ik(radii_obsts=[0.05])
+        self.gomp_class.construct_ik(nr_obst=self.params["nr_obst"])
 
         # Normalization class
         self.normalizations = normalization_functions(x_min=data["x min"], x_max=data["x max"], dof_task=self.params["dim_task"], dt=self.params["dt"], mode_NN=self.params["mode_NN"])
@@ -115,12 +116,12 @@ class example_kuka_stableMP_R3S3():
             self.obstacles = []
 
         # Translation of goal:
-        translation_gpu, translation_cpu = self.normalizations.translation_goal(state_goal = np.append(self.params["goal_pos"], self.params["orientation_goal"]), goal_NN=self.goal_NN)
+        translation_gpu, translation_cpu = self.normalizations.translation_goal(state_goal = np.array(self.params["goal_pos"]), goal_NN=self.goal_NN)
 
         # initial state:
         x_t_init = self.gomp_class.get_initial_pose(q_init=q_init, offset_orientation=offset_orientation)
         x_init_gpu = self.normalizations.normalize_state_to_NN(x_t=[x_t_init], translation_cpu=translation_cpu, offset_orientation=offset_orientation)
-        dynamical_system = self.learner.init_dynamical_system(initial_states=x_init_gpu, delta_t=1)
+        dynamical_system = self.learner.init_dynamical_system(initial_states=x_init_gpu[:, :3].clone(), delta_t=1)
 
         # Initialize lists
         xee_list = []
@@ -146,22 +147,25 @@ class example_kuka_stableMP_R3S3():
 
             # --- action by NN --- #
             time0 = time.perf_counter()
-            obstacle_struct = {"centers": [[0.5, -0.25, 0.5, 0., 0., 0., 0.]],
-                               "axes": [[0.1, 0.1, 0.1, 0.01, 0.01, 0.01, 0.01]], "safety_margins": [[1.0, 1., 1., 1., 1., 1., 1.]]}
-            transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu) #, obstacles=obstacle_struct)
+            centers_obstacles = [[100, 100, 100], [100, 100, 100]]
+            for i in range(self.params["nr_obst"]):
+                centers_obstacles[i][0:3] = self.params["positions_obstacles"][i]
+            obstacles_struct = {"centers": centers_obstacles,
+                               "axes": [[0.25, 0.25, 0.25]], "safety_margins": [[1., 1., 1.]]}
+            transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu[:, :3].clone(), obstacles=obstacles_struct)
             x_t_NN = transition_info["desired state"]
             if self.params["mode_NN"] == "2nd":
                 print("not implemented!!")
             else:
                 action_t_gpu = transition_info["desired velocity"]
                 action_cpu = action_t_gpu.T.cpu().detach().numpy()
-            x_t_action = self.normalizations.reverse_transformation_pos_quat(state_gpu=x_t_NN, offset_orientation=offset_orientation)
-            pybullet.addUserDebugPoints(list([x_t_action[0:3]]), [[1, 0, 0]], 5, 0.1)
+            x_t_action = self.normalizations.reverse_transformation_position(position_gpu=x_t_NN) #, offset_orientation=offset_orientation)
+            pybullet.addUserDebugPoints(list(x_t_action), [[1, 0, 0]], 5, 0.1)
             action_safeMP = self.normalizations.reverse_transformation(action_gpu=action_t_gpu)
-            q_d, solver_flag = self.gomp_class.call_ik(x_t_action[0:3], x_t_action[3:7],
-                                                       positions_obsts=positions_obstacles,
-                                                       q_init_guess=q,
-                                                       q_home=q)
+            q_d, solver_flag = self.gomp_class.call_ik(x_t_action[0][0:3], self.params["orientation_goal"],
+                                                  positions_obsts=positions_obstacles,
+                                                  q_init_guess=q,
+                                                  q_home=q)
             # if solver_flag == False:
             #     q_d = q
             xee_IK, _ = self.gomp_class.get_current_pose(q=q_d, quat_prev=quat_prev)
@@ -183,6 +187,8 @@ class example_kuka_stableMP_R3S3():
                 self.time_to_goal = w*self.params["dt"]
                 break
 
+            time.sleep(0.1)
+
             # if self.IN_COLLISION:
             #     self.time_to_goal = float("nan")
             #     break
@@ -202,7 +208,33 @@ class example_kuka_stableMP_R3S3():
 
 
 if __name__ == "__main__":
+    q_init_list = [
+        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
+        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
+        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
+        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
+        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
+        np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
+        np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
+        np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
+        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+    ]
+    positions_obstacles_list = [
+        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
+        [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
+        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
+        [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
+        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
+        [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
+        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
+        [[0.5, -0.0, 0.28], [0.5, 0.2, 10.4]],
+        [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
+        [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
+    ]
+
     example_class = example_kuka_stableMP_R3S3()
+    example_class.overwrite_defaults(init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0], render=True)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

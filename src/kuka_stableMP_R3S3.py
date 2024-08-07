@@ -17,7 +17,7 @@ import time
 import torch
 from scipy.spatial.transform import Rotation as R
 import pytorch_kinematics as pk
-
+import pybullet
 
 class example_kuka_stableMP_R3S3():
     def __init__(self):
@@ -148,6 +148,7 @@ class example_kuka_stableMP_R3S3():
                 action_t_gpu = transition_info["desired velocity"]
                 action_cpu = action_t_gpu.T.cpu().detach().numpy()
             x_t_action = self.normalizations.reverse_transformation_pos_quat(state_gpu=x_t_NN, offset_orientation=offset_orientation)
+            pybullet.addUserDebugPoints(list([x_t_action[0:3]]), [[1, 0, 0]], 5, 0.1)
             action_safeMP = self.normalizations.reverse_transformation(action_gpu=action_t_gpu)
 
             # # -- transform to configuration space --#

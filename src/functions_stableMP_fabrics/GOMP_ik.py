@@ -16,7 +16,7 @@ class IKGomp():
         else:
             self.q_home = q_home
 
-    def construct_ik(self, urdf_path="/../examples/urdfs/iiwa14.urdf", radii_obsts=[0.2]):
+    def construct_ik(self, urdf_path="/../examples/urdfs/iiwa14.urdf", nr_obst=0):
         # URDF model
         absolute_path = os.path.dirname(os.path.abspath(__file__))
         URDF_FILE = absolute_path + urdf_path #"/examples/urdfs/iiwa14.urdf"
@@ -29,21 +29,18 @@ class IKGomp():
         self.planner.set_boundary_conditions()  # joint limits
 
         self.planner.add_objective_function(name="objective")
-        self.planner.add_position_constraint(name="g_position", tolerance=0)
-        self.planner.add_orientation_constraint(name="g_rotation", tolerance=0.01)
+        self.planner.add_position_constraint(name="g_position", tolerance=0.0)
+        self.planner.add_orientation_constraint(name="g_rotation", tolerance=10.)
 
         # Define collision constraint for each link
         active_links = [f'iiwa_link_{i}' for i in range(8)]
         active_links.append('iiwa_link_ee')
-        # self.planner.add_collision_constraint(name="sphere_col",
-        #                                       link_names=active_links,
-        #                                       r_link=0.1,
-        #                                       r_obst=0.1,
-        #                                       tolerance=0.01)
-        # initial obstacle pose
-        # T_W_Obst = np.eye(4)
-        # T_W_Obst[:3, 3] = np.array([-1., 0.4, 0.15]).T
-        # self.planner.param_ca_dict["sphere_col"]["num_param"] = T_W_Obst[:3, 3]
+        for i in range(nr_obst):
+            self.planner.add_collision_constraint(name="sphere_col_"+str(i),
+                                                  link_names=active_links,
+                                                  r_link=0.1,
+                                                  r_obst=0.05,
+                                                  tolerance=0.01)
         # Formulate problem
         self.planner.setup_problem(verbose=False)
         return
@@ -52,7 +49,10 @@ class IKGomp():
         T_W_Ref = self.construct_T_matrix(position=goal_position, orientation=goal_orientation)
 
         # Obstacle's pose
-        T_W_Obst = self.construct_T_matrix(position=positions_obsts[0])
+        if len(positions_obsts)>0:
+            for i in range(len(positions_obsts)):
+                T_W_Obst = self.construct_T_matrix(position=positions_obsts[i])
+                self.planner.param_ca_dict["sphere_col_"+str(i)]["num_param"] = T_W_Obst[:3, 3]
 
         # Call IK solver
         if q_init_guess is not None:
@@ -60,7 +60,8 @@ class IKGomp():
         self.planner.param_ca_dict["objective"]["num_param"] = q_home  # setting home configuration
         self.planner.param_ca_dict["g_position"]["num_param"] = T_W_Ref
         self.planner.param_ca_dict["g_rotation"]["num_param"] = T_W_Ref
-        # self.planner.param_ca_dict["sphere_col"]["num_param"] = T_W_Obst[:3, 3]
+        # if T_W_Obst is not None:
+        #     self.planner.param_ca_dict["sphere_col"]["num_param"] = T_W_Obst[:3, 3]
 
         start = time.time()
         x, solver_flag = self.planner.solve()

@@ -255,18 +255,19 @@ class trial_environments():
             # todo: IMPORTANT when z=0.5: fabrics becomes unstable/local minima
         }
         obst1 = SphereObstacle(name="staticObst", content_dict=static_obst_dict)
-        static_obst_dict = {
-            "type": "sphere",
-            "geometry": {"position": positions_obstacles[1], "radius": 0.05},
-            "rgba": [1, 0, 0, 1]
-        }
+        if nr_obst>1:
+            static_obst_dict = {
+                "type": "sphere",
+                "geometry": {"position": positions_obstacles[1], "radius": 0.05},
+                "rgba": [1, 0, 0, 1]
+            }
         obst2 = SphereObstacle(name="staticObst", content_dict=static_obst_dict)
         dynamic_obst_dict = {
             "type": "sphere",
             "geometry": {"trajectory": ["-1 + t * 0.1", "-0.6", "0.4"], "radius": 0.05},
         }
         obst0_dyn = DynamicSphereObstacle(name="dynamicObst", content_dict=dynamic_obst_dict)
-        #Definition of the goal.
+            #Definition of the goal.
         goal_dict = {
             "subgoal0": {
                 "weight": 1.0,
