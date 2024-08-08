@@ -77,7 +77,7 @@ class example_kuka_stableMP_R3S3():
 
         # Parameters
         if self.params["mode_NN"] == "1st":
-            self.params_name = '1st_order_R3S3_converge'
+            self.params_name = '1st_order_R3S3_tomato_31may'
         else:
             print("not implemented!!")
             self.params_name = '2nd_order_R3S3_saray'
@@ -94,7 +94,7 @@ class example_kuka_stableMP_R3S3():
 
         # Initialize GOMP
         self.gomp_class  = IKGomp(q_home=self.params["init_pos"]) #q_home=q_init)
-        self.gomp_class.construct_ik(radii_obsts=[0.05])
+        self.gomp_class.construct_ik(nr_obst=self.params["nr_obst"])
 
         # Normalization class
         self.normalizations = normalization_functions(x_min=data["x min"], x_max=data["x max"], dof_task=self.params["dim_task"], dt=self.params["dt"], mode_NN=self.params["mode_NN"])
@@ -202,7 +202,34 @@ class example_kuka_stableMP_R3S3():
 
 
 if __name__ == "__main__":
+    q_init_list = [
+        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
+        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
+        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
+        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
+        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
+        np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
+        np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
+        np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
+        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+    ]
+    positions_obstacles_list = [
+        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
+        [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
+        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
+        [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
+        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
+        [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
+        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
+        [[0.5, -0.0, 0.28], [0.5, 0.2, 10.4]],
+        [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
+        [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
+    ]
+
     example_class = example_kuka_stableMP_R3S3()
+    example_class.overwrite_defaults(init_pos=q_init_list[1], positions_obstacles=positions_obstacles_list[1],
+                                     render=True)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

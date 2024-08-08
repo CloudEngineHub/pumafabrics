@@ -7,7 +7,7 @@ from agent.utils.dynamical_system_operations import denormalize_state
 import numpy as np
 
 # Parameters
-params_name = '1st_order_3D'
+params_name = '1st_order_R3S3_tomato_31may'
 results_base_directory = './'
 
 simulation_length = 2000
@@ -28,7 +28,7 @@ elif params_name == '1st_order_3D':
     obstacles = {'centers': [[0.25, 0.5, 0.]],
                  'axes': [[0.05, 0.05, 0.05]],
                  'safety_margins': [[1.0, 1.0, 1.0]]}
-elif params_name == '1st_order_R3S3' or params_name == "1st_order_R3S3_multi_kuka" or params_name == "1st_order_R3S3_converge" or params_name == "1st_order_R3S3_19apr":
+elif params_name == '1st_order_R3S3' or params_name == "1st_order_R3S3_multi_kuka" or params_name == "1st_order_R3S3_converge" or params_name == "1st_order_R3S3_19apr" or params_name == "1st_order_R3S3_tomato_31may":
     x_t_init = np.array([[0.5, 0.6, 0., 1.0, 0.0, 0.0, 0.0], [-0.75, 0.9, 0., 1.0, 0.0, 0.0, 0.0], [0.9, -0.9, 0., 1.0, 0.0, 0.0, 0.0],
                          [-0.9, -0.9, 0., 1.0, 0.0, 0.0, 0.0], [0.9, 0.9, 0., 1.0, 0.0, 0.0, 0.0], [0.9, 0.3, 0., 1.0, 0.0, 0.0, 0.0],
                          [-0.9, -0.1, 0., 1.0, 0.0, 0.0, 0.0], [-0.9, 0.0, 0., 1.0, 0.0, 0.0, 0.0], [0.4, 0.4, 0., 1.0, 0.0, 0.0, 0.0],
@@ -80,7 +80,7 @@ x_max = torch.FloatTensor(data['x max']).reshape(1, -1).cuda()
 # Simulate dynamical system and plot
 for i in range(simulation_length):
     # Do transition
-    transition_info = dynamical_system.transition(space='task', obstacles=obstacles)
+    transition_info = dynamical_system.transition(space='task') #, obstacles=obstacles)
     x_t = transition_info['desired state']
 
     # Denormalize data

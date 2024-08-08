@@ -1,22 +1,23 @@
 """
 This file is to generate a comparison plot between safeMP and safeMP+fabrics and theorem III.5.
 """
-
+import time
 import numpy as np
 from functions_stableMP_fabrics.environments import trial_environments
 from kuka_fabrics_comparison import example_kuka_fabrics
 # from kuka_stableMP_R3S3 import example_kuka_stableMP_R3S3
 # from kuka_stableMP_fabrics_theoremIII_5_2nd import example_kuka_stableMP_fabrics
 from kuka_stableMP_fabrics_2nd import example_kuka_stableMP_fabrics
+from kuka_stableMP_fabrics_2nd_20Obst import example_kuka_stableMP_fabrics_20
+from kuka_stableMP_3D_GOMP import example_kuka_stableMP_GOMP
 from texttable import Texttable
 import latextable
 import copy
 import pickle
 from scipy import interpolate
 from functions_stableMP_fabrics.plotting_functions import plotting_functions
-
 LOAD_RESULTS = False
-cases = ["PUMA$_free$", "PUMA$_obst$", "GF", "GM", "CM"]
+cases = ["PUMA$_free$", "PUMA$_obst$", "Occlusion-IK", "GF", "GM", "CM", "GM_20", "CM_20"]
 results = {"min_distance": [], "collision": [], "goal_reached": [], "time_to_goal": [], "xee_list": [], "qdot_diff_list": [],
            "dist_to_NN": [],  "vel_to_NN": [], "solver_times": [], "solver_time": [], "solver_time_std": []}
 q_init_list = [
@@ -103,15 +104,23 @@ def KukaComparison():
     class_SMP = example_kuka_stableMP_fabrics()
     class_SMP.overwrite_defaults(bool_combined=False, nr_obst=0)
     results_stableMP = run_i(class_SMP, case=cases[0], q_init_list=q_init_list, results_stableMP=None)
+    time.sleep(1)
 
     # --- run safe MP (only) example ---#
     class_SMP_obst = example_kuka_stableMP_fabrics()
     class_SMP_obst.overwrite_defaults(bool_combined=False, nr_obst=2)
     results_stableMP_obst = run_i(class_SMP_obst, case=cases[1], q_init_list=q_init_list, results_stableMP=None)
+    time.sleep(1)
+
+    # run the occlusion-based IK baseline ---#
+    class_IK = example_kuka_stableMP_GOMP()
+    class_IK.overwrite_defaults(bool_energy_regulator=True, bool_combined=True, render=True)
+    results_IK = run_i(class_IK, case=cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP)
+    time.sleep(1)
 
     # --- run fabrics (only) example ---#
-    results_fabrics = run_i(example_kuka_fabrics(), case=cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP)
-
+    results_fabrics = run_i(example_kuka_fabrics(), case=cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP)
+    time.sleep(1)
     # # --- hierarchical method ---#
     # # (env, goal) = envir_trial.initalize_environment_pointmass(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)
     # # example_hierachical = example_point_robot_hierarchical()
@@ -120,14 +129,30 @@ def KukaComparison():
     # run safe MP + fabrics example ---#
     class_GM = example_kuka_stableMP_fabrics()
     class_GM.overwrite_defaults(bool_energy_regulator=False, bool_combined=True)
-    results_stableMP_fabrics = run_i(class_GM, case=cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP)
+    results_stableMP_fabrics = run_i(class_GM, case=cases[4], q_init_list=q_init_list, results_stableMP=results_stableMP)
+    time.sleep(1)
 
     # run theorem III.5 ---#
     class_CM = example_kuka_stableMP_fabrics()
     class_CM.overwrite_defaults(bool_energy_regulator=True, bool_combined=True)
-    results_CM = run_i(class_CM, case=cases[4], q_init_list=q_init_list, results_stableMP=results_stableMP)
+    results_CM = run_i(class_CM, case=cases[5], q_init_list=q_init_list, results_stableMP=results_stableMP)
+    time.sleep(1)
 
-    results = {cases[0]: results_stableMP, cases[1]: results_stableMP_obst, cases[2]: results_fabrics, cases[3]: results_stableMP_fabrics, cases[4]: results_CM}
+    # run safe MP + fabrics example: 20 obstacles ---#
+    class_GM20 = example_kuka_stableMP_fabrics_20()
+    class_GM20.overwrite_defaults(bool_energy_regulator=False, bool_combined=True, nr_obst=100)
+    results_GM20 = run_i(class_GM20, case=cases[6], q_init_list=q_init_list, results_stableMP=results_stableMP)
+    time.sleep(1)
+
+    # run theorem III.5: 20 obstacles ---#
+    class_CM20 = example_kuka_stableMP_fabrics_20()
+    class_CM20.overwrite_defaults(bool_energy_regulator=True, bool_combined=True, nr_obst=100)
+    results_CM20 = run_i(class_CM20, case=cases[7], q_init_list=q_init_list, results_stableMP=results_stableMP)
+    time.sleep(1)
+
+    results = {cases[0]: results_stableMP, cases[1]: results_stableMP_obst, cases[2]: results_IK,
+               cases[3]: results_fabrics, cases[4]: results_stableMP_fabrics, cases[5]: results_CM,
+               cases[6]: results_GM20, cases[7]: results_CM20}
     return results
 
 def KukaComparisonLoad():

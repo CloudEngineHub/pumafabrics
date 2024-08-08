@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pybullet
-
+import warnings
 from functions_stableMP_fabrics.filters import ema_filter_deriv, PDController
 from agent.utils.normalizations_2 import normalization_functions
 from functions_stableMP_fabrics.environments import trial_environments
@@ -15,7 +15,7 @@ import yaml
 from functions_stableMP_fabrics.GOMP_ik import IKGomp
 import time
 
-class example_kuka_stableMP_R3S3():
+class example_kuka_stableMP_GOMP():
     def __init__(self):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
@@ -25,22 +25,27 @@ class example_kuka_stableMP_R3S3():
             self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
+        warnings.filterwarnings("ignore")
 
-    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, positions_obstacles=None):
+    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None):
         if render is not None:
             self.params["render"] = render
-
         if init_pos is not None:
             self.params["init_pos"] = init_pos
-
         if goal_pos is not None:
             self.params["goal_pos"] = goal_pos
-
+        if orientation_goal is not None:
+            self.params["orientation_goal"] = orientation_goal
         if nr_obst is not None:
             self.params["nr_obst"] = nr_obst
-
+        if bool_energy_regulator is not None:
+            self.params["bool_energy_regulator"] = bool_energy_regulator
+        if bool_combined is not None:
+            self.params["bool_combined"] = bool_combined
         if positions_obstacles is not None:
             self.params["positions_obstacles"] = positions_obstacles
+        if params_name_1st is not None:
+            self.params["params_name_1st"] = params_name_1st
 
     def initialize_environment(self):
         envir_trial = trial_environments()
@@ -125,6 +130,7 @@ class example_kuka_stableMP_R3S3():
 
         # Initialize lists
         xee_list = []
+        qdot_diff_list = []
         quat_prev = copy.deepcopy(x_t_init[3:])
 
         for w in range(self.params["n_steps"]):
@@ -169,7 +175,7 @@ class example_kuka_stableMP_R3S3():
             # if solver_flag == False:
             #     q_d = q
             xee_IK, _ = self.gomp_class.get_current_pose(q=q_d, quat_prev=quat_prev)
-            print("solver_flag:", solver_flag)
+            # print("solver_flag:", solver_flag)
             action = self.pdcontroller.control(desired_velocity=q_d, current_velocity=q)
             self.solver_times.append(time.perf_counter() - time0)
             action = np.clip(action, -1*np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
@@ -180,6 +186,7 @@ class example_kuka_stableMP_R3S3():
             # result analysis:
             x_ee, _ = self.utils_analysis._request_ee_state(q, quat_prev)
             xee_list.append(x_ee[0])
+            qdot_diff_list.append(1)
             self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q, obstacles=self.obstacles)
             self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, quat_prev, x_goal=self.params["goal_pos"])
 
@@ -187,19 +194,28 @@ class example_kuka_stableMP_R3S3():
                 self.time_to_goal = w*self.params["dt"]
                 break
 
-            time.sleep(0.1)
-
-            # if self.IN_COLLISION:
-            #     self.time_to_goal = float("nan")
-            #     break
+            if self.IN_COLLISION:
+                self.time_to_goal = float("nan")
+                break
 
         self.env.close()
 
+        # results = {
+        #     "min_distance": self.utils_analysis.get_min_dist(),
+        #     "collision": self.IN_COLLISION,
+        #     "goal_reached": self.GOAL_REACHED,
+        #     "time_to_goal": self.time_to_goal,
+        #     "solver_times": self.solver_times,
+        #     "solver_time": np.mean(self.solver_times),
+        #     "solver_time_std": np.std(self.solver_times),
+        # }
         results = {
             "min_distance": self.utils_analysis.get_min_dist(),
             "collision": self.IN_COLLISION,
             "goal_reached": self.GOAL_REACHED,
             "time_to_goal": self.time_to_goal,
+            "xee_list": xee_list,
+            "qdot_diff_list": qdot_diff_list,
             "solver_times": self.solver_times,
             "solver_time": np.mean(self.solver_times),
             "solver_time_std": np.std(self.solver_times),
@@ -233,8 +249,8 @@ if __name__ == "__main__":
         [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
 
-    example_class = example_kuka_stableMP_R3S3()
-    example_class.overwrite_defaults(init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0], render=True)
+    example_class = example_kuka_stableMP_GOMP()
+    example_class.overwrite_defaults(init_pos=q_init_list[1], positions_obstacles=positions_obstacles_list[1], render=True)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 
