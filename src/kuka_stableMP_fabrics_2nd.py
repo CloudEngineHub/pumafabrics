@@ -20,12 +20,12 @@ import copy
 import time
 
 class example_kuka_stableMP_fabrics():
-    def __init__(self): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
+    def __init__(self, file_name="kuka_stableMP_fabrics_2nd"): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = -1
         self.solver_times = []
-        with open("config/kuka_stableMP_fabrics_2nd_pouring.yaml", "r") as setup_stream:
+        with open("config/"+file_name+".yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.robot_name = self.params["robot_name"]
 

@@ -89,6 +89,7 @@ speed_obstacles_list = [
     [[0., 0., 0.], [0., 0., 0.]],  # 11: done
 ]
 n_runs = len(q_init_list)
+network_yaml = "kuka_stableMP_fabrics_2nd_pouring"
 #goal_pose = np.array([0.60829608, 0.04368581, 0.352421, 0.61566569, -0.37995015, 0.67837375, -0.12807299])
 
 def resample_path(path, num_points):
