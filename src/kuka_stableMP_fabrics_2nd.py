@@ -25,11 +25,11 @@ class example_kuka_stableMP_fabrics():
         self.IN_COLLISION = False
         self.time_to_goal = -1
         self.solver_times = []
-        with open("config/kuka_stableMP_fabrics_2nd.yaml", "r") as setup_stream:
+        with open("config/kuka_stableMP_fabrics_2nd_pouring.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.robot_name = self.params["robot_name"]
 
-    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None):
+    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None):
         if render is not None:
             self.params["render"] = render
         if init_pos is not None:
@@ -48,6 +48,8 @@ class example_kuka_stableMP_fabrics():
             self.params["positions_obstacles"] = positions_obstacles
         if params_name_1st is not None:
             self.params["params_name_1st"] = params_name_1st
+        if speed_obstacles is not None:
+            self.params["speed_obstacles"] = speed_obstacles
 
     def check_goal_reached(self, x_ee, x_goal):
         dist = np.linalg.norm(x_ee - x_goal)
@@ -325,32 +327,62 @@ class example_kuka_stableMP_fabrics():
 
 if __name__ == "__main__":
     q_init_list = [
-        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
-        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-        np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
-        np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
-        np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
-        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+        np.array((-1.25068, 2.0944, 1.61353, 1.55983, 0.561357, 1.32142, -2.17296)), #0
+        np.array((-0.0299795, -2.0944, 1.20398, 1.93522, -0.956052, 0.702318, 1.38504)), #1
+        np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)), #2
+        np.array((0.487286, -2.0944, 1.46101, 1.53229, -0.980283, 0.194411, 1.53735)), #3
+        np.array((0.674393, -1.78043, 1.75829, 1.0226, 0.356607, -0.0418928, 0.283865)), #4
+        np.array((1.28421, -1.08275, 0.709752, 1.22488, 2.78079, -0.549531, -0.868621)), #5
+        np.array((0.164684, -1.8114, 1.2818, 2.05525, 0.378834, -0.0280146, 0.340511)), #6
+        np.array((1.08108, -1.51439, 0.755646, 1.52847, -1.54951, 0.874368, 2.71138)), #7
+        # np.array((0.0670587, -1.17035, 1.30989, 1.64705, 1.74562, -0.350649, -0.368835)), #8
+        np.array((-1.41497, 1.23653, 2.93949, 1.60902, 2.35079, -1.53339, -0.231835)), #9
+        np.array((1.31414, -1.77245, 1.18276, 1.47711, 2.75051, -1.18862, -1.57065)), #10
+        #np.array((1.33612, -1.73309, -0.861136, -4.68999e-08, -0.675352, 1.06863, 2.32174)), #added!
+        #start originals:
+        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)), #11
+        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)), #12
+        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)), #13
+        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)), #14
+        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)), #15
+        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)), #16
+        np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)), #17
+        np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)), #18
+        np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)), #19
+        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)), #20
     ]
     positions_obstacles_list = [
-        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
-        [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
-        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
-        [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
-        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
-        [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
-        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
-        [[0.5, -0.0, 0.28], [0.5, 0.2, 10.4]],
-        [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
-        [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
+        [[0.2, -0.5,  0.15] , [0.5, 0., 10.1]], #0
+        [[0.0, -0.5,  0.15], [0.5, 0.15, 0.2]], #1
+        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]], #2
+        [[-0.1, -0.72, 0.22], [0.6, 0.02, 10.2]], #3
+        [[-0.1, -0.72, 0.22], [0.3, -0.1, 10.5]], #4
+        [[-0.1, -0.72, 0.22], [0.5, 0.2, 10.25]], #5
+        [[0.03, -0.6,  0.15], [0.5, 0.2, 10.4]], #6
+        [[0.0, -0.72,  0.10], [0.5, 0.2, 10.4]], #7 :done
+        # [[-0.1, -0.7,  0.3], [0.5, 0.2, 10.4]], #8: done, dynamic
+        [[0., -0.72,  0.1], [0.5, 0.2, 10.4]], #9: done
+        [[0.0, -0.72,  0.10], [0.5, 0.2, 10.4]], #10: done
+        [[0.5, 0.0, 0.40], [0.5, 0.2, 10.4]], #11: done
+    ]
+    speed_obstacles_list = [
+        [[0., 0., 0.] , [0., 0., 0.]], #0
+        [[0., 0., 0.], [0., 0., 0.]], #1
+        [[0., 0., 0.], [0., 0., 0.]], #2
+        [[-0.05, 0., 0.], [0., 0., 0.]], #3
+        [[0.04, 0., 0.], [0., 0., 0.]], #4
+        [[-0.05, 0., 0.], [0., 0., 0.]], #5
+        [[0., 0., 0.], [0., 0., 0.]], #6
+        [[0., 0., 0.], [0., 0., 0.]], #7 :done
+        # [[0.05, 0., 0.], [0., 0., 0.]], #8
+        [[0.01, 0., 0.], [0., 0., 0.]], #9
+        [[0., 0., 0.], [0., 0., 0.]], #10
+        [[0., 0., 0.], [0., 0., 0.]], #11: done
     ]
     init_pos = [0.5312149701934061, 0.8355097803551061, 0.0700492926199493, -1.6651880968294615, 0.2936679665237496, -0.8774234085561443, -0.24231138029250487]
     example_class = example_kuka_stableMP_fabrics()
-    example_class.overwrite_defaults(init_pos=q_init_list[3], positions_obstacles=positions_obstacles_list[3], render=True)
+    index = 8
+    example_class.overwrite_defaults(init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=True, speed_obstacles=speed_obstacles_list[index])
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

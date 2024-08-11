@@ -233,6 +233,7 @@ class trial_environments():
         nr_obst = params["nr_obst"]
         nr_dyn_obst = params["nr_obst_dyn"]
         positions_obstacles = params["positions_obstacles"]
+        speed_obstacles = params["speed_obstacles"]
 
         robots = [
             GenericUrdfReacher(urdf="examples/urdfs/"+robot_name+".urdf", mode=mode),
@@ -250,18 +251,20 @@ class trial_environments():
         # Definition of the obstacle.
         static_obst_dict = {
             "type": "sphere",
-            "geometry": {"position": positions_obstacles[0], "radius": 0.05},
+            # "geometry": {"position": positions_obstacles[0], "radius": 0.05},
+            "geometry": {"trajectory": [str(positions_obstacles[0][0]) + "+t*"+str(speed_obstacles[0][0]), str(positions_obstacles[0][1]),
+                                        str(positions_obstacles[0][2])], "radius": 0.05},
             "rgba": [1, 0, 0, 1]
             # todo: IMPORTANT when z=0.5: fabrics becomes unstable/local minima
         }
-        obst1 = SphereObstacle(name="staticObst", content_dict=static_obst_dict)
+        obst1 = DynamicSphereObstacle(name="staticObst", content_dict=static_obst_dict)
         if nr_obst>1:
             static_obst_dict = {
                 "type": "sphere",
                 "geometry": {"position": positions_obstacles[1], "radius": 0.05},
                 "rgba": [1, 0, 0, 1]
             }
-        obst2 = SphereObstacle(name="staticObst", content_dict=static_obst_dict)
+            obst2 = SphereObstacle(name="staticObst", content_dict=static_obst_dict)
         dynamic_obst_dict = {
             "type": "sphere",
             "geometry": {"trajectory": ["-1 + t * 0.1", "-0.6", "0.4"], "radius": 0.05},

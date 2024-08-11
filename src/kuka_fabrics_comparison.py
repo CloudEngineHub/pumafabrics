@@ -28,7 +28,7 @@ class example_kuka_fabrics():
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
 
-    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None):
+    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None):
         if render is not None:
             self.params["render"] = render
         if init_pos is not None:
@@ -45,6 +45,8 @@ class example_kuka_fabrics():
             self.params["positions_obstacles"] = positions_obstacles
         if params_name_1st is not None:
             self.params["params_name_1st"] = params_name_1st
+        if speed_obstacles is not None:
+            self.params["speed_obstacles"] = speed_obstacles
 
     def initialize_environment(self):
         envir_trial = trial_environments()

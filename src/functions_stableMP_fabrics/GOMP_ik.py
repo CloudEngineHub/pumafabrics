@@ -38,7 +38,7 @@ class IKGomp():
         for i in range(nr_obst):
             self.planner.add_collision_constraint(name="sphere_col_"+str(i),
                                                   link_names=active_links,
-                                                  r_link=0.1,
+                                                  r_link=0.10,
                                                   r_obst=0.05,
                                                   tolerance=0.01)
         # Formulate problem

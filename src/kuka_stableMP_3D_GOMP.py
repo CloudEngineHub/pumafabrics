@@ -157,7 +157,7 @@ class example_kuka_stableMP_GOMP():
             for i in range(self.params["nr_obst"]):
                 centers_obstacles[i][0:3] = self.params["positions_obstacles"][i]
             obstacles_struct = {"centers": centers_obstacles,
-                               "axes": [[0.25, 0.25, 0.25]], "safety_margins": [[1., 1., 1.]]}
+                               "axes": [[0.3, 0.3, 0.3]], "safety_margins": [[1., 1., 1.]]}
             transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu[:, :3].clone(), obstacles=obstacles_struct)
             x_t_NN = transition_info["desired state"]
             if self.params["mode_NN"] == "2nd":
@@ -175,7 +175,7 @@ class example_kuka_stableMP_GOMP():
             # if solver_flag == False:
             #     q_d = q
             xee_IK, _ = self.gomp_class.get_current_pose(q=q_d, quat_prev=quat_prev)
-            # print("solver_flag:", solver_flag)
+            print("solver_flag:", solver_flag)
             action = self.pdcontroller.control(desired_velocity=q_d, current_velocity=q)
             self.solver_times.append(time.perf_counter() - time0)
             action = np.clip(action, -1*np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))

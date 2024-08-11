@@ -33,6 +33,7 @@ mode_env: "vel"
 dt: 0.00769 #0.00769
 nr_obst: 2
 positions_obstacles: [[0.5, -0.25, 0.5], [0.24355761, 0.45252747, 0.2]]
+speed_obstacles: [[0., 0., 0.], [0., 0., 0.]]
 nr_obst_dyn: 0
 goal_reached_threshold: 0.02
 n_steps: 2000
