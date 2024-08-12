@@ -16,18 +16,18 @@ from functions_stableMP_fabrics.GOMP_ik import IKGomp
 import time
 
 class example_kuka_stableMP_GOMP():
-    def __init__(self):
+    def __init__(self, file_name="kuka_GOMP"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = -1
         self.solver_times = []
-        with open("config/kuka_GOMP.yaml", "r") as setup_stream:
+        with open("config/"+file_name+".yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
         warnings.filterwarnings("ignore")
 
-    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None):
+    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None):
         if render is not None:
             self.params["render"] = render
         if init_pos is not None:
@@ -46,6 +46,8 @@ class example_kuka_stableMP_GOMP():
             self.params["positions_obstacles"] = positions_obstacles
         if params_name_1st is not None:
             self.params["params_name_1st"] = params_name_1st
+        if speed_obstacles is not None:
+            self.params["speed_obstacles"] = speed_obstacles
 
     def initialize_environment(self):
         envir_trial = trial_environments()
@@ -83,10 +85,9 @@ class example_kuka_stableMP_GOMP():
 
         # Parameters
         if self.params["mode_NN"] == "1st":
-            self.params_name = "1st_order_3D_tomato_31may" ##'1st_order_R3S3_converge'
+            self.params_name = self.params["params_name_1st"]
         else:
-            print("not implemented!!")
-            self.params_name = '2nd_order_R3S3_saray'
+            self.params_name = self.params["params_name_2nd"]
 
         # Load parameters
         Params = getattr(importlib.import_module('params.' + self.params_name), 'Params')
@@ -216,7 +217,7 @@ class example_kuka_stableMP_GOMP():
             "time_to_goal": self.time_to_goal,
             "xee_list": xee_list,
             "qdot_diff_list": qdot_diff_list,
-            "solver_times": self.solver_times,
+            "solver_times": np.array(self.solver_times)*1000,
             "solver_time": np.mean(self.solver_times),
             "solver_time_std": np.std(self.solver_times),
         }

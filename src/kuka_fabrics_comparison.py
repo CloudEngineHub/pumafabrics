@@ -17,13 +17,13 @@ from initializer import initialize_framework
 import copy
 
 class example_kuka_fabrics():
-    def __init__(self):
+    def __init__(self, file_name="kuka_stableMP_fabrics_2nd"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = -1
         self.obstacles = []
         self.solver_times = []
-        with open("config/kuka_stableMP_fabrics_2nd.yaml", "r") as setup_stream:
+        with open("config/"+str(file_name)+".yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
@@ -172,7 +172,7 @@ class example_kuka_fabrics():
             self.params_name = self.params["params_name_1st"]
         else:
             self.params_name = self.params["params_name_2nd"]
-        print("self.params_name:", self.params_name)
+        print("self.params_name in fabrics:", self.params_name)
         q_init = ob['robot_0']["joint_state"]["position"][0:dof]
 
         # Load parameters
@@ -273,7 +273,7 @@ class example_kuka_fabrics():
             "time_to_goal": self.time_to_goal,
             "xee_list": xee_list,
             "qdot_diff_list": qdot_diff_list,
-            "solver_times": self.solver_times,
+            "solver_times": np.array(self.solver_times)*1000,
             "solver_time": np.mean(self.solver_times),
             "solver_time_std": np.std(self.solver_times),
         }

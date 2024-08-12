@@ -318,7 +318,7 @@ class example_kuka_stableMP_fabrics():
             "time_to_goal": self.time_to_goal,
             "xee_list": xee_list,
             "qdot_diff_list": qdot_diff_list,
-            "solver_times": self.solver_times,
+            "solver_times": np.array(self.solver_times)*1000,
             "solver_time": np.mean(self.solver_times),
             "solver_time_std": np.std(self.solver_times),
         }
@@ -379,9 +379,10 @@ if __name__ == "__main__":
         [[0., 0., 0.], [0., 0., 0.]], #10
         [[0., 0., 0.], [0., 0., 0.]], #11: done
     ]
+    network_yaml = "kuka_stableMP_fabrics_2nd_pouring"
     init_pos = [0.5312149701934061, 0.8355097803551061, 0.0700492926199493, -1.6651880968294615, 0.2936679665237496, -0.8774234085561443, -0.24231138029250487]
-    example_class = example_kuka_stableMP_fabrics()
-    index = 8
+    example_class = example_kuka_stableMP_fabrics(file_name=network_yaml)
+    index = 0
     example_class.overwrite_defaults(init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=True, speed_obstacles=speed_obstacles_list[index])
     example_class.construct_example()
     res = example_class.run_kuka_example()
