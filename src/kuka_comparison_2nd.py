@@ -58,10 +58,14 @@ class comparison_kuka_class():
         distance_std = np.std(distances)
         return distances, distance, distance_std
 
-    def run_i(self, example_class, case:str, q_init_list:list, results_stableMP=None, positions_obstacles_list=[], speed_obstacles_list=[]):
+    def run_i(self, example_class, case:str, q_init_list:list, results_stableMP=None, positions_obstacles_list=[], speed_obstacles_list=[], goal_pos_list=None, goal_vel_list=None):
         results_tot = copy.deepcopy(self.results)
         example_class.overwrite_defaults(render=False)
         for i_run in range(self.n_runs):
+            if goal_pos_list is not None:
+                example_class.overwrite_defaults(goal_pos=goal_pos_list[i_run])
+            if goal_vel_list is not None:
+                example_class.overwrite_defaults(goal_vel=goal_vel_list[i_run])
             example_class.overwrite_defaults(init_pos=q_init_list[i_run], positions_obstacles=positions_obstacles_list[i_run], speed_obstacles=speed_obstacles_list[i_run])
             example_class.construct_example()
             results_i = example_class.run_kuka_example()
@@ -74,31 +78,31 @@ class comparison_kuka_class():
             results_tot["dist_to_NN"].append(distances)
             for key in results_i:
                 results_tot[key].append(results_i[key])
-        with open("simulation_kuka_"+case+".pkl", 'wb') as f:
+        with open("simulation_kuka_"+case+"_pouring.pkl", 'wb') as f:
             pickle.dump(results_tot, f)
         return results_tot
 
-    def KukaComparison(self, q_init_list:list, positions_obstacles_list:list, speed_obstacles_list:list, network_yaml: str, network_yaml_GOMP:str, nr_obst:int):
+    def KukaComparison(self, q_init_list:list, positions_obstacles_list:list, speed_obstacles_list:list, network_yaml: str, network_yaml_GOMP:str, nr_obst:int, goal_pos_list=None, goal_vel_list=None):
 
         # --- run safe MP (only) example ---#
         class_SMP = example_kuka_stableMP_fabrics(file_name=network_yaml)
         class_SMP.overwrite_defaults(bool_combined=False, nr_obst=0)
-        results_stableMP = self.run_i(class_SMP, case=self.cases[0], q_init_list=q_init_list, results_stableMP=None, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list)
+        results_stableMP = self.run_i(class_SMP, case=self.cases[0], q_init_list=q_init_list, results_stableMP=None, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         # --- run safe MP (only) example ---#
         class_SMP_obst = example_kuka_stableMP_fabrics(file_name=network_yaml)
         class_SMP_obst.overwrite_defaults(bool_combined=False, nr_obst=nr_obst)
-        results_stableMP_obst = self.run_i(class_SMP_obst, case=self.cases[1], q_init_list=q_init_list, results_stableMP=None, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list)
+        results_stableMP_obst = self.run_i(class_SMP_obst, case=self.cases[1], q_init_list=q_init_list, results_stableMP=None, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         # run the occlusion-based IK baseline ---#
         class_IK = example_kuka_stableMP_GOMP(file_name=network_yaml_GOMP)
         class_IK.overwrite_defaults(bool_energy_regulator=True, bool_combined=True, render=True)
-        results_IK = self.run_i(class_IK, case=self.cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list)
+        results_IK = self.run_i(class_IK, case=self.cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         # --- run fabrics (only) example ---#
         class_fabrics = example_kuka_fabrics(file_name=network_yaml)
         class_fabrics.overwrite_defaults(nr_obst=nr_obst)
-        results_fabrics = self.run_i(class_fabrics, case=self.cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list)
+        results_fabrics = self.run_i(class_fabrics, case=self.cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         # # --- hierarchical method ---#
         # # (env, goal) = envir_trial.initalize_environment_pointmass(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)
@@ -121,7 +125,7 @@ class comparison_kuka_class():
     def KukaComparisonLoad(self):
         results = {}
         for case in self.cases:
-            file_i = open(f'simulation_kuka_{case}.pkl', 'rb')
+            file_i = open(f'simulation_kuka_{case}_pouring.pkl', 'rb')
             results[case] = pickle.load(file_i)
         return results
 
@@ -164,42 +168,89 @@ if __name__ == "__main__":
     LOAD_RESULTS = False
     nr_obst = 2
     q_init_list = [
-        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-        # np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
-        # np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-        # np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        # np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-        # np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
-        # np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
-        # np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
-        # np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+        #changing goal pos
+        np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 0
+        np.array((-0.0299795, -2.0944, 1.20398, 1.93522, -0.956052, 0.702318, 1.38504)),  # 1
+        np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 2
+        np.array((0.487286, -2.0944, 1.46101, 1.53229, -0.980283, 0.194411, 1.53735)),  # 3
+        np.array((0.674393, -1.78043, 1.75829, 1.0226, 0.356607, -0.0418928, 0.283865)),  # 4
+        #others:
+        np.array((-1.25068, 2.0944, 1.61353, 1.55983, 0.561357, 1.32142, -2.17296)),  # 0, 5
+        np.array((-0.0299795, -2.0944, 1.20398, 1.93522, -0.956052, 0.702318, 1.38504)),  # 1, 6
+        np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 2, 7
+        np.array((0.487286, -2.0944, 1.46101, 1.53229, -0.980283, 0.194411, 1.53735)),  # 3, 8
+        np.array((0.674393, -1.78043, 1.75829, 1.0226, 0.356607, -0.0418928, 0.283865)),  # 4, 9
+        np.array((1.28421, -1.08275, 0.709752, 1.22488, 2.78079, -0.549531, -0.868621)),  # 5, 10
+        np.array((0.164684, -1.8114, 1.2818, 2.05525, 0.378834, -0.0280146, 0.340511)),  # 6, 11
+        np.array((1.08108, -1.51439, 0.755646, 1.52847, -1.54951, 0.874368, 2.71138)),  # 7, 12
+        np.array((-1.41497, 1.23653, 2.93949, 1.60902, 2.35079, -1.53339, -0.231835)),  # 8, 13
+        np.array((1.31414, -1.77245, 1.18276, 1.47711, 2.75051, -1.18862, -1.57065)),  # 9, 14
     ]
     positions_obstacles_list = [
-        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
-        [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
-        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
-        [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
-        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
-        [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
-        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
-        [[0.5, -0.0, 0.28], [0.5, 0.2, 10.4]],
-        [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
-        [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
+        #changing
+        [[-0.20, -0.72, 0.22], [0.5, 0., 10.1]],  # 0
+        [[-0.13, -0.5, 0.4], [0.5, 0.15, 0.2]],  # 1
+        [[-0.20, -0.72, 0.22], [0.24, 0.45, 10.2]], #2
+        [[-0.1, -0.65, 0.4], [0.6, 0.02, 10.2]], #3
+        [[-0.18, -0.5, 0.22], [0.3, -0.1, 10.5]], #4
+        # #others:
+        [[0.2, -0.5,  0.15] , [0.5, 0., 10.1]], #0
+        [[0.0, -0.5,  0.15], [0.5, 0.15, 0.2]], #1
+        [[-0.1, -0.72, 0.22], [0.6, 0.02, 10.2]], #2
+        [[-0.1, -0.72, 0.22], [0.3, -0.1, 10.5]], #3
+        [[-0.1, -0.72, 0.22], [0.5, 0.2, 10.25]], #4
+        [[0.03, -0.6,  0.15], [0.5, 0.2, 10.4]], #5
+        [[0.0, -0.6,  0.10], [0.5, 0.2, 10.4]], #6
+        [[0., -0.72,  0.1], [0.5, 0.2, 10.4]], #7
+        [[0.0, -0.72,  0.10], [0.5, 0.2, 10.4]], #8
+        [[0.0, -0.6,  0.10], [0.5, 0.2, 10.4]], #9
     ]
     speed_obstacles_list = [
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
+        #changing goal pose:
+        [[0.03, 0., 0.], [0., 0., 0.]],  # 0
+        [[0., 0., 0.], [0., 0., 0.]],  # 1
+        [[0.02, 0., 0.], [0., 0., 0.]], #2
+        [[0.03, 0., 0.], [0., 0., 0.]], #3
+        [[0.02, 0., 0.], [0., 0., 0.]], #4
+        #others:
+        [[0., 0., 0.] , [0., 0., 0.]], #0
+        [[0., 0., 0.], [0., 0., 0.]], #1
+        [[0.05, 0., 0.], [0., 0., 0.]], #2
+        [[0.04, 0., 0.], [0., 0., 0.]], #3
+        [[0.05, 0., 0.], [0., 0., 0.]], #4
+        [[0., 0., 0.], [0., 0., 0.]], #5
+        [[0., 0., 0.], [0., 0., 0.]], #6
+        [[0.01, 0., 0.], [0., 0., 0.]], #7
+        [[0., 0., 0.], [0., 0., 0.]], #8
+        [[0., 0., 0.], [0., 0., 0.]], #9
     ]
+    goal_pos_list = [
+        # #changing goal pose:
+        [-0.20, -0.72, 0.22],
+        [-0.20, -0.62, 0.4],
+        [-0.20, -0.72, 0.22],
+        [-0.20, -0.62, 0.6],
+        [-0.20, -0.62, 0.22],
+        #others:
+        [-0.09486833, -0.72446137, 0.22143809],
+        [-0.09486833, -0.72446137, 0.22143809],
+        [-0.09486833, -0.72446137, 0.22143809],
+        [-0.09486833, -0.72446137, 0.22143809],
+        [-0.09486833, -0.72446137, 0.22143809],
+        [-0.09486833, -0.72446137, 0.22143809],
+        [-0.09486833, -0.72446137, 0.22143809],
+        [-0.09486833, -0.72446137, 0.22143809],
+        [-0.09486833, -0.72446137, 0.22143809],
+        [-0.09486833, -0.72446137, 0.22143809],
+    ]
+    goal_vel_list = [
+        [0., 0., 0.] for _ in range(len(q_init_list ))
+    ]
+    goal_vel_list[0] = [0., 0., 0.]
+    if len(q_init_list )>1:
+        goal_vel_list[1] = [-0.001, 0., 0.]
+    if len(q_init_list )>2:
+        goal_vel_list[2] = [-0.01, 0., 0.0]
     n_runs = len(q_init_list)
     network_yaml = "kuka_stableMP_fabrics_2nd_pouring"
     network_yaml_GOMP = "kuka_GOMP_pouring"
@@ -207,7 +258,7 @@ if __name__ == "__main__":
     kuka_class = comparison_kuka_class(n_runs=n_runs)
     if LOAD_RESULTS == False:
         # Regenerate the results:
-        results = kuka_class.KukaComparison(q_init_list, positions_obstacles_list, speed_obstacles_list, network_yaml, network_yaml_GOMP, nr_obst)
+        results = kuka_class.KukaComparison(q_init_list, positions_obstacles_list, speed_obstacles_list, network_yaml, network_yaml_GOMP, nr_obst, goal_pos_list, goal_vel_list)
     else:
         results = kuka_class.KukaComparisonLoad()
 
