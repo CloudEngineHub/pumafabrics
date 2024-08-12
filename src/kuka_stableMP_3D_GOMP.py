@@ -27,7 +27,7 @@ class example_kuka_stableMP_GOMP():
         self.robot_name = self.params["robot_name"]
         warnings.filterwarnings("ignore")
 
-    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None):
+    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None, goal_vel=None):
         if render is not None:
             self.params["render"] = render
         if init_pos is not None:
@@ -48,6 +48,8 @@ class example_kuka_stableMP_GOMP():
             self.params["params_name_1st"] = params_name_1st
         if speed_obstacles is not None:
             self.params["speed_obstacles"] = speed_obstacles
+        if goal_vel is not None:
+            self.params["goal_vel"] = goal_vel
 
     def initialize_environment(self):
         envir_trial = trial_environments()
@@ -122,7 +124,8 @@ class example_kuka_stableMP_GOMP():
             self.obstacles = []
 
         # Translation of goal:
-        translation_gpu, translation_cpu = self.normalizations.translation_goal(state_goal = np.array(self.params["goal_pos"]), goal_NN=self.goal_NN)
+        goal_pos = self.params["goal_pos"]
+        translation_gpu, translation_cpu = self.normalizations.translation_goal(state_goal = np.array(goal_pos), goal_NN=self.goal_NN)
 
         # initial state:
         x_t_init = self.gomp_class.get_initial_pose(q_init=q_init, offset_orientation=offset_orientation)
@@ -143,6 +146,11 @@ class example_kuka_stableMP_GOMP():
                 positions_obstacles = [ob_robot["FullSensor"]["obstacles"][2]["position"]]
             else:
                 positions_obstacles = []
+
+            # recompute translation to goal pose:
+            goal_pos = [goal_pos[i] + self.params["goal_vel"][i]*self.params["dt"] for i in range(len(goal_pos))]
+            translation_gpu, translation_cpu = self.normalizations.translation_goal(state_goal=np.array(goal_pos), goal_NN=self.goal_NN)
+            pybullet.addUserDebugPoints([goal_pos], [[1, 0, 0]], 5, 0.1)
 
             # --- end-effector states and normalized states --- #
             x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, quat_prev)
@@ -181,7 +189,7 @@ class example_kuka_stableMP_GOMP():
             self.solver_times.append(time.perf_counter() - time0)
             action = np.clip(action, -1*np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
 
-            self.check_goal_reached(x_ee=x_t[0][0:3], x_goal=self.params["goal_pos"])
+            self.check_goal_reached(x_ee=x_t[0][0:3], x_goal=goal_pos)
             ob, *_ = self.env.step(action)
 
             # result analysis:
@@ -189,7 +197,7 @@ class example_kuka_stableMP_GOMP():
             xee_list.append(x_ee[0])
             qdot_diff_list.append(1)
             self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q, obstacles=self.obstacles)
-            self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, quat_prev, x_goal=self.params["goal_pos"])
+            self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, quat_prev, x_goal=goal_pos)
 
             if self.GOAL_REACHED:
                 self.time_to_goal = w*self.params["dt"]
