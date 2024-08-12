@@ -10,6 +10,7 @@ import copy
 # # results = {"min_distance": [], "collision": [], "goal_reached": [], "time_to_goal": [], "xee_list": [], "qdot_diff_list": [],
 # #            "dist_to_NN": [],  "vel_to_NN": [], "solver_times": [], "solver_time": [], "solver_time_std": []}
 # n_runs = 20
+import pickle
 
 class obtain_total_results():
     def __init__(self):
@@ -44,6 +45,10 @@ class obtain_total_results():
         self.kuka_class_pouring.table_results(results_pouring_no_obst)
 
     def table_results_total(self, results):
+
+        with open("simulation_kuka_results_ALL.pkl", 'wb') as f:
+            pickle.dump(results, f)
+
         # --- create and plot table --- #
         rows = []
         title_row = [' ','Success-Rate', 'Time-to-Success [s]', "Min Clearance [m]", "Computation time [ms]", 'Path difference to PUMA', "Input difference to PUMA"]
@@ -80,25 +85,25 @@ class obtain_total_results():
 
     def produce_results_tomato(self, results=None, nr_obst=2):
         LOAD_RESULTS = False
-        nr_obst = 2
+        nr_obst = nr_obst
         q_init_list = [
             # with goal changing:
             np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
             np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-            # np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
-            # np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-            # np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-            # # others:
-            # np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-            # np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-            # np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
-            # np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-            # np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-            # np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-            # np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
-            # np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
-            # np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
-            # np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+            np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
+            np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
+            np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+            # others:
+            np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
+            np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
+            np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
+            np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
+            np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+            np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
+            np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
+            np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
+            np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
+            np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
         ]
         positions_obstacles_list = [
             # with goal changing:
@@ -185,25 +190,25 @@ class obtain_total_results():
 
     def produce_results_pouring(self, results=None, nr_obst=2):
         LOAD_RESULTS = False
-        nr_obst = 2
+        nr_obst = nr_obst
         q_init_list = [
             # changing goal pos
             np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 0
             np.array((1.31414, -1.77245, 1.18276, 1.47711, 2.75051, -1.18862, -1.57065)),  # 1
-            # np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 2
-            # np.array((0.487286, -2.0944, 1.46101, 1.53229, -0.980283, 0.194411, 1.53735)),  # 3
-            # np.array((0.674393, -1.78043, 1.75829, 1.0226, 0.356607, -0.0418928, 0.283865)),  # 4
-            # # others:
-            # np.array((-1.25068, 2.0944, 1.61353, 1.55983, 0.561357, 1.32142, -2.17296)),  # 0, 5
-            # np.array((-0.0299795, -2.0944, 1.20398, 1.93522, -0.956052, 0.702318, 1.38504)),  # 1, 6
-            # np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 2, 7
-            # np.array((0.487286, -2.0944, 1.46101, 1.53229, -0.980283, 0.194411, 1.53735)),  # 3, 8
-            # np.array((0.674393, -1.78043, 1.75829, 1.0226, 0.356607, -0.0418928, 0.283865)),  # 4, 9
-            # np.array((1.28421, -1.08275, 0.709752, 1.22488, 2.78079, -0.549531, -0.868621)),  # 5, 10
-            # np.array((0.164684, -1.8114, 1.2818, 2.05525, 0.378834, -0.0280146, 0.340511)),  # 6, 11
-            # np.array((1.08108, -1.51439, 0.755646, 1.52847, -1.54951, 0.874368, 2.71138)),  # 7, 12
-            # np.array((-1.41497, 1.23653, 2.93949, 1.60902, 2.35079, -1.53339, -0.231835)),  # 8, 13
-            # np.array((1.31414, -1.77245, 1.18276, 1.47711, 2.75051, -1.18862, -1.57065)),  # 9, 14
+            np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 2
+            np.array((0.487286, -2.0944, 1.46101, 1.53229, -0.980283, 0.194411, 1.53735)),  # 3
+            np.array((0.674393, -1.78043, 1.75829, 1.0226, 0.356607, -0.0418928, 0.283865)),  # 4
+            # others:
+            np.array((-1.25068, 2.0944, 1.61353, 1.55983, 0.561357, 1.32142, -2.17296)),  # 0, 5
+            np.array((-0.0299795, -2.0944, 1.20398, 1.93522, -0.956052, 0.702318, 1.38504)),  # 1, 6
+            np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 2, 7
+            np.array((0.487286, -2.0944, 1.46101, 1.53229, -0.980283, 0.194411, 1.53735)),  # 3, 8
+            np.array((0.674393, -1.78043, 1.75829, 1.0226, 0.356607, -0.0418928, 0.283865)),  # 4, 9
+            np.array((1.28421, -1.08275, 0.709752, 1.22488, 2.78079, -0.549531, -0.868621)),  # 5, 10
+            np.array((0.164684, -1.8114, 1.2818, 2.05525, 0.378834, -0.0280146, 0.340511)),  # 6, 11
+            np.array((1.08108, -1.51439, 0.755646, 1.52847, -1.54951, 0.874368, 2.71138)),  # 7, 12
+            np.array((-1.41497, 1.23653, 2.93949, 1.60902, 2.35079, -1.53339, -0.231835)),  # 8, 13
+            np.array((1.31414, -1.77245, 1.18276, 1.47711, 2.75051, -1.18862, -1.57065)),  # 9, 14
         ]
         positions_obstacles_list = [
             # changing
@@ -289,12 +294,12 @@ class obtain_total_results():
 if __name__ == "__main__":
     total_results = obtain_total_results()
     results_tomato = total_results.produce_results_tomato()
-    results_tomato_no_obst = results_tomato #total_results.produce_results_tomato(nr_obst=0)
+    results_tomato_no_obst = total_results.produce_results_tomato(nr_obst=0)
     results_pouring = total_results.produce_results_pouring()
-    results_pouring_no_obst = results_pouring  #total_results.produce_results_pouring(nr_obst=0)
+    results_pouring_no_obst = total_results.produce_results_pouring(nr_obst=0)
     results_tot = total_results.append_results(results_tomato, results_pouring, results_tomato_no_obst, results_pouring_no_obst)
-
-    # plot table of individual and collective results:
+    #
+    # # plot table of individual and collective results:
     total_results.table_results_individual(results_tomato, results_pouring, results_tomato_no_obst, results_pouring_no_obst)
     total_results.table_results_total(results_tot)
 

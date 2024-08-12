@@ -96,7 +96,7 @@ class comparison_kuka_class():
 
         # run the occlusion-based IK baseline ---#
         class_IK = example_kuka_stableMP_GOMP(file_name=network_yaml_GOMP)
-        class_IK.overwrite_defaults(bool_energy_regulator=True, bool_combined=True, render=True)
+        class_IK.overwrite_defaults(bool_energy_regulator=True, bool_combined=True, render=True, nr_obst=nr_obst)
         results_IK = self.run_i(class_IK, case=self.cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         # --- run fabrics (only) example ---#
