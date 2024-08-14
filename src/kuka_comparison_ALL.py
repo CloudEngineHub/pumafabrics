@@ -37,9 +37,9 @@ class obtain_total_results():
     def table_results_individual(self, results_tomato, results_pouring, results_tomato_no_obst, results_pouring_no_obst):
         print("%%%%%%%%%%%%%%%%%% results tomato with 2 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         self.kuka_class_tomato.table_results(results_tomato)
-        print("%%%%%%%%%%%%%%%%%% results tomato with 0 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        print("%%%%%%%%%%%%%%%%%% results tomato with 2 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         self.kuka_class_pouring.table_results(results_pouring)
-        print("%%%%%%%%%%%%%%%%%% results pouring with 2 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        print("%%%%%%%%%%%%%%%%%% results pouring with 0 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         self.kuka_class_tomato.table_results(results_tomato_no_obst)
         print("%%%%%%%%%%%%%%%%%% results pouring with 0 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         self.kuka_class_pouring.table_results(results_pouring_no_obst)
@@ -193,14 +193,14 @@ class obtain_total_results():
         nr_obst = nr_obst
         q_init_list = [
             # changing goal pos
-            np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 0
-            np.array((1.31414, -1.77245, 1.18276, 1.47711, 2.75051, -1.18862, -1.57065)),  # 1
+            np.array((1.81414, -1.77245, 1.18276, 1.47711, 2.75051, -1.18862, -1.57065)),  # 0
+            np.array((1.81414, -1.77245, 1.18276, 1.47711, 2.75051, -1.18862, -1.57065)),  # 1
             np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 2
             np.array((0.487286, -2.0944, 1.46101, 1.53229, -0.980283, 0.194411, 1.53735)),  # 3
             np.array((0.674393, -1.78043, 1.75829, 1.0226, 0.356607, -0.0418928, 0.283865)),  # 4
-            # others:
-            np.array((-1.25068, 2.0944, 1.61353, 1.55983, 0.561357, 1.32142, -2.17296)),  # 0, 5
-            np.array((-0.0299795, -2.0944, 1.20398, 1.93522, -0.956052, 0.702318, 1.38504)),  # 1, 6
+            # # others:
+            np.array((1.71414, -1.61, 1.18276, 1.47711, 2.75051, -1.18862, -1.57065)),  # 0, 5
+            np.array((1.7, -1.5, 1.5, 1.47711, 2.75051, -1.18862, -1.2)),  # 1, 6
             np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 2, 7
             np.array((0.487286, -2.0944, 1.46101, 1.53229, -0.980283, 0.194411, 1.53735)),  # 3, 8
             np.array((0.674393, -1.78043, 1.75829, 1.0226, 0.356607, -0.0418928, 0.283865)),  # 4, 9
@@ -212,14 +212,14 @@ class obtain_total_results():
         ]
         positions_obstacles_list = [
             # changing
-            [[-0.20, -0.72, 0.22], [0.5, 0., 10.1]],  # 0
-            [[0.0, -0.6, 0.10], [0.5, 0.2, 10.4]],  # 1
+            [[0., -0.6, 0.2], [0.5, 0., 10.1]],  # 0
+            [[0.0, -0.6, 0.2], [0.5, 0.2, 10.4]],  # 1
             [[-0.20, -0.72, 0.22], [0.24, 0.45, 10.2]],  # 2
             [[-0.1, -0.65, 0.4], [0.6, 0.02, 10.2]],  # 3
-            [[-0.18, -0.5, 0.22], [0.3, -0.1, 10.5]],  # 4
-            # #others:
-            [[0.2, -0.5, 0.15], [0.5, 0., 10.1]],  # 0
-            [[0.0, -0.5, 0.15], [0.5, 0.15, 0.2]],  # 1
+            [[-0.1, -0.5, 0.22], [0.3, -0.1, 10.5]],  # 4
+            # # #others:
+            [[0.1, -0.56, 0.3], [0.5, 0., 10.1]],  # 0
+            [[0.15, -0.6, 0.3], [0.5, 0.15, 0.2]],  # 1
             [[-0.1, -0.72, 0.22], [0.6, 0.02, 10.2]],  # 2
             [[-0.1, -0.72, 0.22], [0.3, -0.1, 10.5]],  # 3
             [[-0.1, -0.72, 0.22], [0.5, 0.2, 10.25]],  # 4
@@ -230,13 +230,13 @@ class obtain_total_results():
             [[0.0, -0.6, 0.10], [0.5, 0.2, 10.4]],  # 9
         ]
         speed_obstacles_list = [
-            # changing goal pose:
+            # # changing goal pose:
             [[0.03, 0., 0.], [0., 0., 0.]],  # 0
-            [[0., 0., 0.], [0., 0., 0.]],  # 1
+            [[0.03, 0., 0.], [0., 0., 0.]],  # 1
             [[0.02, 0., 0.], [0., 0., 0.]],  # 2
             [[0.03, 0., 0.], [0., 0., 0.]],  # 3
-            [[0.02, 0., 0.], [0., 0., 0.]],  # 4
-            # others:
+            [[0.05, 0., 0.], [0., 0., 0.]],  # 4
+            # # others:
             [[0., 0., 0.], [0., 0., 0.]],  # 0
             [[0., 0., 0.], [0., 0., 0.]],  # 1
             [[0.05, 0., 0.], [0., 0., 0.]],  # 2
@@ -249,13 +249,13 @@ class obtain_total_results():
             [[0., 0., 0.], [0., 0., 0.]],  # 9
         ]
         goal_pos_list = [
-            # #changing goal pose:
-            [-0.20, -0.72, 0.22],
-            [-0.20, -0.62, 0.5],
+            # # #changing goal pose:
+            [-0.20, -0.72, 0.15],
+            [-0.20, -0.72, 0.15],
             [-0.20, -0.72, 0.22],
             [-0.20, -0.62, 0.6],
             [-0.20, -0.62, 0.22],
-            # others:
+            # # others:
             [-0.09486833, -0.72446137, 0.22143809],
             [-0.09486833, -0.72446137, 0.22143809],
             [-0.09486833, -0.72446137, 0.22143809],
@@ -288,15 +288,24 @@ class obtain_total_results():
 
         #plot the results:
         self.kuka_class_pouring.table_results(results_pouring)
-
         return results_pouring
 
 if __name__ == "__main__":
     total_results = obtain_total_results()
     results_tomato = total_results.produce_results_tomato()
     results_tomato_no_obst = total_results.produce_results_tomato(nr_obst=0)
-    results_pouring = total_results.produce_results_pouring()
+    with open("simulation_kuka_results_ALL_tomato.pkl", 'wb') as f:
+        pickle.dump(results_tomato , f)
+    with open("simulation_kuka_results_ALL_tomato_no_obst.pkl", 'wb') as f:
+        pickle.dump(results_tomato_no_obst, f)
+    file_i = open(f'simulation_kuka_results_pouring_complete.pkl', 'rb')
+    results_pouring = pickle.load(file_i)
+    #results_pouring = total_results.produce_results_pouring()
     results_pouring_no_obst = total_results.produce_results_pouring(nr_obst=0)
+    with open("simulation_kuka_results_ALL_pouring.pkl", 'wb') as f:
+        pickle.dump(results_pouring, f)
+    with open("simulation_kuka_results_ALL_pouring_no_obst.pkl", 'wb') as f:
+        pickle.dump(results_pouring_no_obst, f)
     results_tot = total_results.append_results(results_tomato, results_pouring, results_tomato_no_obst, results_pouring_no_obst)
     #
     # # plot table of individual and collective results:

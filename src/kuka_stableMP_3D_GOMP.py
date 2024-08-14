@@ -143,7 +143,7 @@ class example_kuka_stableMP_GOMP():
             q = ob_robot["joint_state"]["position"][0:dof]
             qdot = ob_robot["joint_state"]["velocity"][0:dof]
             if self.params["nr_obst"] > 0:
-                positions_obstacles = [ob_robot["FullSensor"]["obstacles"][2]["position"]]
+                positions_obstacles = [ob_robot["FullSensor"]["obstacles"][self.params["nr_obst"]]["position"], ob_robot["FullSensor"]["obstacles"][self.params["nr_obst"]+1]["position"]]
             else:
                 positions_obstacles = []
 
@@ -184,7 +184,7 @@ class example_kuka_stableMP_GOMP():
             # if solver_flag == False:
             #     q_d = q
             xee_IK, _ = self.gomp_class.get_current_pose(q=q_d, quat_prev=quat_prev)
-            print("solver_flag:", solver_flag)
+            # print("solver_flag:", solver_flag)
             action = self.pdcontroller.control(desired_velocity=q_d, current_velocity=q)
             self.solver_times.append(time.perf_counter() - time0)
             action = np.clip(action, -1*np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
