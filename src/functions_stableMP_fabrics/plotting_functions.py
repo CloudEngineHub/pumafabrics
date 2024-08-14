@@ -45,26 +45,24 @@ class plotting_functions():
         fig, ax = plt.subplots(1, 1)
         fig.set_size_inches(8, 4)
 
-        #--- plot fabrics ---#
-        line_0, = ax.plot(q_list_0[0, :], q_list_0[1, :], "--", color="k")
-        line_0.set_label("GFs")
-
-
         #--- plot safe MP ---#
         line_1, = ax.plot(q_list_1[0, :], q_list_1[1, :], "--", color="b")
-        line_1.set_label("SMPs")
+        line_1.set_label("PUMA (data-driven)")
 
+        #--- plot fabrics ---#
+        line_0, = ax.plot(q_list_0[0, :], q_list_0[1, :], "--", color="k")
+        line_0.set_label("Fabrics (geometric)")
 
         # #--- plot hierarchical safe MP + fabrics ---#
         # ax.plot(q_list_2[0, :], q_list_2[1, :], color="m")
 
         #--- plot safeMP + fabrics
         line_3, = ax.plot(q_list_3[0, :], q_list_3[1, :], color="cyan")
-        line_3.set_label("Geometric")
+        line_3.set_label("FPM (ours)")
 
         #--- plot theorem III.5 ---#
         line_4, = ax.plot(q_list_4[0, :], q_list_4[1, :], color="m")
-        line_4.set_label("Compatible")
+        line_4.set_label("CPM (ours)")
 
         # initial and final position
         start_point = ax.scatter(q_start[0], q_start[1], marker="o", color="g", zorder=3, s=100)

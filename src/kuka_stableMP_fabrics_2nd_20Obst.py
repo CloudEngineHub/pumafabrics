@@ -18,19 +18,18 @@ from functions_stableMP_fabrics.analysis_utils import UtilsAnalysis
 from functions_stableMP_fabrics.filters import PDController
 import copy
 import time
-import pybullet
 
-class example_kuka_stableMP_fabrics():
-    def __init__(self, file_name="kuka_stableMP_fabrics_2nd"): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
+class example_kuka_stableMP_fabrics_20():
+    def __init__(self): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = -1
         self.solver_times = []
-        with open("config/"+file_name+".yaml", "r") as setup_stream:
+        with open("config/kuka_stableMP_fabrics_2nd.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.robot_name = self.params["robot_name"]
 
-    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None, goal_vel=None):
+    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None):
         if render is not None:
             self.params["render"] = render
         if init_pos is not None:
@@ -49,10 +48,6 @@ class example_kuka_stableMP_fabrics():
             self.params["positions_obstacles"] = positions_obstacles
         if params_name_1st is not None:
             self.params["params_name_1st"] = params_name_1st
-        if speed_obstacles is not None:
-            self.params["speed_obstacles"] = speed_obstacles
-        if goal_vel is not None:
-            self.params["goal_vel"] = goal_vel
 
     def check_goal_reached(self, x_ee, x_goal):
         dist = np.linalg.norm(x_ee - x_goal)
@@ -64,7 +59,9 @@ class example_kuka_stableMP_fabrics():
 
     def initialize_environment(self):
         envir_trial = trial_environments()
+        self.params["nr_obst"]=2
         (self.env, self.goal) = envir_trial.initialize_environment_kuka(params=self.params)
+        self.params["nr_obst"]=100
 
     def construct_fk(self):
         absolute_path = os.path.dirname(os.path.abspath(__file__))
@@ -101,7 +98,7 @@ class example_kuka_stableMP_fabrics():
         planner.set_components(
             collision_links=self.params["collision_links"],
             goal=goal,
-            number_obstacles=self.params["nr_obst"],
+            number_obstacles=100, #self.params["nr_obst"],
             number_plane_constraints=0,
             limits=self.params["iiwa_limits"],
         )
@@ -110,7 +107,23 @@ class example_kuka_stableMP_fabrics():
 
     def compute_action_fabrics(self, q, ob_robot):
         nr_obst = self.params["nr_obst"]
-        if nr_obst>0:
+        if nr_obst>19:
+            x_obsts = [[10, 10, 10] for i in range(nr_obst)]
+            x_obsts[0] = list(ob_robot['FullSensor']['obstacles'][2]['position'])
+            x_obsts[1] = list(ob_robot['FullSensor']['obstacles'][3]['position'])
+            radius_obsts = [[0.5] for i in range(nr_obst)]
+            radius_obsts[0] = list(ob_robot['FullSensor']['obstacles'][2]['size'])
+            radius_obsts[1] = list(ob_robot['FullSensor']['obstacles'][3]['size'])
+            # x_obsts = [list(ob_robot['FullSensor']['obstacles'][2]['position']), list(ob_robot['FullSensor']['obstacles'][3]['position'])]
+            # radius_obsts = [list(ob_robot['FullSensor']['obstacles'][2]['size']), list(ob_robot['FullSensor']['obstacles'][3]['size'])]
+            arguments_dict = dict(
+                q=q,
+                qdot=ob_robot["joint_state"]["velocity"],
+                x_obsts=x_obsts,
+                radius_obsts=radius_obsts, #[radius_obsts.append([np.array([0.1])) for i in range(nr_obst-2)],
+                radius_body_links=self.params["collision_radii"],
+                constraint_0=np.array([0, 0, 1, 0.0]))
+        elif nr_obst>0:
             arguments_dict = dict(
                 q=q,
                 qdot=ob_robot["joint_state"]["velocity"],
@@ -126,7 +139,6 @@ class example_kuka_stableMP_fabrics():
                 qdot=ob_robot["joint_state"]["velocity"],
                 radius_body_links=self.params["collision_radii"],
                 constraint_0=np.array([0, 0, 1, 0.0]))
-
         M_avoidance, f_avoidance, action_avoidance, xddot_speed_avoidance = self.planner_avoidance.compute_M_f_action_avoidance(
             **arguments_dict)
         qddot_speed = np.zeros((self.params["dof"],))  # todo: think about what to do with speed regulation term!!
@@ -236,17 +248,10 @@ class example_kuka_stableMP_fabrics():
             ob_robot = ob['robot_0']
             q = ob_robot["joint_state"]["position"][0:dof]
             qdot = ob_robot["joint_state"]["velocity"][0:dof]
-            if self.params["nr_obst"]>0:
+            if self.params["nr_obst"]>0 and self.params["nr_obst"]<20:
                 self.obstacles = list(ob["robot_0"]["FullSensor"]["obstacles"].values())
             else:
                 self.obstacles = []
-
-            # recompute translation to goal pose:
-            goal_pos = [goal_pos[i] + self.params["goal_vel"][i]*self.params["dt"] for i in range(len(goal_pos))]
-            translation_gpu, translation_cpu = normalizations.translation_goal(state_goal=np.append(goal_pos, orientation_goal), goal_NN=goal_NN)
-            energy_regulation_class.relationship_dq_dx(offset_orientation, translation_cpu, self.kuka_kinematics,
-                                                       normalizations, self.fk)
-            pybullet.addUserDebugPoints([goal_pos], [[1, 0, 0]], 5, 0.1)
 
             # --- end-effector states and normalized states --- #
             x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, quat_prev, mode_NN=self.params["mode_NN"], qdot=qdot)
@@ -328,7 +333,7 @@ class example_kuka_stableMP_fabrics():
             "time_to_goal": self.time_to_goal,
             "xee_list": xee_list,
             "qdot_diff_list": qdot_diff_list,
-            "solver_times": np.array(self.solver_times)*1000,
+            "solver_times": self.solver_times,
             "solver_time": np.mean(self.solver_times),
             "solver_time_std": np.std(self.solver_times),
         }
@@ -337,13 +342,6 @@ class example_kuka_stableMP_fabrics():
 
 if __name__ == "__main__":
     q_init_list = [
-        # with goal changing:
-        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
-        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        #others:
         np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
         np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
@@ -356,13 +354,6 @@ if __name__ == "__main__":
         np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
     ]
     positions_obstacles_list = [
-        # with goal changing:
-        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
-        [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
-        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
-        [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
-        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
-        # others:
         [[0.5, 0., 0.55], [0.5, 0., 10.1]],
         [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
         [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
@@ -374,58 +365,9 @@ if __name__ == "__main__":
         [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
         [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
-    speed_obstacles_list = [
-        #with goal changing:
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        #others:
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-    ]
-    goal_pos_list = [
-        # #changing goal pose:
-        [0.58, -0.014, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.7, -0.214, 0.315],
-        [0.7, -0.214, 0.115],
-        # others:
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-    ]
-    goal_vel_list = [
-        [0., 0., 0.] for _ in range(len(q_init_list))
-    ]
-    goal_vel_list[0] = [0., 0., 0.]
-    if len(q_init_list) > 1:
-        goal_vel_list[1] = [-0.01, 0., 0.]
-    if len(q_init_list) > 2:
-        goal_vel_list[2] = [-0.01, 0., 0.0]
-    network_yaml = "kuka_stableMP_fabrics_2nd"
     init_pos = [0.5312149701934061, 0.8355097803551061, 0.0700492926199493, -1.6651880968294615, 0.2936679665237496, -0.8774234085561443, -0.24231138029250487]
-    example_class = example_kuka_stableMP_fabrics(file_name=network_yaml)
-    index = 4
-    example_class.overwrite_defaults(init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=True, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
+    example_class = example_kuka_stableMP_fabrics_20()
+    example_class.overwrite_defaults(init_pos=q_init_list[3], positions_obstacles=positions_obstacles_list[3], render=True, nr_obst=100)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

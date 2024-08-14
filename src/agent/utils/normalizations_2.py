@@ -146,6 +146,15 @@ class normalization_functions():
         pos = denormalize_state(pos_detranslated, x_min=self.min_state, x_max=self.max_state)
         return pos
 
+    def reverse_transformation_position(self, position_gpu):
+        """
+        Transform normalized position to system positions.
+        """
+        position_cpu = self.gpu_to_cpu(position_gpu).transpose()
+        pos_detranslated = self.reverse_translation(position_cpu)
+        pos = denormalize_state(pos_detranslated, x_min=self.min_state, x_max=self.max_state)
+        return pos
+
     # ------------------------------- in case of quaternions ---------------------------------- #
     def reverse_transformation_pos_quat(self, state_gpu, offset_orientation):
         """
@@ -227,7 +236,8 @@ class normalization_functions():
         # Translation of goal:
         goal_normalized = self.call_normalize_state(state=state_goal)
         translation = self.get_translation(goal_pos=goal_normalized, goal_pos_NN=goal_NN)
-        translation[3:] = np.zeros(4)
+        if len(translation)>3:
+            translation[3:] = np.zeros(4)
         translation_gpu = torch.FloatTensor(translation).cuda()
         return translation_gpu, translation
 

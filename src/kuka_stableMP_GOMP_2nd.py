@@ -16,21 +16,22 @@ from functions_stableMP_fabrics.nullspace_controller import CartesianImpedanceCo
 from initializer import initialize_framework
 from functions_stableMP_fabrics.analysis_utils import UtilsAnalysis
 from functions_stableMP_fabrics.filters import PDController
+from functions_stableMP_fabrics.GOMP_ik import IKGomp
 import copy
 import time
 import pybullet
 
 class example_kuka_stableMP_fabrics():
-    def __init__(self, file_name="kuka_stableMP_fabrics_2nd"): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
+    def __init__(self): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = -1
         self.solver_times = []
-        with open("config/"+file_name+".yaml", "r") as setup_stream:
+        with open("config/kuka_stableMP_GOMP_2nd.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.robot_name = self.params["robot_name"]
 
-    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None, goal_vel=None):
+    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None):
         if render is not None:
             self.params["render"] = render
         if init_pos is not None:
@@ -49,10 +50,6 @@ class example_kuka_stableMP_fabrics():
             self.params["positions_obstacles"] = positions_obstacles
         if params_name_1st is not None:
             self.params["params_name_1st"] = params_name_1st
-        if speed_obstacles is not None:
-            self.params["speed_obstacles"] = speed_obstacles
-        if goal_vel is not None:
-            self.params["goal_vel"] = goal_vel
 
     def check_goal_reached(self, x_ee, x_goal):
         dist = np.linalg.norm(x_ee - x_goal)
@@ -174,8 +171,11 @@ class example_kuka_stableMP_fabrics():
         self.utils_analysis = UtilsAnalysis(forward_kinematics=self.forward_kinematics,
                                             collision_links=self.params["collision_links"],
                                             collision_radii=self.params["collision_radii"])
-        self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
+        self.pdcontroller = PDController(Kp=1., Kd=0.0, dt=self.params["dt"])
         self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])
+        # Initialize GOMP
+        self.gomp_class  = IKGomp(q_home=self.params["init_pos"]) #q_home=q_init)
+        self.gomp_class.construct_ik(nr_obst=self.params["nr_obst"])
 
     def run_kuka_example(self): #, n_steps=2000, goal_pos=[-0.24355761, -0.75252747, 0.5], mode="acc", mode_NN = "1st", dt=0.01, mode_env=None):
         # --- parameters --- #
@@ -241,13 +241,6 @@ class example_kuka_stableMP_fabrics():
             else:
                 self.obstacles = []
 
-            # recompute translation to goal pose:
-            goal_pos = [goal_pos[i] + self.params["goal_vel"][i]*self.params["dt"] for i in range(len(goal_pos))]
-            translation_gpu, translation_cpu = normalizations.translation_goal(state_goal=np.append(goal_pos, orientation_goal), goal_NN=goal_NN)
-            energy_regulation_class.relationship_dq_dx(offset_orientation, translation_cpu, self.kuka_kinematics,
-                                                       normalizations, self.fk)
-            pybullet.addUserDebugPoints([goal_pos], [[1, 0, 0]], 5, 0.1)
-
             # --- end-effector states and normalized states --- #
             x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, quat_prev, mode_NN=self.params["mode_NN"], qdot=qdot)
             quat_prev = copy.deepcopy(xee_orientation)
@@ -255,7 +248,12 @@ class example_kuka_stableMP_fabrics():
 
             # --- action by NN --- #
             time0 = time.perf_counter()
-            transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu)
+            centers_obstacles = [[100, 100, 100, 0., 0., 0., 0.], [100, 100, 100, 0., 0., 0., 0.]]
+            for i in range(self.params["nr_obst"]):
+                centers_obstacles[i][0:3] = self.params["positions_obstacles"][i]
+            obstacles_struct = {"centers": centers_obstacles,
+                               "axes": [[0.25, 0.25, 0.25, 0.01, 0.01, 0.01, 0.01]], "safety_margins": [[1., 1., 1., 1., 1., 1., 1.]]}
+            transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu) #, obstacles=obstacles_struct)
             time00 = time.perf_counter()
             time_list.append(time00 - time0)
 
@@ -264,6 +262,22 @@ class example_kuka_stableMP_fabrics():
             xdot_pos_quat, euler_vel = self.vel_NN_rescale(transition_info, offset_orientation, xee_orientation, normalizations, self.kuka_kinematics)
             xddot_pos_quat = self.acc_NN_rescale(transition_info, offset_orientation, xee_orientation, normalizations, self.kuka_kinematics)
             x_t_action = normalizations.reverse_transformation_pos_quat(state_gpu=transition_info["desired state"], offset_orientation=offset_orientation)
+            pybullet.addUserDebugPoints(list([x_t_action[0:3]]), [[1, 0, 0]], 5, 0.1)
+            obstacles_for_IK = [self.obstacles[i]["position"] for i in range(self.params["nr_obst"])]
+
+            q_d, solver_flag = self.gomp_class.call_ik(#np.array(self.params["goal_pos"]), np.array(self.params["orientation_goal"]),
+                                                       x_t_action[0:3], x_t_action[3:7],
+                                                       positions_obsts=obstacles_for_IK,
+                                                       q_init_guess=q,
+                                                       q_home=q)
+            # if solver_flag == False:
+            #     q_d = q
+            xee_IK, _ = self.gomp_class.get_current_pose(q=q_d, quat_prev=quat_prev)
+            print("solver_flag:", solver_flag)
+            action_GOMP = self.pdcontroller.control(desired_velocity=q_d, current_velocity=q)*1.3
+            self.solver_times.append(time.perf_counter() - time0)
+            #action_GOMP = np.clip(action, -1*np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
+
 
             # ---- velocity action_stableMP: option 1 ---- #
             qdot_stableMP_pulled = self.kuka_kinematics.inverse_diff_kinematics_quat(xdot=xdot_pos_quat,
@@ -301,7 +315,8 @@ class example_kuka_stableMP_fabrics():
             else:
                 action = action_combined
             self.solver_times.append(time.perf_counter() - time0)
-            ob, *_ = self.env.step(action)
+
+            ob, *_ = self.env.step(action_GOMP)
 
             # result analysis:
             x_ee, _ = self.utils_analysis._request_ee_state(q, quat_prev)
@@ -328,7 +343,7 @@ class example_kuka_stableMP_fabrics():
             "time_to_goal": self.time_to_goal,
             "xee_list": xee_list,
             "qdot_diff_list": qdot_diff_list,
-            "solver_times": np.array(self.solver_times)*1000,
+            "solver_times": self.solver_times,
             "solver_time": np.mean(self.solver_times),
             "solver_time_std": np.std(self.solver_times),
         }
@@ -337,13 +352,6 @@ class example_kuka_stableMP_fabrics():
 
 if __name__ == "__main__":
     q_init_list = [
-        # with goal changing:
-        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
-        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        #others:
         np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
         np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
@@ -356,13 +364,6 @@ if __name__ == "__main__":
         np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
     ]
     positions_obstacles_list = [
-        # with goal changing:
-        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
-        [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
-        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
-        [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
-        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
-        # others:
         [[0.5, 0., 0.55], [0.5, 0., 10.1]],
         [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
         [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
@@ -374,58 +375,9 @@ if __name__ == "__main__":
         [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
         [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
-    speed_obstacles_list = [
-        #with goal changing:
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        #others:
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-    ]
-    goal_pos_list = [
-        # #changing goal pose:
-        [0.58, -0.014, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.7, -0.214, 0.315],
-        [0.7, -0.214, 0.115],
-        # others:
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-    ]
-    goal_vel_list = [
-        [0., 0., 0.] for _ in range(len(q_init_list))
-    ]
-    goal_vel_list[0] = [0., 0., 0.]
-    if len(q_init_list) > 1:
-        goal_vel_list[1] = [-0.01, 0., 0.]
-    if len(q_init_list) > 2:
-        goal_vel_list[2] = [-0.01, 0., 0.0]
-    network_yaml = "kuka_stableMP_fabrics_2nd"
     init_pos = [0.5312149701934061, 0.8355097803551061, 0.0700492926199493, -1.6651880968294615, 0.2936679665237496, -0.8774234085561443, -0.24231138029250487]
-    example_class = example_kuka_stableMP_fabrics(file_name=network_yaml)
-    index = 4
-    example_class.overwrite_defaults(init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=True, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
+    example_class = example_kuka_stableMP_fabrics()
+    example_class.overwrite_defaults(init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0], render=True)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

@@ -106,7 +106,7 @@ class create_background_vectorfield():
 
     def plot_backgroundNN(self, ax, x_field, y_field):
         background_lines = ax.plot(x_field, y_field, color="lightgrey", zorder=0)
-        background_lines[0].set_label("Trajectories SMPs")
+        background_lines[0].set_label("Trajectories PUMA")
         self.add_arrow(ax, xdata=x_field, ydata=y_field, color="lightgrey")
 
     def plot_backgroundNN_figure(self, x_field, y_field, vx_field=0, vy_field=0):

@@ -8,6 +8,7 @@ from agent.utils.normalizations_2 import normalization_functions
 from functions_stableMP_fabrics.environments import trial_environments
 from functions_stableMP_fabrics.kinematics_kuka import KinematicsKuka
 from functions_stableMP_fabrics.analysis_utils import UtilsAnalysis
+from functions_stableMP_fabrics.nullspace_controller import CartesianImpedanceController
 import importlib
 from initializer import initialize_framework
 import copy
@@ -16,7 +17,7 @@ import time
 import torch
 from scipy.spatial.transform import Rotation as R
 import pytorch_kinematics as pk
-
+import pybullet
 
 class example_kuka_stableMP_R3S3():
     def __init__(self):
@@ -77,6 +78,7 @@ class example_kuka_stableMP_R3S3():
         self.utils_analysis = UtilsAnalysis(forward_kinematics=self.forward_kinematics, collision_links=self.params["collision_links"], collision_radii=self.params["collision_radii"])
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"], end_link_name=self.params["end_links"][0], robot_name=self.params["robot_name"])
         self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
+        self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])
 
         # Parameters
         if self.params["mode_NN"] == "1st":
@@ -115,7 +117,7 @@ class example_kuka_stableMP_R3S3():
         dynamical_system = self.learner.init_dynamical_system(initial_states=x_init_gpu, delta_t=1)
 
         # Initialize lists
-        xee_list = []
+        xee_list = [x_t_init]
         vee_list = []
         quat_prev = copy.deepcopy(x_t_init[3:])
 
@@ -137,7 +139,8 @@ class example_kuka_stableMP_R3S3():
 
             # --- action by NN --- #
             time0 = time.perf_counter()
-            transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu)
+            obstacle_struct = {"centers": [[0.60829608, 0.04368581, 0.252421, 0., 0., 0., 0.]], "axes": [[0.6, 0.5, 0.5, 0.01, 0.01, 0.01, 0.01]], "safety_margins": [[1.0]]}
+            transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu) #, obstacles=obstacle_struct)
             x_t_NN = transition_info["desired state"]
             if self.params["mode_NN"] == "2nd":
                 print("not implemented!!")
@@ -145,6 +148,7 @@ class example_kuka_stableMP_R3S3():
                 action_t_gpu = transition_info["desired velocity"]
                 action_cpu = action_t_gpu.T.cpu().detach().numpy()
             x_t_action = self.normalizations.reverse_transformation_pos_quat(state_gpu=x_t_NN, offset_orientation=offset_orientation)
+            pybullet.addUserDebugPoints(list([x_t_action[0:3]]), [[1, 0, 0]], 5, 0.1)
             action_safeMP = self.normalizations.reverse_transformation(action_gpu=action_t_gpu)
 
             # # -- transform to configuration space --#
@@ -154,25 +158,25 @@ class example_kuka_stableMP_R3S3():
                 action_quat_vel_sys = self.kuka_kinematics.quat_vel_with_offset(quat_vel_NN=action_quat_vel,
                                                                            quat_offset=offset_orientation)
                 action_safeMP_pulled = self.kuka_kinematics.inverse_diff_kinematics_quat(xdot=np.append(action_safeMP[:3], action_quat_vel_sys), angle_quaternion=xee_orientation).numpy()[0]
-                action_nullspace = self.kuka_kinematics._nullspace_control(q=q, orientation=xee_orientation, order=self.params["mode_NN"])
-                action_safeMP_pulled = action_nullspace + action_safeMP_pulled
+                #action_nullspace = self.kuka_kinematics._nullspace_control(q=q, orientation=xee_orientation, order=self.params["mode_NN"])
+                action_nullspace = self.controller_nullspace._nullspace_control(q=q, qdot=qdot)
+                #action_safeMP_pulled = action_nullspace + action_safeMP_pulled
 
                 # ---- option 2: with PD controller ------ #
-                """
-                euler_vel = kuka_kinematics.quat_vel_to_angular_vel(angle_quaternion=xee_orientation,
-                                                                          vel_quaternion=action_quat_vel_sys)
-                ee_velocity_NN = np.append(action_safeMP[0:3], euler_vel)
-                ee_vel_quat_d = kuka_kinematics.angular_vel_to_quat_vel(angle_quaternion=xee_orientation, vel_angular=vel_ee[3:])
-                action_safeMP_pulled, action_quat_vel, euler_vel = cartesian_controller.control_law(position_d=x_t_action[:3], #state_goal,
-                                                                                                    orientation_d=x_t_action[3:], #orientation_goal,
-                                                                                                    ee_pose=x_t[0],
-                                                                                                    ee_velocity=vel_ee,
-                                                                                                    ee_velocity_d=ee_velocity_NN,
-                                                                                                    ee_vel_quat = action_quat_vel_sys,
-                                                                                                    ee_vel_quat_d = ee_vel_quat_d,
-                                                                                                    J=Jac_current,
-                                                                                                    dt=dt)
-                """
+                # euler_vel = kuka_kinematics.quat_vel_to_angular_vel(angle_quaternion=xee_orientation,
+                #                                                           vel_quaternion=action_quat_vel_sys)
+                # ee_velocity_NN = np.append(action_safeMP[0:3], euler_vel)
+                # ee_vel_quat_d = kuka_kinematics.angular_vel_to_quat_vel(angle_quaternion=xee_orientation, vel_angular=vel_ee[3:])
+                action_safeMP_pulled = self.controller_nullspace.control_law_vel(position_d=x_t_action[:3], #state_goal,
+                                                                                 orientation_d=x_t_action[3:], #orientation_goal,
+                                                                                 ee_pose=x_t[0],
+                                                                                 # ee_pose_t_1 =xee_list[-1],
+                                                                                 # ee_velocity=vel_ee,
+                                                                                 # ee_velocity_d=ee_velocity_NN,
+                                                                                 # ee_vel_quat = action_quat_vel_sys,
+                                                                                 # ee_vel_quat_d = ee_vel_quat_d,
+                                                                                 J=Jac_current)
+                                                                                 #dt=self.params["dt"])
             else:
                 print("not implemented!!")
 

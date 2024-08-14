@@ -15,20 +15,21 @@ import pytorch_kinematics as pk
 import torch
 from initializer import initialize_framework
 import copy
+import pybullet
 
 class example_kuka_fabrics():
-    def __init__(self):
+    def __init__(self, file_name="kuka_stableMP_fabrics_2nd"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = -1
         self.obstacles = []
         self.solver_times = []
-        with open("config/kuka_stableMP_fabrics_2nd.yaml", "r") as setup_stream:
+        with open("config/"+str(file_name)+".yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
 
-    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None):
+    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None, goal_vel=None):
         if render is not None:
             self.params["render"] = render
         if init_pos is not None:
@@ -45,6 +46,10 @@ class example_kuka_fabrics():
             self.params["positions_obstacles"] = positions_obstacles
         if params_name_1st is not None:
             self.params["params_name_1st"] = params_name_1st
+        if speed_obstacles is not None:
+            self.params["speed_obstacles"] = speed_obstacles
+        if goal_vel is not None:
+            self.params["goal_vel"] = goal_vel
 
     def initialize_environment(self):
         envir_trial = trial_environments()
@@ -170,7 +175,7 @@ class example_kuka_fabrics():
             self.params_name = self.params["params_name_1st"]
         else:
             self.params_name = self.params["params_name_2nd"]
-        print("self.params_name:", self.params_name)
+        print("self.params_name in fabrics:", self.params_name)
         q_init = ob['robot_0']["joint_state"]["position"][0:dof]
 
         # Load parameters
@@ -211,6 +216,11 @@ class example_kuka_fabrics():
                 self.obstacles = list(ob["robot_0"]["FullSensor"]["obstacles"].values())
             else:
                 self.obstacles = []
+
+            # recompute translation to goal pose:
+            self.goal_pos = [goal_pos[i] + self.params["goal_vel"][i]*self.params["dt"] for i in range(len(goal_pos))]
+            translation_gpu, translation_cpu = normalizations.translation_goal(state_goal=np.append(self.goal_pos, orientation_goal), goal_NN=goal_NN)
+            pybullet.addUserDebugPoints([goal_pos], [[1, 0, 0]], 5, 0.1)
 
             # --- end-effector states and normalized states --- #
             x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, quat_prev, mode_NN=self.params["mode_NN"], qdot=qdot)
@@ -271,7 +281,7 @@ class example_kuka_fabrics():
             "time_to_goal": self.time_to_goal,
             "xee_list": xee_list,
             "qdot_diff_list": qdot_diff_list,
-            "solver_times": self.solver_times,
+            "solver_times": np.array(self.solver_times)*1000,
             "solver_time": np.mean(self.solver_times),
             "solver_time_std": np.std(self.solver_times),
         }

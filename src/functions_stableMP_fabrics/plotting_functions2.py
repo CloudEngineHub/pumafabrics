@@ -112,11 +112,13 @@ class plotting_functions2():
 
         ax[0].plot(time_x, action_list[0, :])
         ax[0].plot(time_x, action_list[1, :])
-        ax[0].plot(time_x, action_list[2, :])
-        ax[0].plot(time_x, action_list[3, :])
-        ax[0].plot(time_x, action_list[4, :])
-        ax[0].plot(time_x, action_list[5, :])
-        ax[0].plot(time_x, action_list[6, :])
+        if len(action_list)>2:
+            ax[0].plot(time_x, action_list[2, :])
+        if len(action_list)>3:
+            ax[0].plot(time_x, action_list[3, :])
+            ax[0].plot(time_x, action_list[4, :])
+            ax[0].plot(time_x, action_list[5, :])
+            ax[0].plot(time_x, action_list[6, :])
 
         plt.show()
 

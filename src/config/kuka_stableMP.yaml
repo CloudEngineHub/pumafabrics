@@ -37,5 +37,7 @@ goal_pos: [0.60829608, 0.04368581, 0.252421]
 orientation_goal: [ 0.61566569, -0.37995015,  0.67837375, -0.12807299]
 dim_pos: 3
 dim_task: 7
+#params_name_1st: "1st_order_R3S3_converge"
+#params_name_2nd: "2nd_order_R3S3_saray"
 params_name_1st: "1st_order_R3S3_converge"
-params_name_2nd: "2nd_order_R3S3_saray"
+params_name_2nd: "2nd_order_R3S3_tomato_31may"
