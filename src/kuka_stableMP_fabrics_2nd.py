@@ -343,7 +343,7 @@ if __name__ == "__main__":
         np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
         np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
         np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        #others:
+        # others:
         np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
         np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
@@ -375,13 +375,13 @@ if __name__ == "__main__":
         [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
     speed_obstacles_list = [
-        #with goal changing:
+        # with goal changing:
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
-        #others:
+        # others:
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
@@ -421,8 +421,9 @@ if __name__ == "__main__":
         goal_vel_list[1] = [-0.01, 0., 0.]
     if len(q_init_list) > 2:
         goal_vel_list[2] = [-0.01, 0., 0.0]
+    n_runs = len(q_init_list)
     network_yaml = "kuka_stableMP_fabrics_2nd"
-    init_pos = [0.5312149701934061, 0.8355097803551061, 0.0700492926199493, -1.6651880968294615, 0.2936679665237496, -0.8774234085561443, -0.24231138029250487]
+    network_yaml_GOMP = "kuka_GOMP"
     example_class = example_kuka_stableMP_fabrics(file_name=network_yaml)
     index = 4
     example_class.overwrite_defaults(init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=True, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
