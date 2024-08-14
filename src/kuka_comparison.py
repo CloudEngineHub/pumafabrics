@@ -3,10 +3,9 @@ This file is to generate a comparison plot between safeMP and safeMP+fabrics and
 """
 
 import numpy as np
-from functions_stableMP_fabrics.environments import trial_environments
 from kuka_fabrics import example_kuka_fabrics
 from kuka_stableMP_R3S3 import example_kuka_stableMP_R3S3
-from kuka_stableMP_fabrics_theoremIII_5_2nd import example_kuka_stableMP_fabrics
+from src.examples.examples_old_14_aug.kuka_stableMP_fabrics_theoremIII_5_2nd import example_kuka_stableMP_fabrics
 from texttable import Texttable
 import latextable
 import copy

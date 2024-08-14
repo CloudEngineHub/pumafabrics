@@ -24,7 +24,7 @@ class example_kuka_stableMP_R3S3():
         self.IN_COLLISION = False
         self.time_to_goal = -1
         self.solver_times = []
-        with open("config/kuka_stableMP_fabrics_2nd.yaml", "r") as setup_stream:
+        with open("../../config/kuka_stableMP_fabrics_2nd.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.robot_name = self.params["robot_name"]
 

@@ -78,8 +78,6 @@ class comparison_kuka_class():
             results_tot["dist_to_NN"].append(distances)
             for key in results_i:
                 results_tot[key].append(results_i[key])
-        with open("simulation_kuka_"+case+"_pouring.pkl", 'wb') as f:
-            pickle.dump(results_tot, f)
         return results_tot
 
     def KukaComparison(self, q_init_list:list, positions_obstacles_list:list, speed_obstacles_list:list, network_yaml: str, network_yaml_GOMP:str, nr_obst:int, goal_pos_list=None, goal_vel_list=None):
@@ -104,11 +102,6 @@ class comparison_kuka_class():
         class_fabrics.overwrite_defaults(nr_obst=nr_obst)
         results_fabrics = self.run_i(class_fabrics, case=self.cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
-        # # --- hierarchical method ---#
-        # # (env, goal) = envir_trial.initalize_environment_pointmass(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)
-        # # example_hierachical = example_point_robot_hierarchical()
-        # # q_list_hierarchical = example_hierachical.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos, dt=dt, mode=mode, mode_NN=mode_NN)
-
         # run safe MP + fabrics example ---#
         class_GM = example_kuka_stableMP_fabrics(file_name=network_yaml)
         class_GM.overwrite_defaults(bool_energy_regulator=False, bool_combined=True, nr_obst=nr_obst)
@@ -120,13 +113,14 @@ class comparison_kuka_class():
         results_CM = self.run_i(class_CM, case=self.cases[5], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list)
 
         self.results = {self.cases[0]: results_stableMP, self.cases[1]: results_stableMP_obst, self.cases[2]: results_IK, self.cases[3]: results_fabrics, self.cases[4]: results_stableMP_fabrics, self.cases[5]: results_CM}
+        with open("results/data_files/simulation_kuka_2nd.pkl", 'wb') as f:
+            pickle.dump(self.results, f)
         return self.results
 
     def KukaComparisonLoad(self):
         results = {}
-        for case in self.cases:
-            file_i = open(f'simulation_kuka_{case}_pouring.pkl', 'rb')
-            results[case] = pickle.load(file_i)
+        file_i = open(f"results/data_files/simulation_kuka_2nd.pkl", 'rb')
+        results= pickle.load(file_i)
         return results
 
     def table_results(self, results):
@@ -174,7 +168,7 @@ if __name__ == "__main__":
         np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
         np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
         np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        #others:
+        # others:
         np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
         np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
@@ -206,13 +200,13 @@ if __name__ == "__main__":
         [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
     speed_obstacles_list = [
-        #with goal changing:
+        # with goal changing:
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
-        #others:
+        # others:
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
@@ -255,7 +249,6 @@ if __name__ == "__main__":
     n_runs = len(q_init_list)
     network_yaml = "kuka_stableMP_fabrics_2nd"
     network_yaml_GOMP = "kuka_GOMP"
-
     kuka_class = comparison_kuka_class(n_runs=n_runs)
     if LOAD_RESULTS == False:
         # Regenerate the results:
