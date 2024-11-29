@@ -28,6 +28,7 @@ class example_kuka_stableMP_fabrics():
         self.solver_times = []
         with open("config/"+file_name+".yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
+        self.network_yaml = file_name
         self.robot_name = self.params["robot_name"]
 
     def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None, goal_vel=None):
@@ -280,12 +281,17 @@ class example_kuka_stableMP_fabrics():
                 action_avoidance, M_avoidance, f_avoidance, qddot_speed = self.compute_action_fabrics(q=q, ob_robot=ob_robot)
 
                 if self.params["bool_energy_regulator"] == True:
+                    if self.network_yaml == "kuka_stableMP_fabrics_2nd_pouring":
+                        weight_attractor = 1.
+                    else:
+                        weight_attractor = 0.25
                     # ---- get action by NN via theorem III.5 in https://arxiv.org/pdf/2309.07368.pdf ---#
                     action_combined = energy_regulation_class.compute_action_theorem_III5(q=q, qdot=qdot,
                                                                                           qddot_attractor = qddot_stableMP,
                                                                                           action_avoidance=action_avoidance,
                                                                                           M_avoidance=M_avoidance,
-                                                                                          transition_info=transition_info)
+                                                                                          transition_info=transition_info,
+                                                                                          weight_attractor=weight_attractor)
                 else:
                     # --- get action by a simpler combination, sum of dissipative systems ---#
                     action_combined = qddot_stableMP + action_avoidance
@@ -407,7 +413,7 @@ if __name__ == "__main__":
         [0.58, -0.214, 0.115],
         [0.58, -0.214, 0.115],
         [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
+        [0.58, -0.25, 0.115],
         [0.58, -0.214, 0.115],
         [0.58, -0.214, 0.115],
         [0.58, -0.214, 0.115],
@@ -425,7 +431,7 @@ if __name__ == "__main__":
     network_yaml = "kuka_stableMP_fabrics_2nd"
     network_yaml_GOMP = "kuka_GOMP"
     example_class = example_kuka_stableMP_fabrics(file_name=network_yaml)
-    index = 4
+    index = 10
     example_class.overwrite_defaults(init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=True, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
     example_class.construct_example()
     res = example_class.run_kuka_example()

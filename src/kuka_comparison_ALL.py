@@ -158,7 +158,7 @@ class obtain_total_results():
             [0.58, -0.214, 0.115],
             [0.58, -0.214, 0.115],
             [0.58, -0.214, 0.115],
-            [0.58, -0.214, 0.115],
+            [0.58, -0.25,  0.115],
             [0.58, -0.214, 0.115],
             [0.58, -0.214, 0.115],
             [0.58, -0.214, 0.115],
@@ -283,7 +283,8 @@ class obtain_total_results():
         self.kuka_class_pouring = comparison_kuka_class(results=self.results, n_runs=n_runs)
         if LOAD_RESULTS == False:
             # Regenerate the results:
-            results_pouring = self.kuka_class_pouring.KukaComparison(q_init_list, positions_obstacles_list, speed_obstacles_list, network_yaml, network_yaml_GOMP, nr_obst, goal_pos_list, goal_vel_list)
+            results_pouring = self.kuka_class_pouring.KukaComparison(q_init_list, positions_obstacles_list, speed_obstacles_list, network_yaml, network_yaml_GOMP,
+                                                                     nr_obst, goal_pos_list, goal_vel_list)
         else:
             results_pouring = self.kuka_class_pouring.KukaComparisonLoad()
 
@@ -297,18 +298,18 @@ if __name__ == "__main__":
     if LOAD_RESULTS == False:
         results_tomato = total_results.produce_results_tomato()
         results_tomato_no_obst = total_results.produce_results_tomato(nr_obst=0)
-        with open("simulation_kuka_results_ALL_tomato.pkl", 'wb') as f:
-            pickle.dump(results_tomato , f)
-        with open("simulation_kuka_results_ALL_tomato_no_obst.pkl", 'wb') as f:
-            pickle.dump(results_tomato_no_obst, f)
+        # with open("simulation_kuka_results_ALL_tomato.pkl", 'wb') as f:
+        #     pickle.dump(results_tomato , f)
+        # with open("simulation_kuka_results_ALL_tomato_no_obst.pkl", 'wb') as f:
+        #     pickle.dump(results_tomato_no_obst, f)
         # file_i = open(f'simulation_kuka_results_pouring_complete.pkl', 'rb')
         # results_pouring = pickle.load(file_i)
         results_pouring = total_results.produce_results_pouring()
         results_pouring_no_obst = total_results.produce_results_pouring(nr_obst=0)
-        with open("simulation_kuka_results_ALL_pouring.pkl", 'wb') as f:
-            pickle.dump(results_pouring, f)
-        with open("simulation_kuka_results_ALL_pouring_no_obst.pkl", 'wb') as f:
-            pickle.dump(results_pouring_no_obst, f)
+        # with open("simulation_kuka_results_ALL_pouring.pkl", 'wb') as f:
+        #     pickle.dump(results_pouring, f)
+        # with open("simulation_kuka_results_ALL_pouring_no_obst.pkl", 'wb') as f:
+        #     pickle.dump(results_pouring_no_obst, f)
     else:
         file_i = open(f'simulation_kuka_results_ALL_tomato.pkl', 'rb')
         results_tomato = pickle.load(file_i)
@@ -316,8 +317,20 @@ if __name__ == "__main__":
         results_tomato_no_obst = pickle.load(file_i)
         file_i = open(f'simulation_kuka_results_ALL_pouring.pkl', 'rb')
         results_pouring = pickle.load(file_i)
+        #results_pouring = total_results.produce_results_pouring()
         file_i = open(f'simulation_kuka_results_ALL_pouring_no_obst.pkl', 'rb')
         results_pouring_no_obst = pickle.load(file_i)
+        #results_pouring_no_obst = total_results.produce_results_pouring(nr_obst=0)
+
+    #save latest results
+    with open("simulation_kuka_results_ALL_tomato.pkl", 'wb') as f:
+        pickle.dump(results_tomato, f)
+    with open("simulation_kuka_results_ALL_tomato_no_obst.pkl", 'wb') as f:
+        pickle.dump(results_tomato_no_obst, f)
+    with open("simulation_kuka_results_ALL_pouring.pkl", 'wb') as f:
+        pickle.dump(results_pouring, f)
+    with open("simulation_kuka_results_ALL_pouring_no_obst.pkl", 'wb') as f:
+        pickle.dump(results_pouring_no_obst, f)
     results_tot = total_results.append_results(results_tomato, results_pouring, results_tomato_no_obst, results_pouring_no_obst)
     #
     # # plot table of individual and collective results:

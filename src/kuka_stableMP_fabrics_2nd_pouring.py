@@ -21,7 +21,7 @@ import time
 import pybullet
 
 class example_kuka_stableMP_fabrics():
-    def __init__(self, file_name="kuka_stableMP_fabrics_2nd"): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
+    def __init__(self, file_name="kuka_stableMP_fabrics_2nd_pouring"): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = -1
@@ -285,7 +285,8 @@ class example_kuka_stableMP_fabrics():
                                                                                           qddot_attractor = qddot_stableMP,
                                                                                           action_avoidance=action_avoidance,
                                                                                           M_avoidance=M_avoidance,
-                                                                                          transition_info=transition_info)
+                                                                                          transition_info=transition_info,
+                                                                                          weight_attractor=1.)
                 else:
                     # --- get action by a simpler combination, sum of dissipative systems ---#
                     action_combined = qddot_stableMP + action_avoidance
@@ -343,7 +344,7 @@ if __name__ == "__main__":
         np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 2
         np.array((0.487286, -2.0944, 1.46101, 1.53229, -0.980283, 0.194411, 1.53735)),  # 3
         np.array((0.674393, -1.78043, 1.75829, 1.0226, 0.356607, -0.0418928, 0.283865)),  # 4
-        # others:
+        # # others:
         np.array((1.71414, -1.61, 1.18276, 1.47711, 2.75051, -1.18862, -1.57065)),  # 0, 5
         np.array((1.7, -1.5, 1.5, 1.47711, 2.75051, -1.18862, -1.2)),  # 1, 6
         np.array((-0.06968, -2.0944, 1.25021, 1.91157, -0.902882, 0.387756, 1.26118)),  # 2, 7
@@ -357,13 +358,13 @@ if __name__ == "__main__":
     ]
     positions_obstacles_list = [
         # changing
-        [[0., -0.65, 0.2], [0.5, 0., 10.1]],  # 0
-        [[0.0, -0.6, 0.22], [0.5, 0.2, 10.4]],  # 1
+        [[0., -0.6, 0.2], [0.5, 0., 10.1]],  # 0
+        [[0.0, -0.6, 0.2], [0.5, 0.2, 10.4]],  # 1
         [[-0.20, -0.72, 0.22], [0.24, 0.45, 10.2]],  # 2
         [[-0.1, -0.65, 0.4], [0.6, 0.02, 10.2]],  # 3
         [[-0.1, -0.5, 0.22], [0.3, -0.1, 10.5]],  # 4
-        # #others:
-        [[0.1, -0.6, 0.4], [0.5, 0., 10.1]],  # 0
+        # # #others:
+        [[0.1, -0.56, 0.3], [0.5, 0., 10.1]],  # 0
         [[0.15, -0.6, 0.3], [0.5, 0.15, 0.2]],  # 1
         [[-0.1, -0.72, 0.22], [0.6, 0.02, 10.2]],  # 2
         [[-0.1, -0.72, 0.22], [0.3, -0.1, 10.5]],  # 3
@@ -375,13 +376,13 @@ if __name__ == "__main__":
         [[0.0, -0.6, 0.10], [0.5, 0.2, 10.4]],  # 9
     ]
     speed_obstacles_list = [
-        # changing goal pose:
+        # # changing goal pose:
         [[0.03, 0., 0.], [0., 0., 0.]],  # 0
-        [[0., 0., 0.], [0., 0., 0.]],  # 1
+        [[0.03, 0., 0.], [0., 0., 0.]],  # 1
         [[0.02, 0., 0.], [0., 0., 0.]],  # 2
         [[0.03, 0., 0.], [0., 0., 0.]],  # 3
         [[0.05, 0., 0.], [0., 0., 0.]],  # 4
-        # others:
+        # # others:
         [[0., 0., 0.], [0., 0., 0.]],  # 0
         [[0., 0., 0.], [0., 0., 0.]],  # 1
         [[0.05, 0., 0.], [0., 0., 0.]],  # 2
@@ -394,13 +395,13 @@ if __name__ == "__main__":
         [[0., 0., 0.], [0., 0., 0.]],  # 9
     ]
     goal_pos_list = [
-        # #changing goal pose:
+        # # #changing goal pose:
         [-0.20, -0.72, 0.15],
-        [-0.20, -0.62, 0.4],
+        [-0.20, -0.72, 0.15],
         [-0.20, -0.72, 0.22],
         [-0.20, -0.62, 0.6],
         [-0.20, -0.62, 0.22],
-        # others:
+        # # others:
         [-0.09486833, -0.72446137, 0.22143809],
         [-0.09486833, -0.72446137, 0.22143809],
         [-0.09486833, -0.72446137, 0.22143809],
@@ -424,8 +425,10 @@ if __name__ == "__main__":
     network_yaml = "kuka_stableMP_fabrics_2nd_pouring"
     network_yaml_GOMP = "kuka_GOMP_pouring"
     example_class = example_kuka_stableMP_fabrics(file_name=network_yaml)
-    index = 5
-    example_class.overwrite_defaults(init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=True, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
+    index = 0
+    example_class.overwrite_defaults(nr_obst=0, init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index],
+                                     render=True, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index],
+                                     goal_vel=goal_vel_list[index])
     example_class.construct_example()
     res = example_class.run_kuka_example()
 
