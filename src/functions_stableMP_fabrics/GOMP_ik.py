@@ -9,12 +9,13 @@ import copy
 import spatial_casadi as sc
 
 class IKGomp():
-    def __init__(self, q_home=None):
+    def __init__(self, q_home=None, end_link_name='iiwa_link_7'):
         # Current robot's state
         if q_home is None:
             self.q_home = np.array([0.0, 0.0, 1.5, 1.5, 0.0, 0.0, 0.0], dtype=float)
         else:
             self.q_home = q_home
+        self.end_link_name = end_link_name
 
     def construct_ik(self, urdf_path="/../examples/urdfs/iiwa14.urdf", nr_obst=0):
         # URDF model
@@ -24,7 +25,7 @@ class IKGomp():
         # Create IK solver
         self.planner = IK_OPTIM(urdf=URDF_FILE,
                            root_link='world',
-                           end_link='iiwa_link_ee')
+                           end_link='iiwa_link_7')
         self.planner.set_init_guess(self.q_home)
         self.planner.set_boundary_conditions()  # joint limits
 
@@ -34,7 +35,7 @@ class IKGomp():
 
         # Define collision constraint for each link
         active_links = [f'iiwa_link_{i}' for i in range(8)]
-        active_links.append('iiwa_link_ee')
+        active_links.append('iiwa_link_7')
         for i in range(nr_obst):
             self.planner.add_collision_constraint(name="sphere_col_"+str(i),
                                                   link_names=active_links,

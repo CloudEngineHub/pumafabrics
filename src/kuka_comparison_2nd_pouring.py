@@ -85,32 +85,44 @@ class comparison_kuka_class():
         # --- run safe MP (only) example ---#
         class_SMP = example_kuka_stableMP_fabrics(file_name=network_yaml)
         class_SMP.overwrite_defaults(bool_combined=False, nr_obst=0)
-        results_stableMP = self.run_i(class_SMP, case=self.cases[0], q_init_list=q_init_list, results_stableMP=None, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
+        results_stableMP = self.run_i(class_SMP, case=self.cases[0], q_init_list=q_init_list, results_stableMP=None,
+                                      positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                      goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         # --- run safe MP (only) example ---#
         class_SMP_obst = example_kuka_stableMP_fabrics(file_name=network_yaml)
         class_SMP_obst.overwrite_defaults(bool_combined=False, nr_obst=nr_obst)
-        results_stableMP_obst = self.run_i(class_SMP_obst, case=self.cases[1], q_init_list=q_init_list, results_stableMP=None, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
+        results_stableMP_obst = self.run_i(class_SMP_obst, case=self.cases[1], q_init_list=q_init_list, results_stableMP=None,
+                                           positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                           goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         # run the occlusion-based IK baseline ---#
         class_IK = example_kuka_stableMP_GOMP(file_name=network_yaml_GOMP)
         class_IK.overwrite_defaults(bool_energy_regulator=True, bool_combined=True, render=True, nr_obst=nr_obst)
-        results_IK = self.run_i(class_IK, case=self.cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
+        results_IK = self.run_i(class_IK, case=self.cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP,
+                                positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         # --- run fabrics (only) example ---#
         class_fabrics = example_kuka_fabrics(file_name=network_yaml)
         class_fabrics.overwrite_defaults(nr_obst=nr_obst)
-        results_fabrics = self.run_i(class_fabrics, case=self.cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
+        results_fabrics = self.run_i(class_fabrics, case=self.cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP,
+                                     positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                     goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         # run safe MP + fabrics example ---#
         class_GM = example_kuka_stableMP_fabrics(file_name=network_yaml)
         class_GM.overwrite_defaults(bool_energy_regulator=False, bool_combined=True, nr_obst=nr_obst)
-        results_stableMP_fabrics = self.run_i(class_GM, case=self.cases[4], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list)
+        results_stableMP_fabrics = self.run_i(class_GM, case=self.cases[4], q_init_list=q_init_list, results_stableMP=results_stableMP,
+                                              positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                              goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         # run theorem III.5 ---#
         class_CM = example_kuka_stableMP_fabrics(file_name=network_yaml)
         class_CM.overwrite_defaults(bool_energy_regulator=True, bool_combined=True, nr_obst=nr_obst)
-        results_CM = self.run_i(class_CM, case=self.cases[5], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list)
+        results_CM = self.run_i(class_CM, case=self.cases[5], q_init_list=q_init_list, results_stableMP=results_stableMP,
+                                positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         self.results = {self.cases[0]: results_stableMP, self.cases[1]: results_stableMP_obst, self.cases[2]: results_IK, self.cases[3]: results_fabrics, self.cases[4]: results_stableMP_fabrics, self.cases[5]: results_CM}
         with open("results/data_files/simulation_kuka_2nd9.pkl", 'wb') as f:

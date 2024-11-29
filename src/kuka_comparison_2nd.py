@@ -13,8 +13,10 @@ from texttable import Texttable
 import latextable
 import copy
 import pickle
+from scipy.interpolate import interp1d
 from scipy import interpolate
 from functions_stableMP_fabrics.plotting_functions import plotting_functions
+import matplotlib.pyplot as plt
 
 class comparison_kuka_class():
     def __init__(self, results=None, n_runs=10):
@@ -44,6 +46,15 @@ class comparison_kuka_class():
 
         return resampled_path.tolist()
 
+    def interpolate_positions(self, positions, dt_varying, dt_fixed, length):
+        timesteps_fixed = np.linspace(0.0, (length-1)*dt_fixed, length)
+        position_set = np.zeros((length, 3))
+        for i in range(3):
+            positions_i = np.array(positions)[:, i]
+            interp_function = interp1d(dt_varying, list(positions_i), kind='linear', axis=0, fill_value="extrapolate")
+            position_set[:, i] = interp_function(timesteps_fixed)
+        return position_set
+
     def distance_to_NN(self, xee_list_SMP, xee_list):
         """
         Note: currently distance position AND orientation!!
@@ -58,7 +69,47 @@ class comparison_kuka_class():
         distance_std = np.std(distances)
         return distances, distance, distance_std
 
-    def run_i(self, example_class, case:str, q_init_list:list, results_stableMP=None, positions_obstacles_list=[], speed_obstacles_list=[], goal_pos_list=None, goal_vel_list=None):
+    def resample_path_new(self, original_list, target_length):
+        resampled_list = np.zeros((target_length, 3))
+        original_indices = np.linspace(0, len(original_list) - 1, num=len(original_list))
+        target_indices = np.linspace(0, len(original_list) - 1, num=target_length)
+        for i in range(3):
+            resampled_list[:, i] = np.interp(target_indices, original_indices, original_list[:, i])
+        return resampled_list
+
+    def plot_trajectories_2D(self, xee_list, x_demonstrations, xee_list_original, x_demonstrations_original, case):
+        plt.figure(figsize=(6, 4))
+        plt.plot(xee_list_original[:, 0], xee_list_original[:, 1], label='x_ee', color='purple')
+        plt.plot(x_demonstrations_original[:, 0], x_demonstrations_original[:, 1], label='demonstrations', color='blue', linewidth=3)
+        plt.plot(xee_list[:, 0], xee_list[:, 1], label='x_ee', color='purple', marker='o', linewidth=3)
+        plt.plot(x_demonstrations[:, 0], x_demonstrations[:, 1], label='demonstrations', color='blue', marker='o')
+        plt.plot(x_demonstrations[-1, 0], x_demonstrations[-1, 1], label="goal", color='green', marker='x', linewidth=5)
+        # plt.axis([0.3, 1., -0.6, 0.6])
+        plt.legend()
+        plt.title("trajectories for" + case)
+        plt.show()
+
+    def distance_to_demonstration(self, xee_list, xee_demonstrations, xee_list_dt = 0.02, case="some_case"):
+        length = 100
+        x_pos_demonstrations = xee_demonstrations["x_pos"]
+        len_demonstrations = len(x_pos_demonstrations)
+        len_xee = len(xee_list)
+        dt_demonstrations = xee_demonstrations["delta_t"]
+        if len_demonstrations<len_xee:
+            len_interpolate = len_demonstrations
+        else:
+            len_interpolate = len_xee
+        demonstrations_fixed_dt =  self.interpolate_positions(x_pos_demonstrations, dt_demonstrations, xee_list_dt, len_interpolate)
+        interpolated_demonstrations = self.resample_path_new(np.array(x_pos_demonstrations), len_interpolate)
+        interpolated_xee_list = self.resample_path_new(np.array(xee_list), len_interpolate)
+        self.plot_trajectories_2D(interpolated_xee_list, interpolated_demonstrations, np.array(xee_list), np.array(xee_demonstrations['x_pos']), case)
+        distances = np.linalg.norm(np.array(xee_list[0:len_interpolate]) - np.array(interpolated_demonstrations[0:len_interpolate]), axis=1)
+        distance = np.mean(distances)
+        distance_std = np.std(distances)
+        return distances, distance, distance_std
+
+    def run_i(self, example_class, case:str, q_init_list:list, results_stableMP=None, positions_obstacles_list=[],
+              speed_obstacles_list=[], goal_pos_list=None, goal_vel_list=None, xee_demonstrations=None):
         results_tot = copy.deepcopy(self.results)
         example_class.overwrite_defaults(render=False)
         for i_run in range(self.n_runs):
@@ -69,48 +120,70 @@ class comparison_kuka_class():
             example_class.overwrite_defaults(init_pos=q_init_list[i_run], positions_obstacles=positions_obstacles_list[i_run], speed_obstacles=speed_obstacles_list[i_run])
             example_class.construct_example()
             results_i = example_class.run_kuka_example()
-            if case == "GF" and results_i["goal_reached"] == False:
-                print("i_run:", i_run)
-            if results_stableMP is None:
-                distances, _, _ = self.distance_to_NN(results_i["xee_list"], results_i["xee_list"])
+            if xee_demonstrations == None:
+                print("wrong distance checker activitated!!!!!!")
+                if case == "GF" and results_i["goal_reached"] == False:
+                    print("i_run:", i_run)
+                if results_stableMP is None:
+                    distances, _, _ = self.distance_to_NN(results_i["xee_list"], results_i["xee_list"])
+                else:
+                    distances, _, _ = self.distance_to_NN(results_stableMP["xee_list"][i_run], results_i["xee_list"])
             else:
-                distances, _, _ = self.distance_to_NN(results_stableMP["xee_list"][i_run], results_i["xee_list"])
+                xee_positions_list = [results_i["xee_list"][z][0:3] for z in range(len(results_i["xee_list"]))]
+                distances, _, _ = self.distance_to_demonstration(xee_positions_list,
+                                                                 xee_demonstrations[f"ee_state_{i_run}"],
+                                                                 xee_list_dt=example_class.params["dt"],
+                                                                 case=case)
             results_tot["dist_to_NN"].append(distances)
             for key in results_i:
                 results_tot[key].append(results_i[key])
         return results_tot
 
-    def KukaComparison(self, q_init_list:list, positions_obstacles_list:list, speed_obstacles_list:list, network_yaml: str, network_yaml_GOMP:str, nr_obst:int, goal_pos_list=None, goal_vel_list=None):
+    def KukaComparison(self, q_init_list:list, positions_obstacles_list:list, speed_obstacles_list:list,
+                       network_yaml: str, network_yaml_GOMP:str, nr_obst:int, goal_pos_list=None,
+                       goal_vel_list=None, xee_demonstrations=None):
 
         # --- run safe MP (only) example ---#
         class_SMP = example_kuka_stableMP_fabrics(file_name=network_yaml)
         class_SMP.overwrite_defaults(bool_combined=False, nr_obst=0)
-        results_stableMP = self.run_i(class_SMP, case=self.cases[0], q_init_list=q_init_list, results_stableMP=None, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
+        results_stableMP = self.run_i(class_SMP, case=self.cases[0], q_init_list=q_init_list, results_stableMP=None,
+                                      positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                      goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         # --- run safe MP (only) example ---#
         class_SMP_obst = example_kuka_stableMP_fabrics(file_name=network_yaml)
         class_SMP_obst.overwrite_defaults(bool_combined=False, nr_obst=nr_obst)
-        results_stableMP_obst = self.run_i(class_SMP_obst, case=self.cases[1], q_init_list=q_init_list, results_stableMP=None, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
+        results_stableMP_obst = self.run_i(class_SMP_obst, case=self.cases[1], q_init_list=q_init_list, results_stableMP=None,
+                                           positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                           goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         # run the occlusion-based IK baseline ---#
         class_IK = example_kuka_stableMP_GOMP(file_name=network_yaml_GOMP)
         class_IK.overwrite_defaults(bool_energy_regulator=True, bool_combined=True, render=True, nr_obst=nr_obst)
-        results_IK = self.run_i(class_IK, case=self.cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
+        results_IK = self.run_i(class_IK, case=self.cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP,
+                                positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         # --- run fabrics (only) example ---#
         class_fabrics = example_kuka_fabrics(file_name=network_yaml)
         class_fabrics.overwrite_defaults(nr_obst=nr_obst)
-        results_fabrics = self.run_i(class_fabrics, case=self.cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list, goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
+        results_fabrics = self.run_i(class_fabrics, case=self.cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP,
+                                     positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                     goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         # run safe MP + fabrics example ---#
         class_GM = example_kuka_stableMP_fabrics(file_name=network_yaml)
         class_GM.overwrite_defaults(bool_energy_regulator=False, bool_combined=True, nr_obst=nr_obst)
-        results_stableMP_fabrics = self.run_i(class_GM, case=self.cases[4], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list)
+        results_stableMP_fabrics = self.run_i(class_GM, case=self.cases[4], q_init_list=q_init_list, results_stableMP=results_stableMP,
+                                              positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                              goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         # run theorem III.5 ---#
         class_CM = example_kuka_stableMP_fabrics(file_name=network_yaml)
         class_CM.overwrite_defaults(bool_energy_regulator=True, bool_combined=True, nr_obst=nr_obst)
-        results_CM = self.run_i(class_CM, case=self.cases[5], q_init_list=q_init_list, results_stableMP=results_stableMP, positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list)
+        results_CM = self.run_i(class_CM, case=self.cases[5], q_init_list=q_init_list, results_stableMP=results_stableMP,
+                                positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
+                                goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         self.results = {self.cases[0]: results_stableMP, self.cases[1]: results_stableMP_obst, self.cases[2]: results_IK, self.cases[3]: results_fabrics, self.cases[4]: results_stableMP_fabrics, self.cases[5]: results_CM}
         with open("results/data_files/simulation_kuka_2nd.pkl", 'wb') as f:

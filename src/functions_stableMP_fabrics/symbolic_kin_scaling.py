@@ -5,7 +5,7 @@ class SymbolicKinScaling:
     def __init__(self):
         dt = 0.01
 
-    def forward_kinematics_symbolic(self, q, end_link_name="iiwa_link_ee", fk=None):
+    def forward_kinematics_symbolic(self, q, end_link_name="iiwa_link_7", fk=None):
         x_fk = fk.fk(q=q, parent_link="iiwa_link_0", child_link=end_link_name, positionOnly=False)
         pos = x_fk[:3, 3]
         rot_matrix = x_fk[:3, :3]

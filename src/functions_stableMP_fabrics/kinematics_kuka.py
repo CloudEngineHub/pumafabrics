@@ -10,7 +10,7 @@ import casadi as ca
 from functions_stableMP_fabrics.filters import ema_filter_deriv
 
 class KinematicsKuka(object):
-    def __init__(self, end_link_name="iiwa_link_ee", robot_name="iiwa14", dt=0.01):
+    def __init__(self, end_link_name="iiwa_link_7", robot_name="iiwa14", dt=0.01):
         self.robot_name = robot_name
         self.construct_chain(end_link_name=end_link_name)
         self.dt=dt
@@ -18,7 +18,7 @@ class KinematicsKuka(object):
         self.len_max_list=10
         self.Jac_dot_list = []
 
-    def construct_chain(self, end_link_name="iiwa_link_ee"):
+    def construct_chain(self, end_link_name="iiwa_link_7"):
         """
         To be able to process the urdf, I had to comment out the first line of iiwa7.urdf:
         <!-- ?xml version="1.0" encoding="utf-8"?> -->
@@ -44,7 +44,7 @@ class KinematicsKuka(object):
             self.Jacobian_vec = self.Jacobian_vec[-self.len_max_list:]
         return self.Jacobian_vec
 
-    def forward_kinematics(self, q, end_link_name="iiwa_link_ee"):
+    def forward_kinematics(self, q, end_link_name="iiwa_link_7"):
         x_fk = self.chain.forward_kinematics(q, end_only=False)[end_link_name]
         m = x_fk.get_matrix()
         pos = torch.Tensor.numpy(m[:, :3, 3])[0]
@@ -289,7 +289,7 @@ class KinematicsKuka(object):
 
         return quat_new
 
-    def forward_kinematics_symbolic(self, end_link_name="iiwa_link_ee", fk=None):
+    def forward_kinematics_symbolic(self, end_link_name="iiwa_link_7", fk=None):
         #x_fk = fk.fk(q=q, parent_link="iiwa_link_0", child_link=end_link_name, positionOnly=False)
         q = fk._q_ca
         x_fk= fk.casadi(q=q,

@@ -18,7 +18,8 @@ class obtain_total_results():
         self.results_tot = {"PUMA$_free$": {"solver_times":[]}, "PUMA$_obst$": {"solver_times":[]},  "Occlusion-IK": {"solver_times":[]}, "GF": {"solver_times":[]}, "GM": {"solver_times":[]}, "CM": {"solver_times":[]}}
         self.results = {"min_distance": [], "collision": [], "goal_reached": [], "time_to_goal": [], "xee_list": [], "qdot_diff_list": [],
            "dist_to_NN": [],  "vel_to_NN": [], "solver_times": [], "solver_time": [], "solver_time_std": []}
-        self.n_runs_total = 20
+        self.kuka_class_tomato = comparison_kuka_class()
+        self.kuka_class_pouring= comparison_kuka_class()
 
     def append_results(self, results_0, results_1, results_0_no_obst, results_1_no_obst):
         results_tot = copy.deepcopy(self.results_tot)
@@ -37,9 +38,9 @@ class obtain_total_results():
     def table_results_individual(self, results_tomato, results_pouring, results_tomato_no_obst, results_pouring_no_obst):
         print("%%%%%%%%%%%%%%%%%% results tomato with 2 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         self.kuka_class_tomato.table_results(results_tomato)
-        print("%%%%%%%%%%%%%%%%%% results tomato with 2 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        print("%%%%%%%%%%%%%%%%%% results pouring with 2 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         self.kuka_class_pouring.table_results(results_pouring)
-        print("%%%%%%%%%%%%%%%%%% results pouring with 0 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        print("%%%%%%%%%%%%%%%%%% results tomato with 0 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         self.kuka_class_tomato.table_results(results_tomato_no_obst)
         print("%%%%%%%%%%%%%%%%%% results pouring with 0 obstacles: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         self.kuka_class_pouring.table_results(results_pouring_no_obst)
@@ -67,7 +68,7 @@ class obtain_total_results():
                     np.round(np.nanstd(results[case]["min_distance"]), decimals=2))
 
             rows.append([case,
-                         str(np.round(np.sum(results[case]["goal_reached"]) / n_runs, decimals=1)), #+ "+-" + str(np.round(np.nanstd(results[case]["goal_reached"]), decimals=4)),
+                         str(np.round(np.sum(results[case]["goal_reached"]) / n_runs, decimals=2)), #+ "+-" + str(np.round(np.nanstd(results[case]["goal_reached"]), decimals=4)),
                          str(np.round(np.nanmean(results[case]["time_to_goal"]), decimals=4)) + " $\pm$ " + str(np.round(np.nanstd(results[case]["time_to_goal"]), decimals=4)),
                          # collision_episodes_rate_str,
                          min_clearance_str,
@@ -291,21 +292,32 @@ class obtain_total_results():
         return results_pouring
 
 if __name__ == "__main__":
+    LOAD_RESULTS=True
     total_results = obtain_total_results()
-    results_tomato = total_results.produce_results_tomato()
-    results_tomato_no_obst = total_results.produce_results_tomato(nr_obst=0)
-    with open("simulation_kuka_results_ALL_tomato.pkl", 'wb') as f:
-        pickle.dump(results_tomato , f)
-    with open("simulation_kuka_results_ALL_tomato_no_obst.pkl", 'wb') as f:
-        pickle.dump(results_tomato_no_obst, f)
-    file_i = open(f'simulation_kuka_results_pouring_complete.pkl', 'rb')
-    results_pouring = pickle.load(file_i)
-    #results_pouring = total_results.produce_results_pouring()
-    results_pouring_no_obst = total_results.produce_results_pouring(nr_obst=0)
-    with open("simulation_kuka_results_ALL_pouring.pkl", 'wb') as f:
-        pickle.dump(results_pouring, f)
-    with open("simulation_kuka_results_ALL_pouring_no_obst.pkl", 'wb') as f:
-        pickle.dump(results_pouring_no_obst, f)
+    if LOAD_RESULTS == False:
+        results_tomato = total_results.produce_results_tomato()
+        results_tomato_no_obst = total_results.produce_results_tomato(nr_obst=0)
+        with open("simulation_kuka_results_ALL_tomato.pkl", 'wb') as f:
+            pickle.dump(results_tomato , f)
+        with open("simulation_kuka_results_ALL_tomato_no_obst.pkl", 'wb') as f:
+            pickle.dump(results_tomato_no_obst, f)
+        # file_i = open(f'simulation_kuka_results_pouring_complete.pkl', 'rb')
+        # results_pouring = pickle.load(file_i)
+        results_pouring = total_results.produce_results_pouring()
+        results_pouring_no_obst = total_results.produce_results_pouring(nr_obst=0)
+        with open("simulation_kuka_results_ALL_pouring.pkl", 'wb') as f:
+            pickle.dump(results_pouring, f)
+        with open("simulation_kuka_results_ALL_pouring_no_obst.pkl", 'wb') as f:
+            pickle.dump(results_pouring_no_obst, f)
+    else:
+        file_i = open(f'simulation_kuka_results_ALL_tomato.pkl', 'rb')
+        results_tomato = pickle.load(file_i)
+        file_i = open(f'simulation_kuka_results_ALL_tomato_no_obst.pkl', 'rb')
+        results_tomato_no_obst = pickle.load(file_i)
+        file_i = open(f'simulation_kuka_results_ALL_pouring.pkl', 'rb')
+        results_pouring = pickle.load(file_i)
+        file_i = open(f'simulation_kuka_results_ALL_pouring_no_obst.pkl', 'rb')
+        results_pouring_no_obst = pickle.load(file_i)
     results_tot = total_results.append_results(results_tomato, results_pouring, results_tomato_no_obst, results_pouring_no_obst)
     #
     # # plot table of individual and collective results:
