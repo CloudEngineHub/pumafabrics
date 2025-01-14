@@ -23,7 +23,7 @@ class example_kuka_stableMP_fabrics_20():
     def __init__(self): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
-        self.time_to_goal = -1
+        self.time_to_goal = float("nan")
         self.solver_times = []
         with open("config/kuka_stableMP_fabrics_2nd.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
@@ -61,7 +61,7 @@ class example_kuka_stableMP_fabrics_20():
         envir_trial = trial_environments()
         self.params["nr_obst"]=2
         (self.env, self.goal) = envir_trial.initialize_environment_kuka(params=self.params)
-        self.params["nr_obst"]=100
+        self.params["nr_obst"]=1000
 
     def construct_fk(self):
         absolute_path = os.path.dirname(os.path.abspath(__file__))

@@ -24,7 +24,7 @@ class example_kuka_stableMP_fabrics():
     def __init__(self, file_name="kuka_stableMP_fabrics_2nd"): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
-        self.time_to_goal = -1
+        self.time_to_goal = float("nan")
         self.solver_times = []
         with open("config/"+file_name+".yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
@@ -284,7 +284,7 @@ class example_kuka_stableMP_fabrics():
                     if self.network_yaml == "kuka_stableMP_fabrics_2nd_pouring":
                         weight_attractor = 1.
                     else:
-                        weight_attractor = 0.25
+                        weight_attractor = 1.
                     # ---- get action by NN via theorem III.5 in https://arxiv.org/pdf/2309.07368.pdf ---#
                     action_combined = energy_regulation_class.compute_action_theorem_III5(q=q, qdot=qdot,
                                                                                           qddot_attractor = qddot_stableMP,
@@ -431,7 +431,7 @@ if __name__ == "__main__":
     network_yaml = "kuka_stableMP_fabrics_2nd"
     network_yaml_GOMP = "kuka_GOMP"
     example_class = example_kuka_stableMP_fabrics(file_name=network_yaml)
-    index = 10
+    index = 1
     example_class.overwrite_defaults(init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=True, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
     example_class.construct_example()
     res = example_class.run_kuka_example()

@@ -25,7 +25,7 @@ class example_kuka_stableMP_fabrics():
     def __init__(self): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
-        self.time_to_goal = -1
+        self.time_to_goal = float("nan")
         self.solver_times = []
         with open("config/kuka_stableMP_GOMP_2nd.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)

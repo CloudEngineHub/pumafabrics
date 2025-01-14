@@ -24,7 +24,7 @@ class example_kuka_stableMP_fabrics():
     def __init__(self, file_name="kuka_stableMP_fabrics_2nd_pouring"): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
-        self.time_to_goal = -1
+        self.time_to_goal = float("nan")
         self.solver_times = []
         with open("config/"+file_name+".yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
@@ -406,7 +406,7 @@ if __name__ == "__main__":
         [-0.09486833, -0.72446137, 0.22143809],
         [-0.09486833, -0.72446137, 0.22143809],
         [-0.09486833, -0.72446137, 0.22143809],
-        [-0.09486833, -0.72446137, 0.22143809],
+        [-0.09486833, -0.68446137, 0.22143809],
         [-0.09486833, -0.72446137, 0.22143809],
         [-0.09486833, -0.72446137, 0.22143809],
         [-0.09486833, -0.72446137, 0.22143809],
@@ -425,8 +425,8 @@ if __name__ == "__main__":
     network_yaml = "kuka_stableMP_fabrics_2nd_pouring"
     network_yaml_GOMP = "kuka_GOMP_pouring"
     example_class = example_kuka_stableMP_fabrics(file_name=network_yaml)
-    index = 0
-    example_class.overwrite_defaults(nr_obst=0, init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index],
+    index = 9
+    example_class.overwrite_defaults(nr_obst=2, init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index],
                                      render=True, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index],
                                      goal_vel=goal_vel_list[index])
     example_class.construct_example()

@@ -112,7 +112,10 @@ class comparison_kuka_class():
               speed_obstacles_list=[], goal_pos_list=None, goal_vel_list=None, xee_demonstrations=None):
         results_tot = copy.deepcopy(self.results)
         example_class.overwrite_defaults(render=False)
+        # if case == "GF":
+        #     example_class.overwrite_defaults(render=True)
         for i_run in range(self.n_runs):
+            print("case: ", case, ", run_id: ", i_run)
             if goal_pos_list is not None:
                 example_class.overwrite_defaults(goal_pos=goal_pos_list[i_run])
             if goal_vel_list is not None:
@@ -220,7 +223,7 @@ class comparison_kuka_class():
                          # collision_episodes_rate_str,
                          min_clearance_str,
                          str(np.round(np.nanmean(np.concatenate(results[case]["solver_times"], axis=0)), decimals=6)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["solver_times"], axis=0)), decimals=6)),
-                         str(np.round(np.nanmean(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)),
+                         str(np.round(np.nanmedian(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)),
                          str(np.round(np.nanmean(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)),
                          ])
         table = Texttable()

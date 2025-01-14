@@ -21,7 +21,7 @@ class example_kuka_fabrics():
     def __init__(self, file_name="kuka_stableMP_fabrics_2nd"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
-        self.time_to_goal = -1
+        self.time_to_goal = float("nan")
         self.obstacles = []
         self.solver_times = []
         with open("config/"+str(file_name)+".yaml", "r") as setup_stream:

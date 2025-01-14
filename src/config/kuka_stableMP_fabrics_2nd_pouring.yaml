@@ -23,7 +23,7 @@ collision_geometry: "-0.01 / (x ** 1) * xdot ** 2"
 collision_finsler: "0.01/(x**2) * xdot**2"
 #default settings:
 render: True
-bool_energy_regulator: True
+bool_energy_regulator: False
 bool_combined: True
 bool_speed_control: True
 bool_extensive_concretize: True

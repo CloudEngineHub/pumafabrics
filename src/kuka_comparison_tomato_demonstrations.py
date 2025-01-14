@@ -69,11 +69,11 @@ class comparisonDemonstrations():
         LOAD_RESULTS = False
         nr_obst = nr_obst
         positions_obstacles_list = [
-            # with goal changing:
+            # # with goal changing:
             [[0.5, 0., 0.55], [0.5, 0., 10.1]],
-            [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
+            [[0.55, 0.15, 0.05], [0.55, 0.15, 0.23]], #[[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]], #[[0.55, 0.15, 0.05], [0.55, 0.15, 0.23]], #changed
             [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
-            [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
+            [[0.45, 0.02, 0.28], [0.7, 0.02, 0.28]], #[[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]], #[[0.45, 0.02, 0.28], [0.7, 0.02, 0.28]], #3 changed
             [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
             # others:
             [[0.5, 0., 0.55], [0.5, 0., 10.1]],
@@ -88,7 +88,7 @@ class comparisonDemonstrations():
             [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
         ]
         speed_obstacles_list = [
-            # with goal changing:
+            # # with goal changing:
             [[0., 0., 0.], [0., 0., 0.]],
             [[0., 0., 0.], [0., 0., 0.]],
             [[0., 0., 0.], [0., 0., 0.]],
@@ -110,6 +110,11 @@ class comparisonDemonstrations():
         goal_vel_list = [
             [0., 0., 0.] for _ in range(len(q_init_list))
         ]
+        goal_vel_list[0] = [0., 0., 0.]
+        if len(q_init_list) > 1:
+            goal_vel_list[1] = [-0.01, 0., 0.]
+        if len(q_init_list) > 2:
+            goal_vel_list[2] = [-0.01, 0., 0.0]
         n_runs = len(q_init_list)
         network_yaml = "kuka_stableMP_fabrics_2nd"
         network_yaml_GOMP = "kuka_GOMP"
