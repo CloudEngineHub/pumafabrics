@@ -1,24 +1,18 @@
-from copy import deepcopy
-import gymnasium as gym
-from urdfenvs.urdf_common.urdf_env import UrdfEnv
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
-from urdfenvs.robots.generic_urdf import GenericUrdfReacher
-from urdfenvs.sensors.full_sensor import FullSensor
 from mpscenes.goals.goal_composition import GoalComposition
-from mpscenes.obstacles.sphere_obstacle import SphereObstacle
-from functions_stableMP_fabrics.environments import trial_environments
+from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
 import numpy as np
 import os
-from functions_stableMP_fabrics.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from src.functions_stableMP_fabrics.geometry_IL import construct_IL_geometry
-from functions_stableMP_fabrics.plotting_functions import plotting_functions
+from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
+from pumafabrics.tamed_puma.kinematics.geometry_IL import construct_IL_geometry
+from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
 
-from tools.animation import TrajectoryPlotter
+from pumafabrics.puma_adapted.tools.animation import TrajectoryPlotter
 import torch
 import matplotlib.pyplot as plt
 import importlib
-from initializer import initialize_framework
-from agent.utils.normalizations import normalizaton_sim_NN
+from pumafabrics.puma_adapted.initializer import initialize_framework
+from pumafabrics.tamed_puma.utils.normalizations import normalizaton_sim_NN
 # TODO hardcoding the indices for subgoal_1 is undesired
 
 class example_planar_stableMP():

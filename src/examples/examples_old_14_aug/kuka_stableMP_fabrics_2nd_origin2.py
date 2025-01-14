@@ -1,12 +1,10 @@
 import os
-import gymnasium as gym
-import yaml
 import numpy as np
 import casadi as ca
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from functions_stableMP_fabrics.filters import PDController
 from mpscenes.goals.goal_composition import GoalComposition
-from src.functions_stableMP_fabrics.plotting_functions2 import plotting_functions2
+from pumafabrics.tamed_puma.utils.plotting_functions2 import plotting_functions2
 from functions_stableMP_fabrics.parametrized_planner_extended import ParameterizedFabricPlannerExtended
 from agent.utils.normalizations_2 import normalization_functions
 from functions_stableMP_fabrics.environments import trial_environments
@@ -17,7 +15,7 @@ import matplotlib.pyplot as plt
 import importlib
 from initializer import initialize_framework
 import copy
-import torch
+
 
 class example_kuka_stableMP_R3S3():
     def __init__(self, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):

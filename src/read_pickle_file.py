@@ -1,5 +1,5 @@
 import pickle
-from functions_stableMP_fabrics.kinematics_kuka import KinematicsKuka
+from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 from grasp_planning import IK_OPTIM
@@ -25,7 +25,7 @@ planner.setup_problem(verbose=False)
 
 # Path to the .pk file
 for i in range(11):
-    file_path_template = 'datasets/kuka/pouring/ee_state_%s.pk'
+    file_path_template = '../pumafabrics/puma_adapted/datasets/kuka/pouring/ee_state_%s.pk'
     file_path = file_path_template % i
 
     # Load the content from the .pk file

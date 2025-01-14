@@ -1,20 +1,17 @@
 import os
-import gymnasium as gym
 import yaml
 import numpy as np
 import casadi as ca
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from mpscenes.goals.goal_composition import GoalComposition
-from src.functions_stableMP_fabrics.plotting_functions2 import plotting_functions2
-from functions_stableMP_fabrics.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from agent.utils.normalizations_2 import normalization_functions
-from functions_stableMP_fabrics.environments import trial_environments
-from functions_stableMP_fabrics.kinematics_kuka import KinematicsKuka
-from functions_stableMP_fabrics.energy_regulator import energy_regulation
-import matplotlib.pyplot as plt
+from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
+from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
+from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
+from pumafabrics.tamed_puma.tamedpuma.energy_regulator import energy_regulation
 import importlib
-from initializer import initialize_framework
-from functions_stableMP_fabrics.analysis_utils import UtilsAnalysis
+from pumafabrics.puma_adapted.initializer import initialize_framework
+from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 import copy
 import time
 

@@ -2,17 +2,17 @@ import os
 import numpy as np
 import pybullet
 import warnings
-from functions_stableMP_fabrics.filters import ema_filter_deriv, PDController
-from agent.utils.normalizations_2 import normalization_functions
-from functions_stableMP_fabrics.environments import trial_environments
-from functions_stableMP_fabrics.kinematics_kuka import KinematicsKuka
+from pumafabrics.tamed_puma.utils.filters import PDController
+from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
+from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
-from functions_stableMP_fabrics.analysis_utils import UtilsAnalysis
+from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 import importlib
-from initializer import initialize_framework
+from pumafabrics.puma_adapted.initializer import initialize_framework
 import copy
 import yaml
-from functions_stableMP_fabrics.GOMP_ik import IKGomp
+from pumafabrics.tamed_puma.modulation_ik.GOMP_ik import IKGomp
 import time
 import random
 

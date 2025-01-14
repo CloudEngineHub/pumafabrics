@@ -1,22 +1,19 @@
 import os
-import gymnasium as gym
 import yaml
 import numpy as np
-import casadi as ca
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from mpscenes.goals.goal_composition import GoalComposition
-from functions_stableMP_fabrics.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from agent.utils.normalizations_2 import normalization_functions
-from functions_stableMP_fabrics.environments import trial_environments
-from functions_stableMP_fabrics.kinematics_kuka import KinematicsKuka
-from functions_stableMP_fabrics.energy_regulator import energy_regulation
-import matplotlib.pyplot as plt
+from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
+from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
+from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
+from pumafabrics.tamed_puma.tamedpuma.energy_regulator import energy_regulation
 import importlib
-from functions_stableMP_fabrics.nullspace_controller import CartesianImpedanceController
-from initializer import initialize_framework
-from functions_stableMP_fabrics.analysis_utils import UtilsAnalysis
-from functions_stableMP_fabrics.filters import PDController
-from functions_stableMP_fabrics.GOMP_ik import IKGomp
+from pumafabrics.tamed_puma.nullspace_control.nullspace_controller import CartesianImpedanceController
+from pumafabrics.puma_adapted.initializer import initialize_framework
+from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
+from pumafabrics.tamed_puma.utils.filters import PDController
+from pumafabrics.tamed_puma.modulation_ik.GOMP_ik import IKGomp
 import copy
 import time
 import pybullet
@@ -27,7 +24,7 @@ class example_kuka_stableMP_fabrics():
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
         self.solver_times = []
-        with open("config/kuka_stableMP_GOMP_2nd.yaml", "r") as setup_stream:
+        with open("../pumafabrics/tamed_puma/config/kuka_stableMP_GOMP_2nd.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.robot_name = self.params["robot_name"]
 

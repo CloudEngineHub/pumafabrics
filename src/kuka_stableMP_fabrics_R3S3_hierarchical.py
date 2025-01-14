@@ -1,26 +1,20 @@
 import os
-import gymnasium as gym
 import numpy as np
 
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 
-from urdfenvs.urdf_common.urdf_env import UrdfEnv
-from urdfenvs.robots.generic_urdf import GenericUrdfReacher
-from urdfenvs.sensors.full_sensor import FullSensor
-
 from mpscenes.goals.goal_composition import GoalComposition
-from mpscenes.obstacles.sphere_obstacle import SphereObstacle
-from src.functions_stableMP_fabrics.geometry_IL import construct_IL_geometry
-from src.functions_stableMP_fabrics.plotting_functions import plotting_functions
-from functions_stableMP_fabrics.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from agent.utils.normalizations import normalizaton_sim_NN
-from functions_stableMP_fabrics.environments import trial_environments
-from functions_stableMP_fabrics.kinematics_kuka import KinematicsKuka
-from tools.animation import TrajectoryPlotter
+from pumafabrics.tamed_puma.kinematics.geometry_IL import construct_IL_geometry
+from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
+from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
+from pumafabrics.tamed_puma.utils.normalizations import normalizaton_sim_NN
+from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
+from pumafabrics.puma_adapted.tools.animation import TrajectoryPlotter
 import torch
 import matplotlib.pyplot as plt
 import importlib
-from initializer import initialize_framework
+from pumafabrics.puma_adapted.initializer import initialize_framework
 import yaml
 
 class example_kuka_stableMP_R3S3():
@@ -29,7 +23,7 @@ class example_kuka_stableMP_R3S3():
         self.IN_COLLISION = False
         self.time_to_goal = -1
         self.solver_times = []
-        with open("config/kuka_hierarchical.yaml", "r") as setup_stream:
+        with open("../pumafabrics/tamed_puma/config/kuka_hierarchical.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]

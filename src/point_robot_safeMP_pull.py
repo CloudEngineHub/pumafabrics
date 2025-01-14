@@ -10,15 +10,15 @@ from urdfenvs.sensors.full_sensor import FullSensor
 from mpscenes.obstacles.sphere_obstacle import SphereObstacle
 from mpscenes.goals.goal_composition import GoalComposition
 
-from functions_stableMP_fabrics.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from tools.animation import TrajectoryPlotter
+from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
+from pumafabrics.puma_adapted.tools.animation import TrajectoryPlotter
 import torch
 import matplotlib.pyplot as plt
 import importlib
-from initializer import initialize_framework
-from agent.utils.normalizations import normalizaton_sim_NN
-from src.functions_stableMP_fabrics.geometry_IL import construct_IL_geometry
-from functions_stableMP_fabrics.plotting_functions import plotting_functions
+from pumafabrics.puma_adapted.initializer import initialize_framework
+from pumafabrics.tamed_puma.utils.normalizations import normalizaton_sim_NN
+from pumafabrics.tamed_puma.kinematics.geometry_IL import construct_IL_geometry
+from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
 
 # Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
 # mass to compute actions for a simulated 3D point mass.

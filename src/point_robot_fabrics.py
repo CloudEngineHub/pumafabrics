@@ -1,24 +1,17 @@
 import os
-import gymnasium as gym
 import numpy as np
-import copy
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
-from urdfenvs.urdf_common.urdf_env import UrdfEnv
-from urdfenvs.robots.generic_urdf import GenericUrdfReacher
-from urdfenvs.sensors.full_sensor import FullSensor
-from mpscenes.obstacles.sphere_obstacle import SphereObstacle
 from mpscenes.goals.goal_composition import GoalComposition
-from functions_stableMP_fabrics.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from tools.animation import TrajectoryPlotter
+from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
+from pumafabrics.puma_adapted.tools.animation import TrajectoryPlotter
 import torch
 import matplotlib.pyplot as plt
 import importlib
-from initializer import initialize_framework
-from agent.utils.dynamical_system_operations import normalize_state
-from agent.utils.normalizations import normalizaton_sim_NN
-from functions_stableMP_fabrics.plotting_functions import plotting_functions
-from functions_stableMP_fabrics.combining_actions import combine_fabrics_safeMP
-from functions_stableMP_fabrics.environments import trial_environments
+from pumafabrics.puma_adapted.initializer import initialize_framework
+from pumafabrics.tamed_puma.utils.normalizations import normalizaton_sim_NN
+from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
+from pumafabrics.tamed_puma.tamedpuma.combining_actions import combine_fabrics_safeMP
+from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
 
 # Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
 # mass to compute actions for a simulated 3D point mass.

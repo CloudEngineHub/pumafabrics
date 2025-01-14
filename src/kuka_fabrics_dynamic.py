@@ -1,10 +1,10 @@
 import os
 import numpy as np
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
-from functions_stableMP_fabrics.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from functions_stableMP_fabrics.environments import trial_environments
-from functions_stableMP_fabrics.analysis_utils import UtilsAnalysis
-from functions_stableMP_fabrics.kinematics_kuka import KinematicsKuka
+from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
+from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
+from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 import pickle
 import yaml
 import time
@@ -16,7 +16,7 @@ class example_kuka_fabrics():
         self.time_to_goal = -1
         self.obstacles = []
         self.solver_times = []
-        with open("config/kuka_fabrics.yaml", "r") as setup_stream:
+        with open("../pumafabrics/tamed_puma/config/kuka_fabrics.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]

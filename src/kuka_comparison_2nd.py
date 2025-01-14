@@ -3,19 +3,17 @@ This file is to generate a comparison plot between safeMP and safeMP+fabrics and
 """
 
 import numpy as np
-from functions_stableMP_fabrics.environments import trial_environments
-from kuka_fabrics_comparison import example_kuka_fabrics
+from examples.kuka_fabrics_comparison import example_kuka_fabrics
 # from kuka_stableMP_R3S3 import example_kuka_stableMP_R3S3
 # from kuka_stableMP_fabrics_theoremIII_5_2nd import example_kuka_stableMP_fabrics
-from kuka_stableMP_fabrics_2nd import example_kuka_stableMP_fabrics
-from kuka_stableMP_3D_GOMP import example_kuka_stableMP_GOMP
+from examples.kuka_stableMP_fabrics_2nd import example_kuka_stableMP_fabrics
+from examples.kuka_stableMP_3D_GOMP import example_kuka_stableMP_GOMP
 from texttable import Texttable
 import latextable
 import copy
 import pickle
 from scipy.interpolate import interp1d
 from scipy import interpolate
-from functions_stableMP_fabrics.plotting_functions import plotting_functions
 import matplotlib.pyplot as plt
 
 class comparison_kuka_class():

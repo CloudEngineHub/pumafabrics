@@ -1,16 +1,10 @@
 import os
-import gymnasium as gym
 import numpy as np
 
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 
-from urdfenvs.urdf_common.urdf_env import UrdfEnv
-from urdfenvs.robots.generic_urdf import GenericUrdfReacher
-from urdfenvs.sensors.full_sensor import FullSensor
-
 from mpscenes.goals.goal_composition import GoalComposition
-from mpscenes.obstacles.sphere_obstacle import SphereObstacle
-from src.functions_stableMP_fabrics.geometry_IL import construct_IL_geometry
+from pumafabrics.tamed_puma.kinematics.geometry_IL import construct_IL_geometry
 from functions_stableMP_fabrics.parametrized_planner_extended import ParameterizedFabricPlannerExtended
 from agent.utils.normalizations import normalizaton_sim_NN
 from functions_stableMP_fabrics.plotting_functions import plotting_functions

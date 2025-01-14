@@ -10,7 +10,7 @@ import pickle
 from kuka_comparison_2nd import comparison_kuka_class
 # from evaluations.comparison_general import ComparisonGeneral
 # from pumafabrics.tamed_puma.utils.record_data import RecordData, EvaluationDataStructure
-from src.functions_stableMP_fabrics.kinematics_kuka import KinematicsKuka
+from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 import yaml
 
 class ReadDemonstrations():

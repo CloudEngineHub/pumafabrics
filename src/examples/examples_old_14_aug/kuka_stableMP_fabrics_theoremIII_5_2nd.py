@@ -25,7 +25,7 @@ class example_kuka_stableMP_fabrics():
         self.IN_COLLISION = False
         self.time_to_goal = -1
         self.solver_times = []
-        with open("../../config/kuka_stableMP_fabrics.yaml", "r") as setup_stream:
+        with open("../../../pumafabrics/tamed_puma/config/kuka_stableMP_fabrics.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
