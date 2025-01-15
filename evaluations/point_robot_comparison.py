@@ -3,10 +3,10 @@ This file is to generate a comparison plot between safeMP and safeMP+fabrics and
 """
 
 import numpy as np
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
-from examples.point_robot_PUMA import example_point_robot_safeMP
-from examples.point_robot_TamedPUMA_FPM import example_point_robot_safeMP_fabrics
-from examples.point_robot_TamedPUMA_CPM import example_point_robot_theoremIII_5
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
+from examples.point_robot_PUMA import example_point_robot_PUMA
+from examples.point_robot_TamedPUMA_FPM import example_point_robot_TamedPUMA_FPM
+from examples.point_robot_TamedPUMA_CPM import example_point_robot_TamedPUMA_CPM
 from examples.point_robot_Fabrics import example_point_robot_fabrics
 from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
 
@@ -34,7 +34,7 @@ q_list_fabrics = example_fabrics.run_point_robot_urdf(n_steps=1000, env=env, goa
 
 # --- run safe MP (only) example ---#
 (env, goal) = envir_trial.initalize_environment_pointmass(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)
-example_safeMP = example_point_robot_safeMP(v_min=v_min, v_max=v_max, acc_min=acc_min, acc_max=acc_max)
+example_safeMP = example_point_robot_PUMA(v_min=v_min, v_max=v_max, acc_min=acc_min, acc_max=acc_max)
 q_list_safeMP = example_safeMP.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos, dt=dt, mode=mode, mode_NN = mode_NN)
 
 # --- hierarchical method ---#
@@ -44,12 +44,12 @@ q_list_safeMP = example_safeMP.run_point_robot_urdf(n_steps=1000, env=env, goal=
 
 # run safe MP + fabrics example ---#
 (env, goal) = envir_trial.initalize_environment_pointmass(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)
-example_safeMP_fabrics = example_point_robot_safeMP_fabrics()
+example_safeMP_fabrics = example_point_robot_TamedPUMA_FPM()
 q_list_safeMP_fabrics = example_safeMP_fabrics.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos, dt=dt, mode=mode, mode_NN=mode_NN)
 
 # run theorem III.5 ---#
 (env, goal) = envir_trial.initalize_environment_pointmass(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)
-example_theoremIII_5 = example_point_robot_theoremIII_5(v_min=v_min, v_max=v_max, acc_min=acc_min, acc_max=acc_max)
+example_theoremIII_5 = example_point_robot_TamedPUMA_CPM(v_min=v_min, v_max=v_max, acc_min=acc_min, acc_max=acc_max)
 q_list_theoremIII_5 = example_theoremIII_5.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos, dt=dt, mode=mode, mode_NN=mode_NN)
 
 

@@ -5,7 +5,7 @@ from mpscenes.goals.goal_composition import GoalComposition
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
 from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
 from pumafabrics.tamed_puma.tamedpuma.combining_actions import combine_fabrics_safeMP
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 
 # Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
 # mass to compute actions for a simulated 3D point mass.
@@ -150,6 +150,7 @@ def main(render=True):
     example_class = example_point_robot_fabrics()
     res = example_class.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
                                dt=dt, mode=mode, mode_NN=mode_NN)
+    return {}
 
 if __name__ == "__main__":
     main()

@@ -2,7 +2,7 @@ import os
 import numpy as np
 from pumafabrics.tamed_puma.utils.filters import PDController
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
@@ -10,7 +10,7 @@ import importlib
 from pumafabrics.puma_adapted.initializer import initialize_framework
 import copy
 import yaml
-from pumafabrics.tamed_puma.modulation_ik.GOMP_ik import IKGomp
+from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
 import time
 import pybullet
 

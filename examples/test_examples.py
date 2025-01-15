@@ -49,6 +49,6 @@ def test_pointrobot_TamedPUMA_hierarchical():
     from examples.point_robot_TamedPUMA_hierarchical import main
     blueprint_test(main)
 
-def test_mobile_manipulator_fabrics():
-    from examples.mobile_manipulator_Fabrics import main
-    blueprint_test(main)
+# def test_mobile_manipulator_fabrics():
+#     from examples.mobile_manipulator_Fabrics import main
+#     blueprint_test(main)

@@ -4,7 +4,7 @@ from pumafabrics.tamed_puma.utils.filters import PDController
 from pumafabrics.tamed_puma.utils.plotting_functions2 import plotting_functions2
 from pumafabrics.tamed_puma.nullspace_control.cartesian_impedance_control import CartesianImpedanceController
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 import matplotlib.pyplot as plt
 import importlib

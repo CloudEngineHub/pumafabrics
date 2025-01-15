@@ -5,7 +5,7 @@ from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from mpscenes.goals.goal_composition import GoalComposition
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from pumafabrics.tamed_puma.tamedpuma.energy_regulator import energy_regulation
 import importlib
@@ -17,7 +17,7 @@ import copy
 import time
 import pybullet
 
-class example_kuka_stableMP_fabrics():
+class example_kuka_TamedPUMA():
     def __init__(self, file_name="kuka_stableMP_fabrics_2nd"): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
@@ -426,9 +426,9 @@ def main(render=True):
     n_runs = len(q_init_list)
     network_yaml = "kuka_stableMP_fabrics_2nd"
     network_yaml_GOMP = "kuka_GOMP"
-    example_class = example_kuka_stableMP_fabrics(file_name=network_yaml)
+    example_class = example_kuka_TamedPUMA(file_name=network_yaml)
     index = 1
-    example_class.overwrite_defaults(init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=True, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
+    example_class.overwrite_defaults(init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=render, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
     example_class.construct_example()
     res = example_class.run_kuka_example()
 
@@ -438,6 +438,7 @@ def main(render=True):
     print("goal reached:", res["goal_reached"])
     print("time_to_goal:", res["time_to_goal"])
     print("solver time: mean: ", res["solver_time"], " , std: ", res["solver_time_std"])
+    return {}
 
 if __name__ == "__main__":
     main()

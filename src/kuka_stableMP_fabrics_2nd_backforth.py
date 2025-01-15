@@ -6,7 +6,7 @@ from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from mpscenes.goals.goal_composition import GoalComposition
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from pumafabrics.tamed_puma.tamedpuma.energy_regulator import energy_regulation
 import importlib

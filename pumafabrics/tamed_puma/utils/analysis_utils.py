@@ -14,10 +14,7 @@ class UtilsAnalysis():
         self.goal_reach_thr = 0.05
         self.kuka_kinematics = KinematicsKuka()
 
-    def vel_error_with_SMP(self):
-        kkk=1
-
-    def check_distance_collision(self, q: np.ndarray, obstacles: list, margin=0.0) -> bool:
+    def check_distance_collision(self, q: np.ndarray, obstacles: list, margin=0.0, parent_link='iiwa_link_0') -> bool:
         """
         Outputs if there is a collision: True, False
         Keeps track of the minimum distance to an obstacle
@@ -28,7 +25,7 @@ class UtilsAnalysis():
         for i_link, collision_link in enumerate(self.collision_links):
             pose_link_i = self.fk.numpy(
                 q,
-                parent_link='iiwa_link_0',
+                parent_link=parent_link,
                 child_link=collision_link,
             )
             for obstacle in obstacles:

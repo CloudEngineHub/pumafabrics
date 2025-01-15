@@ -4,7 +4,7 @@ import pybullet
 import warnings
 from pumafabrics.tamed_puma.utils.filters import PDController
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
@@ -12,11 +12,11 @@ import importlib
 from pumafabrics.puma_adapted.initializer import initialize_framework
 import copy
 import yaml
-from pumafabrics.tamed_puma.modulation_ik.GOMP_ik import IKGomp
+from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
 import time
 import random
 
-class example_kuka_stableMP_GOMP():
+class example_kuka_modulation_IK_1000():
     def __init__(self, file_name="kuka_GOMP"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
@@ -262,8 +262,8 @@ def main(render=True):
         [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
 
-    example_class = example_kuka_stableMP_GOMP()
-    example_class.overwrite_defaults(init_pos=q_init_list[1], positions_obstacles=positions_obstacles_list[1], render=True)
+    example_class = example_kuka_modulation_IK_1000()
+    example_class.overwrite_defaults(init_pos=q_init_list[1], positions_obstacles=positions_obstacles_list[1], render=render)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 
@@ -273,6 +273,7 @@ def main(render=True):
     print("goal reached:", res["goal_reached"])
     print("time_to_goal:", res["time_to_goal"])
     print("solver time: mean: ", res["solver_time"], " , std: ", res["solver_time_std"])
+    return {}
 
 if __name__ == "__main__":
     main()

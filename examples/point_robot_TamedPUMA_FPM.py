@@ -11,17 +11,19 @@ import torch
 import matplotlib.pyplot as plt
 import importlib
 from pumafabrics.puma_adapted.initializer import initialize_framework
-from pumafabrics.tamed_puma.utils.normalizations import normalizaton_sim_NN
+from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
 from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
 from pumafabrics.tamed_puma.tamedpuma.combining_actions import combine_fabrics_safeMP
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 
 # Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
 # mass to compute actions for a simulated 3D point mass.
 
-class example_point_robot_safeMP_fabrics():
+class example_point_robot_TamedPUMA_FPM():
     def __init__(self):
-        pass
+        self.params = {}
+        self.params["x_min"] = np.array([-10, -10])
+        self.params["x_max"] = np.array([10, 10])
 
     def set_planner(self, goal: GoalComposition, ONLY_GOAL=False, bool_speed_control=True, mode="acc", dt=0.01):
         """
@@ -88,7 +90,6 @@ class example_point_robot_safeMP_fabrics():
         # --- parameters --- #
         dof = 2
         scaling_factor = 10
-        scaling_room = {"x": [-10, 10], "y":[-10, 10]}
         if mode == "vel":
             str_mode = "velocity"
         elif mode == "acc":
@@ -130,7 +131,7 @@ class example_point_robot_safeMP_fabrics():
         goal_NN = data['goals training'][0]
 
         # Translation of goal:
-        normalizations = normalizaton_sim_NN(scaling_room=scaling_room)
+        normalizations = normalization_functions(x_min=self.params["x_min"], x_max=self.params["x_max"], dt=dt, mode_NN=mode_NN, learner=learner)
         goal_normalized = np.array((goal._sub_goals[0]._config["desired_position"]))/scaling_factor
         translation = normalizations.get_translation(goal_pos=goal_normalized, goal_pos_NN=goal_NN)
         translation_gpu = torch.FloatTensor(translation).cuda()
@@ -138,17 +139,14 @@ class example_point_robot_safeMP_fabrics():
         # Initialize dynamical system
         min_vel = learner.min_vel
         max_vel = learner.max_vel
-        x_init_gpu, x_init_cpu = normalizations.transformation_to_NN(x_t=x_t_init, translation_gpu=translation_gpu,
-                                                      dt=dt, min_vel=min_vel, max_vel=max_vel)
+        x_init_cpu, x_init_gpu = normalizations.normalize_state_position_to_NN(x_t=x_t_init, translation_cpu=translation)
         dynamical_system = learner.init_dynamical_system(initial_states=x_init_gpu, delta_t=1)
-        # dynamical_system.saturate
 
         # Initialize trajectory plotter
         fig, ax = plt.subplots()
         fig.set_size_inches(8, 8)
         fig.show()
-        trajectory_plotter = TrajectoryPlotter(fig, x0=x_init_cpu, pause_time=1e-5, goal=data['goals training'][0])
-        # x_t_NN = torch.FloatTensor(x_t_init_scaled).cuda()
+        trajectory_plotter = TrajectoryPlotter(fig, x0=x_init_cpu.T, pause_time=1e-5, goal=data['goals training'][0])
 
         # Initialize lists
         list_diff = []
@@ -165,8 +163,7 @@ class example_point_robot_safeMP_fabrics():
             x_t = np.array([np.append(q, qdot)])
 
             # --- translate to axis system of NN ---#
-            x_t_gpu, _ = normalizations.transformation_to_NN(x_t=x_t, translation_gpu=translation_gpu,
-                                           dt=dt, min_vel=dynamical_system.min_vel, max_vel=dynamical_system.max_vel)
+            x_t_cpu, x_t_gpu = normalizations.normalize_state_position_to_NN(x_t=x_t, translation_cpu=translation)
 
             # --- get action by NN --- #
             transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu)
@@ -178,8 +175,8 @@ class example_point_robot_safeMP_fabrics():
                 action_t_gpu = transition_info["desired "+str_mode]
                 xddot_t_NN = transition_info["desired acceleration"]
 
-            action_safeMP = normalizations.reverse_transformation(action_gpu=action_t_gpu,  dt=dt, mode_NN=mode_NN)
-            xddot_safeMP = normalizations.reverse_transformation(action_gpu=xddot_t_NN, dt=dt, mode_NN="2nd")
+            action_safeMP = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN=mode_NN)
+            xddot_safeMP = normalizations.reverse_transformation(action_gpu=xddot_t_NN, mode_NN="2nd")
 
             # --- get action by fabrics --- #
             arguments_dict = dict(
@@ -236,9 +233,10 @@ def main(render=True):
                                                               goal_pos=goal_pos)
 
     # --- run example --- #
-    example_class = example_point_robot_safeMP_fabrics()
+    example_class = example_point_robot_TamedPUMA_FPM()
     res = example_class.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
                                dt=dt, mode=mode, mode_NN=mode_NN)
+    return {}
 
 if __name__ == "__main__":
     main()

@@ -5,14 +5,14 @@ import torch
 import matplotlib.pyplot as plt
 import importlib
 from pumafabrics.puma_adapted.initializer import initialize_framework
-from pumafabrics.tamed_puma.utils.normalizations import normalizaton_sim_NN
+from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
 from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 
 # Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
 # mass to compute actions for a simulated 3D point mass.
 
-class example_point_robot_safeMP():
+class example_point_robot_PUMA():
     def __init__(self, v_min=0, v_max=0, acc_min=0, acc_max=0):
         dt = 0.01
         self.v_min = v_min
@@ -21,6 +21,9 @@ class example_point_robot_safeMP():
         self.acc_max = acc_max
         self.INT_COLLISION_CHECK = 0
         self.BOOL_COLLISION_CHECK = 0
+        self.params = {}
+        self.params["x_min"] = np.array([-10, -10])
+        self.params["x_max"] = np.array([10, 10])
 
     def get_action_in_limits(self, action_old, mode="acc"):
         if mode == "vel":
@@ -88,7 +91,7 @@ class example_point_robot_safeMP():
         goal_NN = data['goals training'][0]
 
         # Translation of goal:
-        normalizations = normalizaton_sim_NN(scaling_room=scaling_room)
+        normalizations = normalization_functions(x_min=self.params["x_min"], x_max=self.params["x_max"], dt=dt, mode_NN=mode_NN, learner=learner)
         state_goal = np.array((goal._sub_goals[0]._config["desired_position"]))
         goal_normalized = normalizations.call_normalize_state(state=state_goal)
         translation = normalizations.get_translation(goal_pos=goal_normalized, goal_pos_NN=goal_NN)
@@ -98,15 +101,14 @@ class example_point_robot_safeMP():
         min_vel = learner.min_vel
         max_vel = learner.max_vel
         dof = len(min_vel[0])
-        x_init_gpu, x_init_cpu = normalizations.transformation_to_NN(x_t=x_t_init, translation_gpu=translation_gpu,
-                                                  dt=dt, min_vel=min_vel, max_vel=max_vel)
+        x_init_cpu, x_init_gpu = normalizations.normalize_state_position_to_NN(x_t=x_t_init, translation_cpu=translation)
         dynamical_system = learner.init_dynamical_system(initial_states=x_init_gpu, delta_t=1)
 
         # Initialize trajectory plotter
         fig, ax = plt.subplots()
         fig.set_size_inches(8, 8)
         fig.show()
-        trajectory_plotter = TrajectoryPlotter(fig, x0=x_init_cpu, pause_time=1e-5, goal=data['goals training'][0])
+        trajectory_plotter = TrajectoryPlotter(fig, x0=x_init_cpu.T, pause_time=1e-5, goal=data['goals training'][0])
         # x_t_NN = torch.FloatTensor(x_t_init_scaled).cuda()
 
         for w in range(n_steps):
@@ -121,8 +123,7 @@ class example_point_robot_safeMP():
             x_t = np.array([np.append(q, qdot)])
 
             # --- translate to axis system of NN ---#
-            x_t_gpu, _ = normalizations.transformation_to_NN(x_t=x_t, translation_gpu=translation_gpu,
-                                       dt=dt, min_vel=dynamical_system.min_vel, max_vel=dynamical_system.max_vel)
+            x_t_cpu, x_t_gpu = normalizations.normalize_state_position_to_NN(x_t=x_t, translation_cpu=translation)
 
             # --- get action by NN --- #
             transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu)
@@ -132,7 +133,7 @@ class example_point_robot_safeMP():
             else:
                 action_t_gpu = transition_info["desired "+str_mode]
 
-            action_safeMP[0:dof] = normalizations.reverse_transformation(action_gpu=action_t_gpu, dt=dt, mode_NN=mode_NN)
+            action_safeMP[0:dof] = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN=mode_NN)
             action = self.get_action_in_limits(action_safeMP, mode=mode)
             self.stop_when_collided(q=q, obst_struct=ob_robot["FullSensor"]["obstacles"], w=w)
             ob, *_, = env.step(action)
@@ -164,8 +165,9 @@ def main(render=True):
     (env, goal) = envir_trial.initalize_environment_pointmass(render, mode=mode, dt=dt, init_pos=init_pos,
                                                               goal_pos=goal_pos)
 
-    example_class = example_point_robot_safeMP(v_min=v_min, v_max=v_max, acc_min=acc_min, acc_max=acc_max)
+    example_class = example_point_robot_PUMA(v_min=v_min, v_max=v_max, acc_min=acc_min, acc_max=acc_max)
     res = example_class.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos, dt=dt, mode=mode, mode_NN=mode_NN)
+    return {}
 
 if __name__ == "__main__":
     main()

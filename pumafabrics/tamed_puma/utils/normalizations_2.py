@@ -9,7 +9,7 @@ class normalization_functions():
     '''
     Functions to normalize and denormalize the states and actions (positions/quaternions/velocities).
     '''
-    def __init__(self, x_min, x_max, dof_task=0, dim_pos=3, dt=0.01, mode_NN="1st", learner=None):
+    def __init__(self, x_min, x_max, dof_task=0, dim_pos=3, dt=0.01, mode_NN="1st", min_vel=[], max_vel=[], learner=None):
         self.min_state = x_min
         self.max_state = x_max
         if dof_task == 0:
@@ -25,6 +25,9 @@ class normalization_functions():
         if learner is not None:
             self.min_vel = self.gpu_to_cpu(learner.min_vel).transpose()[0]
             self.max_vel = self.gpu_to_cpu(learner.max_vel).transpose()[0]
+        else:
+            self.min_vel = min_vel
+            self.max_vel = max_vel
 
     def get_scaling_factor(self):
         """
@@ -49,9 +52,6 @@ class normalization_functions():
     def normalize_to_NN(self, state_value, x_min, x_max):
         state_scaled = copy.deepcopy(state_value)
         state_scaled[0:self.dim_pos] = normalize_state(state_value[0:self.dim_pos], x_min=x_min[:self.dim_pos], x_max=x_max[:self.dim_pos])
-        # if self.mode_NN == "2nd": #self.mode == "acc" and  #state is pos + vel
-        #     state_scaled[self.dof_task] = state_value[self.dof_task] / self.scaling_factor[0] #v_x
-        #     state_scaled[self.dof_task+1] = state_value[self.dof_task+1] / self.scaling_factor[1] #v_y
         return state_scaled
 
     def get_translation(self, goal_pos, goal_pos_NN):
@@ -77,7 +77,7 @@ class normalization_functions():
         xy_detranslated = xy_NN + self.translation
         return xy_detranslated
 
-    def transformation_to_NN(self, x_t, translation_cpu, min_vel=list, max_vel=list):
+    def transformation_to_NN(self, x_t, translation_cpu):
         """
         Transform system states to normalized states in the neural network
         """
@@ -85,10 +85,6 @@ class normalization_functions():
 
         #scale wrt room size:
         x_t_NN[0] = self.normalize_to_NN(x_t[0], x_min=self.min_state, x_max=self.max_state)
-
-        #scale wrt velocities
-        # if self.mode_NN == "2nd": #self.mode == "acc" and
-        #     x_t_gpu[0][self.dof_task:self.dof_task*2] = normalize_state(x_t_gpu[0][self.dof_task:self.dof_task*2] * self.dt, min_vel, max_vel)
 
         # translation wrt goal
         x_t_NN[0][0:self.dof_task] = self.translation_to_NN(x_t_NN[0][0:self.dof_task], translation=translation_cpu)
@@ -133,18 +129,8 @@ class normalization_functions():
             action_Transformed = action_cpu / self.dt
 
         # unscale wrt room size
-        #action_Transformed2 = denormalize_state(action_Transformed, dynamical_system.min_vel.T.cpu().detach().numpy().transpose()[0], dynamical_system.max_vel.T.cpu().detach().numpy().transpose()[0])
         action_Transformed[0:self.dof_task] = self.denormalize_action(action_Transformed[0:self.dof_task])
         return action_Transformed
-
-    def reverse_transformation_pos(self, position_gpu):
-        """
-        Transform normalized position to system positions.
-        """
-        position_cpu = self.gpu_to_cpu(position_gpu)
-        pos_detranslated = self.reverse_translation(position_cpu)
-        pos = denormalize_state(pos_detranslated, x_min=self.min_state, x_max=self.max_state)
-        return pos
 
     def reverse_transformation_position(self, position_gpu):
         """
@@ -266,6 +252,19 @@ class normalization_functions():
             return x_gpu
         else:
             return x_gpu
+
+    def normalize_state_position_to_NN(self, x_t, translation_cpu):
+        # normalize pose (position+orientation)
+        x_cpu = self.transformation_to_NN(x_t=x_t, translation_cpu=translation_cpu)
+        x_gpu = self.cpu_to_gpu(x_cpu)
+
+        # --- if state=(pose, vel) also normalize the velocities) ---#
+        if self.mode_NN == "2nd":
+            x_vel_cpu = self.transformation_to_NN_vel(v_t=x_t[0][self.dof_task:self.dof_task * 2])
+            x_gpu[0][self.dof_task:self.dof_task*2] = torch.cuda.FloatTensor(x_vel_cpu)
+            return x_cpu, x_gpu
+        else:
+            return x_cpu, x_gpu
 
     def check_quaternion_flipped(self, quat, quat_prev):
         dist_quat = np.linalg.norm(quat - quat_prev)

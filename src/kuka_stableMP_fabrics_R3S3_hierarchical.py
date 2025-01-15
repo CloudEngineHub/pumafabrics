@@ -8,7 +8,7 @@ from pumafabrics.tamed_puma.kinematics.geometry_IL import construct_IL_geometry
 from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
 from pumafabrics.tamed_puma.utils.normalizations import normalizaton_sim_NN
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from pumafabrics.puma_adapted.tools.animation import TrajectoryPlotter
 import torch

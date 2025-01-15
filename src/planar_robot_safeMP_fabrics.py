@@ -1,6 +1,6 @@
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from mpscenes.goals.goal_composition import GoalComposition
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 import numpy as np
 import os
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended

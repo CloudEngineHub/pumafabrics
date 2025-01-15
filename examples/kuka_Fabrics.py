@@ -3,7 +3,7 @@ import numpy as np
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 import yaml
@@ -167,7 +167,7 @@ class example_kuka_fabrics():
         ob, *_ = self.env.step(action)
 
         # Construct classes:
-        results_base_directory = './'
+        results_base_directory = '../pumafabrics/puma_adapted/'
 
         # Parameters
         if self.params["mode_NN"] == "1st":
@@ -178,7 +178,7 @@ class example_kuka_fabrics():
         q_init = ob['robot_0']["joint_state"]["position"][0:dof]
 
         # Load parameters
-        Params = getattr(importlib.import_module('params.' + self.params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + self.params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True
@@ -312,7 +312,7 @@ def main(render=True):
         [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
         [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
-    example_class.overwrite_defaults(init_pos=q_init_list[1], positions_obstacles=positions_obstacles_list[1])
+    example_class.overwrite_defaults(init_pos=q_init_list[1], positions_obstacles=positions_obstacles_list[1], render=render)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 
@@ -322,6 +322,7 @@ def main(render=True):
     print("goal reached:", res["goal_reached"])
     print("time_to_goal:", res["time_to_goal"])
     print("solver time: mean: ", res["solver_time"], " , std: ", res["solver_time_std"])
+    return {}
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@ from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from mpscenes.goals.goal_composition import GoalComposition
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from pumafabrics.tamed_puma.tamedpuma.energy_regulator import energy_regulation
 import importlib
@@ -16,7 +16,7 @@ from pumafabrics.tamed_puma.utils.filters import PDController
 import copy
 import time
 
-class example_kuka_stableMP_fabrics_20():
+class example_kuka_TamedPUMA_1000():
     def __init__(self): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
@@ -359,8 +359,8 @@ def main(render=True):
         [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
     init_pos = [0.5312149701934061, 0.8355097803551061, 0.0700492926199493, -1.6651880968294615, 0.2936679665237496, -0.8774234085561443, -0.24231138029250487]
-    example_class = example_kuka_stableMP_fabrics_20()
-    example_class.overwrite_defaults(init_pos=q_init_list[3], positions_obstacles=positions_obstacles_list[3], render=True, nr_obst=100)
+    example_class = example_kuka_TamedPUMA_1000()
+    example_class.overwrite_defaults(init_pos=q_init_list[3], positions_obstacles=positions_obstacles_list[3], render=render, nr_obst=100)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 
@@ -370,6 +370,7 @@ def main(render=True):
     print("goal reached:", res["goal_reached"])
     print("time_to_goal:", res["time_to_goal"])
     print("solver time: mean: ", res["solver_time"], " , std: ", res["solver_time_std"])
+    return {}
 
 if __name__ == "__main__":
     main()

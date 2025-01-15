@@ -95,8 +95,8 @@ class plotting_functions():
         ax.legend(loc="upper left", fontsize=9.5)
         # ax.legend(["GFs", "SMPs", "Geometric", "Compatible", "Start", "Target", "Obstacles"], loc="upper left")
         plt.suptitle("Trajectories of the proposed methods on a point-mass example", fontsize=13.5)
-        plt.savefig("comparison_plot.eps", format="eps") #, dpi=100)
-        plt.savefig("comparison_plot.jpg", format="jpg")  # , dpi=100)
+        plt.savefig("images/comparison_plot.eps", format="eps") #, dpi=100)
+        plt.savefig("images/comparison_plot.jpg", format="jpg")  # , dpi=100)
         plt.show()
 
     def comparison_plot_iiwa(self, results=dict, cases=dict, dt=0.02):

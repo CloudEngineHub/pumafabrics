@@ -10,16 +10,19 @@ import torch
 import matplotlib.pyplot as plt
 import importlib
 from pumafabrics.puma_adapted.initializer import initialize_framework
-from pumafabrics.tamed_puma.utils.normalizations import normalizaton_sim_NN
+from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
 from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 
 # Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
 # mass to compute actions for a simulated 3D point mass.
 
 class example_point_robot_hierarchical():
     def __init__(self):
-        dt = 0.01
+        self.params = {}
+        self.params["x_min"] = np.array([-10, -10])
+        self.params["x_max"] = np.array([10, 10])
+
     def set_planner(self, goal: GoalComposition, ONLY_GOAL=False, bool_speed_control=True, mode="acc", dt=0.01):
         """
         Initializes the fabric planner for the point robot.
@@ -78,26 +81,6 @@ class example_point_robot_hierarchical():
             action_combined = xddot_combined
         return action_combined
 
-    def simple_plot(self, list_fabrics_goal, list_fabrics_avoidance, list_safeMP, list_diff, dt=0.01):
-        time_x = np.arange(0.0, len(list_fabrics_goal)*dt, dt)
-        fig, ax = plt.subplots(1, 3)
-        ax[0].plot(time_x, list_fabrics_goal)
-        ax[0].plot(time_x, list_safeMP, '--')
-        ax[1].plot(time_x, list_fabrics_avoidance, '-')
-        # ax[1].plot(time_x, list_fabrics_goal, "--")
-        ax[2].plot(time_x, list_diff, '-')
-        ax[2].plot()
-        ax[0].grid()
-        ax[1].grid()
-        ax[2].grid()
-        ax[0].set(xlabel="time (s)", ylabel="x [m]", title="Actions fabrics, safeMP")
-        ax[1].set(xlabel="time (s)", ylabel="x [m]", title="Action fabr avoidance")
-        ax[2].set(xlabel="time (s)", ylabel="x [m]", title="Action difference")
-        ax[0].legend(["x", "y", "$x_{IL}$", "$y_{IL}$"])
-        ax[1].legend(["x", "y"])
-        ax[2].legend(["x", "y"])
-        plt.savefig("difference_fabrics_safeMP.png")
-
     def run_point_robot_urdf(self, n_steps=2000, env=None, goal=None, init_pos=np.array([-5, 5]), goal_pos=[-2.4355761, -7.5252747], mode="acc", mode_NN="2nd", dt=0.01):
         """
         Set the gym environment, the planner and run point robot example.
@@ -113,22 +96,6 @@ class example_point_robot_hierarchical():
         """
         # --- parameters --- #
         dof = 2
-        # mode = "vel"
-        # dt = 0.01
-        #
-        # # replication example panda robot
-        # init_pos = np.array([0.6, 0.0, 0.0])
-        # goal_pos = [0.1, -0.6]
-        scaling_factor = 3
-        scaling_room = {"x": [-scaling_factor, scaling_factor], "y": [-scaling_factor, scaling_factor]}
-
-        # pointmass example with obstacle (also uncomment obstacle)
-        # init_pos = np.array([-0.9, -0.1, 0.0])
-        # goal_pos = [3.5, 0.5]
-        # scaling_factor = 10
-        # scaling_room = {"x": [-scaling_factor, scaling_factor], "y":[-scaling_factor, scaling_factor]}
-
-        # (env, goal) = initalize_environment(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)
         planner = self.set_planner(goal, bool_speed_control=True, mode=mode, dt=dt)
 
         # action_safeMP = np.array([0.0, 0.0, 0.0])
@@ -153,7 +120,8 @@ class example_point_robot_hierarchical():
         goal_NN = data['goals training'][0]
 
         # Translation of goal:
-        normalizations = normalizaton_sim_NN(scaling_room=scaling_room)
+        normalizations = normalization_functions(x_min=self.params["x_min"], x_max=self.params["x_max"], dt=dt,
+                                                 mode_NN=mode_NN, learner=learner)
         state_goal = np.array((goal._sub_goals[0]._config["desired_position"]))
         goal_normalized = normalizations.call_normalize_state(state=state_goal)
         translation = normalizations.get_translation(goal_pos=goal_normalized, goal_pos_NN=goal_NN)
@@ -162,8 +130,7 @@ class example_point_robot_hierarchical():
         # Initialize dynamical system
         min_vel = learner.min_vel
         max_vel = learner.max_vel
-        x_init_gpu, x_init_cpu = normalizations.transformation_to_NN(x_t=x_t_init, translation_gpu=translation_gpu,
-                                                      dt=dt, min_vel=min_vel, max_vel=max_vel)
+        x_init_cpu, x_init_gpu = normalizations.normalize_state_position_to_NN(x_t=x_t_init, translation_cpu=translation)
         dynamical_system = learner.init_dynamical_system(initial_states=x_init_gpu, delta_t=1)
         # dynamical_system.saturate
 
@@ -171,7 +138,7 @@ class example_point_robot_hierarchical():
         fig, ax = plt.subplots()
         fig.set_size_inches(8, 8)
         fig.show()
-        trajectory_plotter = TrajectoryPlotter(fig, x0=x_init_cpu, pause_time=1e-5, goal=data['goals training'][0])
+        trajectory_plotter = TrajectoryPlotter(fig, x0=x_init_cpu.T, pause_time=1e-5, goal=data['goals training'][0])
         # x_t_NN = torch.FloatTensor(x_t_init_scaled).cuda()
 
         # Initialize lists
@@ -185,15 +152,14 @@ class example_point_robot_hierarchical():
             x_t = np.array([np.append(q, qdot)])
 
             # --- translate to axis system of NN ---#
-            x_t_gpu, _ = normalizations.transformation_to_NN(x_t=x_t, translation_gpu=translation_gpu,
-                                           dt=dt, min_vel=dynamical_system.min_vel, max_vel=dynamical_system.max_vel)
+            x_t_cpu, x_t_gpu = normalizations.normalize_state_position_to_NN(x_t=x_t, translation_cpu=translation)
 
             # --- get action by NN --- #
             transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu)
             x_t_NN = transition_info["desired state"]
 
             # denormalized position of NN, used as goal for fabrics
-            pos_safeMP = normalizations.reverse_transformation_pos(x_t_NN[0][0:2])
+            pos_safeMP = normalizations.reverse_transformation_position(x_t_NN[0][0:2])
 
             # --- get action by fabrics --- #
             arguments_dict = dict(
@@ -218,8 +184,6 @@ class example_point_robot_hierarchical():
             trajectory_plotter.update(x_t_gpu.T.cpu().detach().numpy())
         plt.savefig(params.results_path+"images/point_robot_hierarchical")
         env.close()
-        # simple_plot(list_fabrics_goal=list_fabr_goal, list_fabrics_avoidance=list_fabr_avoidance,
-        #             list_safeMP=list_safeMP, list_diff = list_diff, dt=dt)
         make_plots = plotting_functions(results_path=params.results_path)
         make_plots.plotting_q_values(q_list, dt=dt, q_start=q_list[:, 0], q_goal=np.array(goal_pos))
         return q_list
@@ -241,6 +205,7 @@ def main(render=True):
     example_class = example_point_robot_hierarchical()
     res = example_class.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
                                dt=dt, mode=mode, mode_NN=mode_NN)
+    return {}
 
 if __name__ == "__main__":
     main()

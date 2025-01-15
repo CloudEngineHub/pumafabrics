@@ -4,7 +4,7 @@ import numpy as np
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from pumafabrics.tamed_puma.utils.filters import PDController
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
-from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
+from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 from pumafabrics.tamed_puma.nullspace_control.nullspace_controller import CartesianImpedanceController

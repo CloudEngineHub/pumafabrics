@@ -18,6 +18,7 @@ class PDController:
         error_vel = xdot_d - xdot
         control_value = Kp * error_pos + Kd * (error_vel)
         return control_value
+
 def ema_filter(signal, alpha=0.5):
         """
         Apply an Exponential Moving Average (EMA) filter to a signal.
@@ -51,12 +52,4 @@ def ema_filter_deriv(signal:np.ndarray, alpha=0.01, dt=0.01):
     filtered_signal = ema_filter(signal_deriv, alpha=alpha)
     filtered_deriv = np.array(filtered_signal)
     return filtered_deriv
-    # deriv_signal = filtered_signal/dt
-    # len_vel_list = len(vel_list)
-    # if len_vel_list>=filter_nr:
-    #     vel_list_latest = vel_list[-filter_nr:]
-    # else:
-    #     vel_list_latest = vel_list
-    # acc_filtered = (sum(vel_list)/filter_nr)/dt
-    # return acc_filtered
 
