@@ -14,7 +14,6 @@ import copy
 import yaml
 from pumafabrics.tamed_puma.modulation_ik.GOMP_ik import IKGomp
 import time
-import random
 
 class example_kuka_stableMP_GOMP():
     def __init__(self, file_name="kuka_GOMP"):
@@ -22,8 +21,8 @@ class example_kuka_stableMP_GOMP():
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
         self.solver_times = []
-        with open("config/"+file_name+".yaml", "r") as setup_stream:
-            self.params = yaml.safe_load(setup_stream)
+        with open("../pumafabrics/tamed_puma/config/" + file_name + ".yaml", "r") as setup_stream:
+             self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
         warnings.filterwarnings("ignore")
@@ -54,9 +53,7 @@ class example_kuka_stableMP_GOMP():
 
     def initialize_environment(self):
         envir_trial = trial_environments()
-        self.params["nr_obst"]=2
         (self.env, self.goal) = envir_trial.initialize_environment_kuka(params=self.params)
-        self.params["nr_obst"]=1000
 
     def check_goal_reached(self, x_ee, x_goal):
         dist = np.linalg.norm(x_ee - x_goal)
@@ -68,7 +65,7 @@ class example_kuka_stableMP_GOMP():
 
     def construct_fk(self):
         absolute_path = os.path.dirname(os.path.abspath(__file__))
-        with open(absolute_path + "/examples/urdfs/"+self.robot_name+".urdf", "r", encoding="utf-8") as file:
+        with open(absolute_path + "/../pumafabrics/tamed_puma/config/urdfs/"+self.robot_name+".urdf", "r", encoding="utf-8") as file:
             urdf = file.read()
         self.forward_kinematics = GenericURDFFk(
             urdf,
@@ -80,7 +77,7 @@ class example_kuka_stableMP_GOMP():
         self.initialize_environment()
 
         # Construct classes:
-        results_base_directory = './'
+        results_base_directory = '../pumafabrics/puma_adapted/'
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"], end_link_name=self.params["end_links"][0])
         self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
         self.construct_fk()
@@ -95,7 +92,7 @@ class example_kuka_stableMP_GOMP():
             self.params_name = self.params["params_name_2nd"]
 
         # Load parameters
-        Params = getattr(importlib.import_module('params.' + self.params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + self.params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True
@@ -145,12 +142,10 @@ class example_kuka_stableMP_GOMP():
             ob_robot = ob['robot_0']
             q = ob_robot["joint_state"]["position"][0:dof]
             qdot = ob_robot["joint_state"]["velocity"][0:dof]
-            if self.params["nr_obst"] > 0 and self.params["nr_obst"] < 20:
+            if self.params["nr_obst"] > 0:
                 positions_obstacles = [ob_robot["FullSensor"]["obstacles"][self.params["nr_obst"]]["position"], ob_robot["FullSensor"]["obstacles"][self.params["nr_obst"]+1]["position"]]
             else:
-                positions_obstacles = [ob_robot["FullSensor"]["obstacles"][2]["position"]*(1+0.01*random.uniform(0, 1)) for _ in range(self.params["nr_obst"])]
-                positions_obstacles[1] = ob_robot["FullSensor"]["obstacles"][3]["position"]
-                positions_obstacles[0] = ob_robot["FullSensor"]["obstacles"][2]["position"]
+                positions_obstacles = []
 
             # recompute translation to goal pose:
             goal_pos = [goal_pos[i] + self.params["goal_vel"][i]*self.params["dt"] for i in range(len(goal_pos))]
@@ -167,9 +162,9 @@ class example_kuka_stableMP_GOMP():
 
             # --- action by NN --- #
             time0 = time.perf_counter()
-            centers_obstacles = [[100, 100, 100] for _ in range(self.params["nr_obst"])]
+            centers_obstacles = [[100, 100, 100], [100, 100, 100]]
             for i in range(self.params["nr_obst"]):
-                centers_obstacles[i][0:3] = self.params["positions_obstacles"][0]
+                centers_obstacles[i][0:3] = self.params["positions_obstacles"][i]
             obstacles_struct = {"centers": centers_obstacles,
                                "axes": [[0.3, 0.3, 0.3]], "safety_margins": [[1., 1., 1.]]}
             transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu[:, :3].clone(), obstacles=obstacles_struct)
@@ -236,8 +231,7 @@ class example_kuka_stableMP_GOMP():
         }
         return results
 
-
-if __name__ == "__main__":
+def main(render=True):
     q_init_list = [
         np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
@@ -274,3 +268,6 @@ if __name__ == "__main__":
     print("goal reached:", res["goal_reached"])
     print("time_to_goal:", res["time_to_goal"])
     print("solver time: mean: ", res["solver_time"], " , std: ", res["solver_time_std"])
+
+if __name__ == "__main__":
+    main()

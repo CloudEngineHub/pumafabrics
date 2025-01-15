@@ -97,7 +97,7 @@ def set_planner(goal: GoalComposition, ONLY_GOAL=False, bool_speed_control=True,
     """
     degrees_of_freedom = 2
     absolute_path = os.path.dirname(os.path.abspath(__file__))
-    with open(absolute_path + "/examples/urdfs/point_robot.urdf", "r", encoding="utf-8") as file:
+    with open(absolute_path + "/../pumafabrics/tamed_puma/config/urdfs/point_robot.urdf", "r", encoding="utf-8") as file:
         urdf = file.read()
     forward_kinematics = GenericURDFFk(
         urdf,
@@ -173,10 +173,10 @@ def run_point_robot_urdf(n_steps=2000, render=True):
     x_t_init = np.array([np.append(x_function(q_init[0:dof])[0:dof], xdot_function(q_init[0:dof], qdot_init[0:dof])[0:dof])])
     # x_t_init = np.array([np.append(ob['robot_0']["joint_state"]["position"][0:2], ob['robot_0']["joint_state"]["velocity"][0:2])]) # initial states
     # simulation_length = 2000
-    results_base_directory = './'
+    results_base_directory = '../pumafabrics/puma_adapted/'
 
     # Load parameters
-    Params = getattr(importlib.import_module('params.' + params_name), 'Params')
+    Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + params_name), 'Params')
     params = Params(results_base_directory)
     params.results_path += params.selected_primitives_ids + '/'
     params.load_model = True
@@ -234,11 +234,11 @@ def run_point_robot_urdf(n_steps=2000, render=True):
         transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu)
         x_t_NN = transition_info["desired state"]
         if mode == "acc":
-            action_t_gpu = transition_info["phi"]
-            xddot_t_NN = transition_info["phi"]
+            action_t_gpu = transition_info["desired " + str_mode]
+            xddot_t_NN = transition_info["desired acceleration"]
         else:
             action_t_gpu = transition_info["desired " + str_mode]
-            xddot_t_NN = transition_info["phi"]
+            xddot_t_NN = transition_info["desired acceleration"]
         action_safeMP = normalizations.reverse_transformation(action_gpu=action_t_gpu, dt=dt, mode_NN=mode_NN)
         xddot_safeMP = normalizations.reverse_transformation(action_gpu=xddot_t_NN, dt=dt, mode_NN="2nd")
 

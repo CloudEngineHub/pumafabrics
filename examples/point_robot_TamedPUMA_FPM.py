@@ -1,7 +1,10 @@
 import os
 import numpy as np
+import copy
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
+
 from mpscenes.goals.goal_composition import GoalComposition
+
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
 from pumafabrics.puma_adapted.tools.animation import TrajectoryPlotter
 import torch
@@ -15,12 +18,11 @@ from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
 
 # Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
 # mass to compute actions for a simulated 3D point mass.
-# #
-# # todo: tune behavior.
 
-class example_point_robot_fabrics():
+class example_point_robot_safeMP_fabrics():
     def __init__(self):
-        dt = 0.01
+        pass
+
     def set_planner(self, goal: GoalComposition, ONLY_GOAL=False, bool_speed_control=True, mode="acc", dt=0.01):
         """
         Initializes the fabric planner for the point robot.
@@ -38,7 +40,7 @@ class example_point_robot_fabrics():
         """
         degrees_of_freedom = 2
         absolute_path = os.path.dirname(os.path.abspath(__file__))
-        with open(absolute_path + "/examples/urdfs/point_robot.urdf", "r", encoding="utf-8") as file:
+        with open(absolute_path + "/../pumafabrics/tamed_puma/config/urdfs/point_robot.urdf", "r", encoding="utf-8") as file:
             urdf = file.read()
         forward_kinematics = GenericURDFFk(
             urdf,
@@ -70,27 +72,7 @@ class example_point_robot_fabrics():
         planner.concretize_extensive(mode=mode, time_step=dt, extensive_concretize=True, bool_speed_control=bool_speed_control)
         return planner
 
-    def simple_plot(self, list_fabrics_goal, list_fabrics_avoidance, list_safeMP, list_diff, dt=0.01, results_path=""):
-        time_x = np.arange(0.0, len(list_fabrics_goal)*dt, dt)
-        fig, ax = plt.subplots(1, 3)
-        ax[0].plot(time_x, list_fabrics_goal)
-        ax[0].plot(time_x, list_safeMP, '--')
-        ax[1].plot(time_x, list_fabrics_avoidance, '-')
-        # ax[1].plot(time_x, list_fabrics_goal, "--")
-        ax[2].plot(time_x, list_diff, '-')
-        ax[2].plot()
-        ax[0].grid()
-        ax[1].grid()
-        ax[2].grid()
-        ax[0].set(xlabel="time (s)", ylabel="x [m]", title="Actions fabrics, safeMP")
-        ax[1].set(xlabel="time (s)", ylabel="x [m]", title="Action fabr avoidance")
-        ax[2].set(xlabel="time (s)", ylabel="x [m]", title="Action difference")
-        ax[0].legend(["x", "y", "$x_{IL}$", "$y_{IL}$"])
-        ax[1].legend(["x", "y"])
-        ax[2].legend(["x", "y"])
-        plt.savefig(results_path+"images/difference_fabrics_safeMP.png")
-
-    def run_point_robot_urdf(self, n_steps=2000, env=None, goal=None, init_pos=np.array([-5, 5]), goal_pos=[-2.4355761, -7.5252747], mode="acc", mode_NN="2nd", dt=0.01):
+    def run_point_robot_urdf(self, n_steps=2000, env=None, goal=None, init_pos=np.array([-5, 5]), goal_pos=[-2.4355761, -7.5252747], mode="acc", mode_NN = "2nd", dt=0.01):
         """
         Set the gym environment, the planner and run point robot example.
         The initial zero action step is needed to initialize the sensor in the
@@ -105,18 +87,6 @@ class example_point_robot_fabrics():
         """
         # --- parameters --- #
         dof = 2
-        # mode = "vel"
-        # dt = 0.01
-        # init_pos = np.array([-0.9, -0.1, 0.0])
-        # goal_pos = [3.5, 0.5]
-        # scaling_factor = 10
-        #scaling_room = {"x": [-scaling_factor, scaling_factor], "y":[-scaling_factor, scaling_factor]}
-        # init_pos = np.array([-0.5, 0.5])
-        # goal_pos = [-0.24355761, -0.75252747]
-        # scaling_factor = 1
-        # scaling_room = {"x": [-1, 1], "y":[-1, 1]}
-        # init_pos = np.array([-5, 5])
-        # goal_pos = [-2.4355761, -7.5252747]
         scaling_factor = 10
         scaling_room = {"x": [-10, 10], "y":[-10, 10]}
         if mode == "vel":
@@ -147,10 +117,10 @@ class example_point_robot_fabrics():
         params_name = '2nd_order_2D'
         x_t_init = np.array([np.append(ob['robot_0']["joint_state"]["position"][0:2], ob['robot_0']["joint_state"]["velocity"][0:2])]) # initial states
         # simulation_length = 2000
-        results_base_directory = './'
+        results_base_directory = '../pumafabrics/puma_adapted/'
 
         # Load parameters
-        Params = getattr(importlib.import_module('params.' + params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True
@@ -216,54 +186,49 @@ class example_point_robot_fabrics():
                 q=ob_robot["joint_state"]["position"][0:dof],
                 qdot=ob_robot["joint_state"]["velocity"][0:dof],
                 x_goal_0=ob_robot['FullSensor']['goals'][2]['position'][0:dof],
-                weight_goal_0=10, #ob_robot['FullSensor']['goals'][2]['weight'],
+                weight_goal_0=ob_robot['FullSensor']['goals'][2]['weight'],
                 x_obst_0=ob_robot['FullSensor']['obstacles'][3]['position'],
                 radius_obst_0=ob_robot['FullSensor']['obstacles'][3]['size'],
                 x_obst_1=ob_robot['FullSensor']['obstacles'][4]['position'],
                 radius_obst_1=ob_robot['FullSensor']['obstacles'][4]['size'],
-                # x_obst_2=ob_robot['FullSensor']['obstacles'][5]['position'],
-                # radius_obst_2=ob_robot['FullSensor']['obstacles'][5]['size'],
                 radius_body_base_link_y=np.array([0.2])
             )
             action_fabrics[0:dof] = planner.compute_action(**arguments_dict)
-            # M, f, action_forced, xddot_speed = planner.compute_M_f_action_avoidance(**arguments_dict)
-            # M_avoidance, f_avoidance, action_avoidance, xddot_speed_avoidance = planner_avoidance.compute_M_f_action_avoidance(**arguments_dict)
-            # M_attractor, f_attractor, action_attractor, xddot_speed_attractor = planner_goal.compute_M_f_action_attractor(**arguments_dict)
-            #
-            # action_combined = combined_geometry.combine_action(M_avoidance, M_attractor, f_avoidance, f_attractor, xddot_speed, planner,
-            #                                  qdot=ob_robot["joint_state"]["velocity"][0:dof])
-            # xddot_speed = np.zeros((dof,)) #todo: think about what to do with speed regulation term!!
-            # M_safeMP = np.identity(dof,)
-            # action_fabrics_safeMP = combined_geometry.combine_action(M_avoidance, M_safeMP, f_avoidance, -xddot_safeMP[0:dof], xddot_speed, planner,
-            #                                        qdot=ob_robot["joint_state"]["velocity"][0:dof])
+            M, f, action_forced, xddot_speed = planner.compute_M_f_action_avoidance(**arguments_dict)
+            M_avoidance, f_avoidance, action_avoidance, xddot_speed_avoidance = planner_avoidance.compute_M_f_action_avoidance(**arguments_dict)
+            M_attractor, f_attractor, action_attractor, xddot_speed_attractor = planner_goal.compute_M_f_action_attractor(**arguments_dict)
+
+            action_combined = combined_geometry.combine_action(M_avoidance, M_attractor, f_avoidance, f_attractor, xddot_speed, planner,
+                                             qdot=ob_robot["joint_state"]["velocity"][0:dof])
+            xddot_speed = np.zeros((dof,)) #todo: think about what to do with speed regulation term!!
+            M_safeMP = np.identity(dof,)
+            action_fabrics_safeMP = combined_geometry.combine_action(M_avoidance, M_safeMP, f_avoidance, -xddot_safeMP[0:dof], xddot_speed, planner,
+                                                   qdot=ob_robot["joint_state"]["velocity"][0:dof])
 
             # --- update environment ---#
-            ob, *_, = env.step(np.append(action_fabrics, 0))
+            ob, *_, = env.step(np.append(action_fabrics_safeMP, 0))
 
             # --- Update plot ---#
             trajectory_plotter.update(x_t_gpu.T.cpu().detach().numpy())
 
             # --- Plot actions ---#
-            # list_diff.append(action_safeMP[0:dof] - action_attractor)
-            # list_fabr_goal.append(action_attractor)
-            # list_fabr_avoidance.append(copy.deepcopy(action_avoidance))
-            # list_safeMP.append(copy.deepcopy(action_safeMP[0:dof]))
-        plt.savefig(params.results_path+"images/point_robot_safeMP_fabrics")
+            list_diff.append(action_safeMP[0:dof] - action_attractor)
+            list_fabr_goal.append(action_attractor)
+            list_fabr_avoidance.append(copy.deepcopy(action_avoidance))
+            list_safeMP.append(copy.deepcopy(action_safeMP[0:dof]))
+        plt.savefig("../examples/images/point_robot_FPM")
         env.close()
-        self.simple_plot(list_fabrics_goal=list_fabr_goal, list_fabrics_avoidance=list_fabr_avoidance,
-                    list_safeMP=list_safeMP, list_diff = list_diff, dt=dt, results_path=params.results_path)
-        make_plots = plotting_functions(results_path=params.results_path)
-        make_plots.plotting_q_values(q_list, dt=dt, q_start=q_list[:, 0], q_goal=np.array(goal_pos))
+        make_plots = plotting_functions(results_path="../examples/images/")
+        make_plots.plotting_q_values(q_list, dt=dt, q_start=q_list[:, 0], q_goal=np.array(goal_pos), file_name="point_robot_q_FPM")
         return q_list
 
-if __name__ == "__main__":
+def main(render=True):
     # --- Initial parameters --- #
     mode = "acc"
     mode_NN = "2nd"
     dt = 0.01
     init_pos = np.array([0.0, 0.0])
     goal_pos = [-2.4355761, -7.5252747]
-    render = True
 
     # --- generate environment --- #
     envir_trial = trial_environments()
@@ -271,6 +236,9 @@ if __name__ == "__main__":
                                                               goal_pos=goal_pos)
 
     # --- run example --- #
-    example_class = example_point_robot_fabrics()
+    example_class = example_point_robot_safeMP_fabrics()
     res = example_class.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
                                dt=dt, mode=mode, mode_NN=mode_NN)
+
+if __name__ == "__main__":
+    main()

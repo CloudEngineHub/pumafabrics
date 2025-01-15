@@ -1,9 +1,9 @@
 import os
 import numpy as np
-import copy
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 
 from mpscenes.goals.goal_composition import GoalComposition
+
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
 from pumafabrics.puma_adapted.tools.animation import TrajectoryPlotter
 import torch
@@ -12,21 +12,14 @@ import importlib
 from pumafabrics.puma_adapted.initializer import initialize_framework
 from pumafabrics.tamed_puma.utils.normalizations import normalizaton_sim_NN
 from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
-from pumafabrics.tamed_puma.tamedpuma.combining_actions import combine_fabrics_safeMP
 from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
-from pumafabrics.tamed_puma.tamedpuma.energy_regulator import energy_regulation
+
 # Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
 # mass to compute actions for a simulated 3D point mass.
-#
-# todo: tune behavior.
-class example_point_robot_theoremIII_5():
-    def __init__(self, v_min=0, v_max=0, acc_min=0, acc_max=0):
-        dt = 0.01
-        self.v_min = v_min
-        self.v_max = v_max
-        self.acc_min = acc_min
-        self.acc_max = acc_max
 
+class example_point_robot_hierarchical():
+    def __init__(self):
+        dt = 0.01
     def set_planner(self, goal: GoalComposition, ONLY_GOAL=False, bool_speed_control=True, mode="acc", dt=0.01):
         """
         Initializes the fabric planner for the point robot.
@@ -44,7 +37,7 @@ class example_point_robot_theoremIII_5():
         """
         degrees_of_freedom = 2
         absolute_path = os.path.dirname(os.path.abspath(__file__))
-        with open(absolute_path + "/examples/urdfs/point_robot.urdf", "r", encoding="utf-8") as file:
+        with open(absolute_path + "/../pumafabrics/tamed_puma/config/urdfs/point_robot.urdf", "r", encoding="utf-8") as file:
             urdf = file.read()
         forward_kinematics = GenericURDFFk(
             urdf,
@@ -76,7 +69,16 @@ class example_point_robot_theoremIII_5():
         planner.concretize_extensive(mode=mode, time_step=dt, extensive_concretize=True, bool_speed_control=bool_speed_control)
         return planner
 
-    def simple_plot(self, list_fabrics_goal, list_fabrics_avoidance, list_safeMP, list_diff, dt=0.01, results_path=""):
+
+    def combine_action(self, M_avoidance, M_attractor, f_avoidance, f_attractor, xddot_speed, planner, qdot = []):
+        xddot_combined = -np.dot(planner.Minv(M_avoidance + M_attractor), f_avoidance + f_attractor) + xddot_speed
+        if planner._mode == "vel":
+            action_combined = qdot + planner._time_step * xddot_combined
+        else:
+            action_combined = xddot_combined
+        return action_combined
+
+    def simple_plot(self, list_fabrics_goal, list_fabrics_avoidance, list_safeMP, list_diff, dt=0.01):
         time_x = np.arange(0.0, len(list_fabrics_goal)*dt, dt)
         fig, ax = plt.subplots(1, 3)
         ax[0].plot(time_x, list_fabrics_goal)
@@ -94,14 +96,7 @@ class example_point_robot_theoremIII_5():
         ax[0].legend(["x", "y", "$x_{IL}$", "$y_{IL}$"])
         ax[1].legend(["x", "y"])
         ax[2].legend(["x", "y"])
-        plt.savefig(results_path+"images/difference_fabrics_safeMP.png")
-
-    def get_action_in_limits(self, action_old, mode="acc"):
-        if mode == "vel":
-            action = np.clip(action_old, self.v_min, self.v_max)
-        else:
-            action = np.clip(action_old, self.acc_min, self.acc_max)
-        return action
+        plt.savefig("difference_fabrics_safeMP.png")
 
     def run_point_robot_urdf(self, n_steps=2000, env=None, goal=None, init_pos=np.array([-5, 5]), goal_pos=[-2.4355761, -7.5252747], mode="acc", mode_NN="2nd", dt=0.01):
         """
@@ -120,45 +115,35 @@ class example_point_robot_theoremIII_5():
         dof = 2
         # mode = "vel"
         # dt = 0.01
-        # init_pos = np.array([-5, 5])
-        # goal_pos = [-2.4355761, -7.5252747]
-        scaling_factor = 10
-        scaling_room = {"x": [-10, 10], "y":[-10, 10]}
+        #
+        # # replication example panda robot
+        # init_pos = np.array([0.6, 0.0, 0.0])
+        # goal_pos = [0.1, -0.6]
+        scaling_factor = 3
+        scaling_room = {"x": [-scaling_factor, scaling_factor], "y": [-scaling_factor, scaling_factor]}
+
+        # pointmass example with obstacle (also uncomment obstacle)
         # init_pos = np.array([-0.9, -0.1, 0.0])
         # goal_pos = [3.5, 0.5]
         # scaling_factor = 10
         # scaling_room = {"x": [-scaling_factor, scaling_factor], "y":[-scaling_factor, scaling_factor]}
-        if mode == "vel":
-            str_mode = "velocity"
-        elif mode == "acc":
-            str_mode = "acceleration"
-        else:
-            print("this control mode is not defined")
 
+        # (env, goal) = initalize_environment(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)
         planner = self.set_planner(goal, bool_speed_control=True, mode=mode, dt=dt)
-        planner_goal = self.set_planner(goal=goal, ONLY_GOAL=True, bool_speed_control=True, mode=mode, dt=dt)
-        planner_avoidance = self.set_planner(goal=None, bool_speed_control=True, mode=mode, dt=dt)
 
-        # create class for combined functions on fabrics + safeMP combination
-        v_min = -50*np.ones((dof,))
-        v_max = 50*np.ones((dof,))
-        acc_min = -50*np.ones((dof,))
-        acc_max = 50*np.ones((dof,))
-        combined_geometry = combine_fabrics_safeMP(v_min = v_min, v_max=v_max, acc_min=acc_min, acc_max=acc_max)
-
-        action_safeMP = np.array([0.0, 0.0, 0.0])
+        # action_safeMP = np.array([0.0, 0.0, 0.0])
         action_fabrics = np.array([0.0, 0.0, 0.0])
-        ob, *_ = env.step(action_safeMP)
+        ob, *_ = env.step(action_fabrics)
         q_list = np.zeros((2, n_steps))
 
         # Parameters
         params_name = '2nd_order_2D'
         x_t_init = np.array([np.append(ob['robot_0']["joint_state"]["position"][0:2], ob['robot_0']["joint_state"]["velocity"][0:2])]) # initial states
         # simulation_length = 2000
-        results_base_directory = './'
+        results_base_directory = '../pumafabrics/puma_adapted/'
 
         # Load parameters
-        Params = getattr(importlib.import_module('params.' + params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True
@@ -169,7 +154,8 @@ class example_point_robot_theoremIII_5():
 
         # Translation of goal:
         normalizations = normalizaton_sim_NN(scaling_room=scaling_room)
-        goal_normalized = np.array((goal._sub_goals[0]._config["desired_position"]))/scaling_factor
+        state_goal = np.array((goal._sub_goals[0]._config["desired_position"]))
+        goal_normalized = normalizations.call_normalize_state(state=state_goal)
         translation = normalizations.get_translation(goal_pos=goal_normalized, goal_pos_NN=goal_NN)
         translation_gpu = torch.FloatTensor(translation).cuda()
 
@@ -181,12 +167,6 @@ class example_point_robot_theoremIII_5():
         dynamical_system = learner.init_dynamical_system(initial_states=x_init_gpu, delta_t=1)
         # dynamical_system.saturate
 
-        # Initialize energization class:
-        #create function dxdq:
-        energy_regulation_class = energy_regulation(dim_task=2, mode_NN=mode_NN, dof=dof, dynamical_system=dynamical_system)
-        # energy_regulation_class.relationship_dq_dx(offset_orientation, translation_cpu, self.kuka_kinematics,
-        #                                            normalizations, self.fk)
-
         # Initialize trajectory plotter
         fig, ax = plt.subplots()
         fig.set_size_inches(8, 8)
@@ -195,10 +175,6 @@ class example_point_robot_theoremIII_5():
         # x_t_NN = torch.FloatTensor(x_t_init_scaled).cuda()
 
         # Initialize lists
-        list_diff = []
-        list_fabr_goal = []
-        list_fabr_avoidance = []
-        list_safeMP = []
 
         for w in range(n_steps):
             # --- state from observation --- #
@@ -215,22 +191,16 @@ class example_point_robot_theoremIII_5():
             # --- get action by NN --- #
             transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu)
             x_t_NN = transition_info["desired state"]
-            if mode == "acc":
-                action_t_gpu = transition_info["desired acceleration"]
-                xddot_t_NN  = transition_info["desired acceleration"]
-            else:
-                action_t_gpu = transition_info["desired "+str_mode]
-                xddot_t_NN = transition_info["desired acceleration"]
 
-            action_safeMP = normalizations.reverse_transformation(action_gpu=action_t_gpu,  dt=dt, mode_NN=mode_NN)
-            xddot_safeMP = normalizations.reverse_transformation(action_gpu=xddot_t_NN, dt=dt, mode_NN="2nd")
+            # denormalized position of NN, used as goal for fabrics
+            pos_safeMP = normalizations.reverse_transformation_pos(x_t_NN[0][0:2])
 
             # --- get action by fabrics --- #
             arguments_dict = dict(
                 q=ob_robot["joint_state"]["position"][0:dof],
                 qdot=ob_robot["joint_state"]["velocity"][0:dof],
-                x_goal_0=ob_robot['FullSensor']['goals'][2]['position'][0:dof],
-                weight_goal_0=ob_robot['FullSensor']['goals'][2]['weight'],
+                x_goal_0=pos_safeMP,
+                weight_goal_0=30, #ob_robot['FullSensor']['goals'][2]['weight'],
                 x_obst_0=ob_robot['FullSensor']['obstacles'][3]['position'],
                 radius_obst_0=ob_robot['FullSensor']['obstacles'][3]['size'],
                 x_obst_1=ob_robot['FullSensor']['obstacles'][4]['position'],
@@ -240,63 +210,37 @@ class example_point_robot_theoremIII_5():
                 radius_body_base_link_y=np.array([0.2])
             )
             action_fabrics[0:dof] = planner.compute_action(**arguments_dict)
-            M, f, action_forced, xddot_speed = planner.compute_M_f_action_avoidance(**arguments_dict)
-            M_avoidance, f_avoidance, action_avoidance, xddot_speed_avoidance = planner_avoidance.compute_M_f_action_avoidance(**arguments_dict)
-            M_attractor, f_attractor, action_attractor, xddot_speed_attractor = planner_goal.compute_M_f_action_attractor(**arguments_dict)
-
-            # ---- get action by NN via theorem III.5 in https://arxiv.org/pdf/2309.07368.pdf ---#
-            action_theorem_III_5 = energy_regulation_class.compute_action_theorem_III5(q, qdot, action_safeMP, action_avoidance, M_avoidance, transition_info,
-                                        weight_attractor=0.25)
-
-            # ---- action via other ways ---- #
-            action_combined = combined_geometry.combine_action(M_avoidance, M_attractor, f_avoidance, f_attractor, xddot_speed, planner,
-                                             qdot=ob_robot["joint_state"]["velocity"][0:dof])
-            xddot_speed = np.zeros((dof,)) #todo: think about what to do with speed regulation term!!
-            M_safeMP = np.identity(dof,)
-            action_fabrics_safeMP = combined_geometry.combine_action(M_avoidance, M_safeMP, f_avoidance, -xddot_safeMP[0:dof], xddot_speed, planner,
-                                                   qdot=ob_robot["joint_state"]["velocity"][0:dof])
 
             # --- update environment ---#
-            action_tot = self.get_action_in_limits(np.append(action_theorem_III_5, 0))
-            ob, *_, = env.step(action_tot)#env.step(np.append(action_fabrics_safeMP, 0))
+            ob, *_, = env.step(np.append(action_fabrics, 0))
 
             # --- Update plot ---#
             trajectory_plotter.update(x_t_gpu.T.cpu().detach().numpy())
-
-            # --- Plot actions ---#
-            list_diff.append(action_safeMP[0:dof] - action_attractor)
-            list_fabr_goal.append(action_attractor)
-            list_fabr_avoidance.append(copy.deepcopy(action_avoidance))
-            list_safeMP.append(copy.deepcopy(action_safeMP[0:dof]))
-        plt.savefig(params.results_path+"images/point_robot_safeMP_fabrics")
+        plt.savefig(params.results_path+"images/point_robot_hierarchical")
         env.close()
-        self.simple_plot(list_fabrics_goal=list_fabr_goal, list_fabrics_avoidance=list_fabr_avoidance,
-                    list_safeMP=list_safeMP, list_diff = list_diff, dt=dt, results_path=params.results_path)
+        # simple_plot(list_fabrics_goal=list_fabr_goal, list_fabrics_avoidance=list_fabr_avoidance,
+        #             list_safeMP=list_safeMP, list_diff = list_diff, dt=dt)
         make_plots = plotting_functions(results_path=params.results_path)
         make_plots.plotting_q_values(q_list, dt=dt, q_start=q_list[:, 0], q_goal=np.array(goal_pos))
         return q_list
 
-if __name__ == "__main__":
+def main(render=True):
     # --- Initial parameters --- #
     mode = "acc"
     mode_NN = "2nd"
     dt = 0.01
     init_pos = np.array([0., 0.])
     goal_pos = [-2.4355761, -7.5252747]
-    render = True
 
-    dof = 2
-    v_min = -50 * np.ones((dof+1,))
-    v_max = 50 * np.ones((dof+1,))
-    acc_min = -50 * np.ones((dof+1,))
-    acc_max = 50 * np.ones((dof+1,))
-
-    # --- generate environment ---#
+    # --- generate environment --- #
     envir_trial = trial_environments()
     (env, goal) = envir_trial.initalize_environment_pointmass(render, mode=mode, dt=dt, init_pos=init_pos,
                                                               goal_pos=goal_pos)
 
-    # --- run example ---#
-    example_class = example_point_robot_theoremIII_5(v_min=v_min, v_max=v_max, acc_min=acc_min, acc_max=acc_max)
+    # --- run example --- #
+    example_class = example_point_robot_hierarchical()
     res = example_class.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
                                dt=dt, mode=mode, mode_NN=mode_NN)
+
+if __name__ == "__main__":
+    main()

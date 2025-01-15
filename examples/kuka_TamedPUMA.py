@@ -337,8 +337,7 @@ class example_kuka_stableMP_fabrics():
         }
         return results
 
-
-if __name__ == "__main__":
+def main(render=True):
     q_init_list = [
         # with goal changing:
         np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
@@ -439,3 +438,6 @@ if __name__ == "__main__":
     print("goal reached:", res["goal_reached"])
     print("time_to_goal:", res["time_to_goal"])
     print("solver time: mean: ", res["solver_time"], " , std: ", res["solver_time_std"])
+
+if __name__ == "__main__":
+    main()

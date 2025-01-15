@@ -4,10 +4,10 @@ This file is to generate a comparison plot between safeMP and safeMP+fabrics and
 
 import numpy as np
 from pumafabrics.tamed_puma.tamedpuma.environments import trial_environments
-from point_robot_safeMP import example_point_robot_safeMP
-from point_robot_safeMP_fabrics import example_point_robot_safeMP_fabrics
-from point_robot_theoremIII5 import example_point_robot_theoremIII_5
-from point_robot_fabrics import example_point_robot_fabrics
+from examples.point_robot_PUMA import example_point_robot_safeMP
+from examples.point_robot_TamedPUMA_FPM import example_point_robot_safeMP_fabrics
+from examples.point_robot_TamedPUMA_CPM import example_point_robot_theoremIII_5
+from examples.point_robot_Fabrics import example_point_robot_fabrics
 from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
 
 # --- Initial parameters --- #

@@ -62,7 +62,7 @@ class example_kuka_stableMP_fabrics_20():
 
     def construct_fk(self):
         absolute_path = os.path.dirname(os.path.abspath(__file__))
-        with open(absolute_path + "/examples/urdfs/"+self.robot_name+".urdf", "r", encoding="utf-8") as file:
+        with open(absolute_path + "/../pumafabrics/tamed_puma/config/urdfs/"+self.robot_name+".urdf", "r", encoding="utf-8") as file:
             urdf = file.read()
         self.forward_kinematics = GenericURDFFk(
             urdf,
@@ -77,7 +77,7 @@ class example_kuka_stableMP_fabrics_20():
             goal  = self.goal
         self.construct_fk()
         absolute_path = os.path.dirname(os.path.abspath(__file__))
-        with open(absolute_path + "/examples/urdfs/"+self.robot_name+".urdf", "r", encoding="utf-8") as file:
+        with open(absolute_path +  "/../pumafabrics/tamed_puma/config/urdfs/"+self.robot_name+".urdf", "r", encoding="utf-8") as file:
             urdf = file.read()
         forward_kinematics = GenericURDFFk(
             urdf,
@@ -194,7 +194,7 @@ class example_kuka_stableMP_fabrics_20():
         ob, *_ = self.env.step(action)
 
         # Construct classes:
-        results_base_directory = './'
+        results_base_directory = '../pumafabrics/puma_adapted/'
 
         # Parameters
         if self.params["mode_NN"] == "1st":
@@ -205,7 +205,7 @@ class example_kuka_stableMP_fabrics_20():
         q_init = ob['robot_0']["joint_state"]["position"][0:dof]
 
         # Load parameters
-        Params = getattr(importlib.import_module('params.' + self.params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + self.params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True
@@ -333,8 +333,7 @@ class example_kuka_stableMP_fabrics_20():
         }
         return results
 
-
-if __name__ == "__main__":
+def main(render=True):
     q_init_list = [
         np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
@@ -371,3 +370,6 @@ if __name__ == "__main__":
     print("goal reached:", res["goal_reached"])
     print("time_to_goal:", res["time_to_goal"])
     print("solver time: mean: ", res["solver_time"], " , std: ", res["solver_time_std"])
+
+if __name__ == "__main__":
+    main()

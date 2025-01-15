@@ -3,11 +3,11 @@ This file is to generate a comparison plot between safeMP and safeMP+fabrics and
 """
 
 import numpy as np
-from examples.kuka_fabrics_comparison import example_kuka_fabrics
+from examples.kuka_Fabrics import example_kuka_fabrics
 # from kuka_stableMP_R3S3 import example_kuka_stableMP_R3S3
 # from kuka_stableMP_fabrics_theoremIII_5_2nd import example_kuka_stableMP_fabrics
-from examples.kuka_stableMP_fabrics_2nd import example_kuka_stableMP_fabrics
-from examples.kuka_stableMP_3D_GOMP import example_kuka_stableMP_GOMP
+from examples.kuka_TamedPUMA import example_kuka_stableMP_fabrics
+from examples.kuka_stableMP_3D_ModulationIK import example_kuka_stableMP_GOMP
 from texttable import Texttable
 import latextable
 import copy
@@ -124,7 +124,7 @@ class comparison_kuka_class():
                                 goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list)
 
         self.results = {self.cases[0]: results_stableMP, self.cases[1]: results_stableMP_obst, self.cases[2]: results_IK, self.cases[3]: results_fabrics, self.cases[4]: results_stableMP_fabrics, self.cases[5]: results_CM}
-        with open("results/data_files/simulation_kuka_2nd9.pkl", 'wb') as f:
+        with open("results/data_files/simulation_kuka_2nd.pkl", 'wb') as f:
             pickle.dump(self.results, f)
         return self.results
 

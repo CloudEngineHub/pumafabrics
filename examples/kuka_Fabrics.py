@@ -286,8 +286,7 @@ class example_kuka_fabrics():
         }
         return results
 
-
-if __name__ == "__main__":
+def main(render=True):
     example_class = example_kuka_fabrics()
     q_init_list = [
         np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
@@ -323,3 +322,6 @@ if __name__ == "__main__":
     print("goal reached:", res["goal_reached"])
     print("time_to_goal:", res["time_to_goal"])
     print("solver time: mean: ", res["solver_time"], " , std: ", res["solver_time_std"])
+
+if __name__ == "__main__":
+    main()

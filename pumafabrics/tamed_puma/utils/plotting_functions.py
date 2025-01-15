@@ -1,10 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pumafabrics.puma_adapted.background_vectorfield import create_background_vectorfield
+import os
 
 class plotting_functions():
     def __init__(self, results_path=""):
         self.results_path = results_path
+        self.dir_path = "images"
 
     def generate_background_NN(self):
         # --- run background with NN ---#
@@ -25,7 +27,7 @@ class plotting_functions():
         ax.legend(["x", "start", "end"])
         plt.savefig(self.results_path+"xy_simulation.png")
 
-    def plotting_q_values(self, q_list, dt=0.01, q_start=np.array([0, 0]), q_goal=np.array([0, 0])):
+    def plotting_q_values(self, q_list, dt=0.01, q_start=np.array([0, 0]), q_goal=np.array([0, 0]), file_name="configurations_simulation"):
         time_x = np.arange(0.0, len(q_list) * dt, dt)
         fig, ax = plt.subplots(1, 1)
         ax.plot(q_list[0, :], q_list[1, :], '--', color="b")
@@ -36,8 +38,9 @@ class plotting_functions():
         # ax.set_ylim(scaling_room["y"][0], scaling_room["y"][1])
         ax.set(xlabel="x [m]", ylabel="y [m]", title="Configurations q")
         ax.legend(["q", "start", "end"])
-        plt.savefig(self.results_path+"images/configurations_simulation.png")
-
+        if not os.path.isdir(self.dir_path):
+            os.makedirs(self.dir_path)
+        plt.savefig(self.results_path+file_name+".png")
 
 
     def comparison_plot(self, q_list_0, q_list_1, q_list_3, q_list_4, q_goal=np.array([0.0, 0.0]), q_start=np.array([0.0, 0.0]), dt=0.01, scaling_room=None):

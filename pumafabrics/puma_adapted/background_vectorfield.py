@@ -28,10 +28,10 @@ class create_background_vectorfield():
         # x_t_init = xy_0
         # x_t_init = np.array([np.linspace(-10, 10, 100)])
         simulation_length = 2000
-        results_base_directory = './'
+        results_base_directory = '../pumafabrics/puma_adapted/'
 
         # Load parameters
-        Params = getattr(importlib.import_module('params.' + params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True

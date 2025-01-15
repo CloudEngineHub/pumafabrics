@@ -7,7 +7,7 @@ import numpy as np
 # from examples.kuka_TamedPUMA import example_kuka_TamedPUMA
 # from examples.kuka_PUMA_3D_ModulationIK import example_kuka_PUMA_modulationIK
 import pickle
-from kuka_comparison_2nd import comparison_kuka_class
+from evaluations.kuka_comparison_2nd_tomato import comparison_kuka_class
 # from evaluations.comparison_general import ComparisonGeneral
 # from pumafabrics.tamed_puma.utils.record_data import RecordData, EvaluationDataStructure
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka

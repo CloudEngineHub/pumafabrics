@@ -14,6 +14,7 @@ import copy
 import yaml
 from pumafabrics.tamed_puma.modulation_ik.GOMP_ik import IKGomp
 import time
+import random
 
 class example_kuka_stableMP_GOMP():
     def __init__(self, file_name="kuka_GOMP"):
@@ -21,8 +22,8 @@ class example_kuka_stableMP_GOMP():
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
         self.solver_times = []
-        with open("../pumafabrics/tamed_puma/config/" + file_name + ".yaml", "r") as setup_stream:
-             self.params = yaml.safe_load(setup_stream)
+        with open("../pumafabrics/tamed_puma/config/"+file_name+".yaml", "r") as setup_stream:
+            self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
         warnings.filterwarnings("ignore")
@@ -53,7 +54,9 @@ class example_kuka_stableMP_GOMP():
 
     def initialize_environment(self):
         envir_trial = trial_environments()
+        self.params["nr_obst"]=2
         (self.env, self.goal) = envir_trial.initialize_environment_kuka(params=self.params)
+        self.params["nr_obst"]=1000
 
     def check_goal_reached(self, x_ee, x_goal):
         dist = np.linalg.norm(x_ee - x_goal)
@@ -142,10 +145,12 @@ class example_kuka_stableMP_GOMP():
             ob_robot = ob['robot_0']
             q = ob_robot["joint_state"]["position"][0:dof]
             qdot = ob_robot["joint_state"]["velocity"][0:dof]
-            if self.params["nr_obst"] > 0:
+            if self.params["nr_obst"] > 0 and self.params["nr_obst"] < 20:
                 positions_obstacles = [ob_robot["FullSensor"]["obstacles"][self.params["nr_obst"]]["position"], ob_robot["FullSensor"]["obstacles"][self.params["nr_obst"]+1]["position"]]
             else:
-                positions_obstacles = []
+                positions_obstacles = [ob_robot["FullSensor"]["obstacles"][2]["position"]*(1+0.01*random.uniform(0, 1)) for _ in range(self.params["nr_obst"])]
+                positions_obstacles[1] = ob_robot["FullSensor"]["obstacles"][3]["position"]
+                positions_obstacles[0] = ob_robot["FullSensor"]["obstacles"][2]["position"]
 
             # recompute translation to goal pose:
             goal_pos = [goal_pos[i] + self.params["goal_vel"][i]*self.params["dt"] for i in range(len(goal_pos))]
@@ -162,9 +167,9 @@ class example_kuka_stableMP_GOMP():
 
             # --- action by NN --- #
             time0 = time.perf_counter()
-            centers_obstacles = [[100, 100, 100], [100, 100, 100]]
+            centers_obstacles = [[100, 100, 100] for _ in range(self.params["nr_obst"])]
             for i in range(self.params["nr_obst"]):
-                centers_obstacles[i][0:3] = self.params["positions_obstacles"][i]
+                centers_obstacles[i][0:3] = self.params["positions_obstacles"][0]
             obstacles_struct = {"centers": centers_obstacles,
                                "axes": [[0.3, 0.3, 0.3]], "safety_margins": [[1., 1., 1.]]}
             transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu[:, :3].clone(), obstacles=obstacles_struct)
@@ -231,8 +236,7 @@ class example_kuka_stableMP_GOMP():
         }
         return results
 
-
-if __name__ == "__main__":
+def main(render=True):
     q_init_list = [
         np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
@@ -269,3 +273,6 @@ if __name__ == "__main__":
     print("goal reached:", res["goal_reached"])
     print("time_to_goal:", res["time_to_goal"])
     print("solver time: mean: ", res["solver_time"], " , std: ", res["solver_time_std"])
+
+if __name__ == "__main__":
+    main()
