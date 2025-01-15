@@ -102,7 +102,9 @@ class example_kuka_PUMA_modulationIK():
         self.goal_NN = data['goals training'][0]
 
         # Initialize GOMP
-        self.gomp_class  = IKGomp(q_home=self.params["init_pos"]) #q_home=q_init)
+        self.gomp_class  = IKGomp(  q_home=self.params["init_pos"],
+                                    end_link_name = self.params["end_links"][0],
+                                    robot_name = self.params["robot_name"])
         self.gomp_class.construct_ik(nr_obst=self.params["nr_obst"])
 
         # Normalization class

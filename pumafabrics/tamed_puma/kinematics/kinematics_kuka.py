@@ -15,22 +15,6 @@ class KinematicsKuka(KinematicsBasics):
         self.end_link_name = end_link_name
         super().__init__(end_link_name, robot_name, dt)
 
-    def get_qdot_from_linear_angular_vel(self, q, xdot, x_pose):
-        """
-        xdot = [linear velocity, angle velocity in quaternions], [7x1]
-        """
-        # forward kinematics:
-        self.Jacobian = self.call_jacobian(q=q)
-
-        # # differentiable inverse kinematics
-        xdot_euler = self.quaternion_operations.quat_vel_to_angular_vel(angle_quaternion=x_pose[3:], vel_quaternion=xdot[3:])
-        xdot = np.append(xdot[:3], xdot_euler/self.dt)
-
-        # ---- position + orientation ---#
-        qdot = self.inverse_diff_kinematics(xdot)
-
-        return qdot.numpy()[0]
-
     def get_initial_pose(self, q_init, offset_orientation):
         # initial state pose:
         x_t_init_pose = self.forward_kinematics(q_init)
@@ -71,20 +55,5 @@ class KinematicsKuka(KinematicsBasics):
             x_t = np.array([np.append(x_t_pose, xdot_t_pose)])
         return x_t, xee_orientation, xdot_t
 
-    def symbolic_rot_matrix_to_quaternions(self, rot_matrix):
-        r = sc.Rotation.from_matrix(rot_matrix)
-        quatern = r.as_quat()
-        quat = [quatern[3], quatern[0], quatern[1], quatern[2]]
-        return quatern
-
 if __name__ == "__main__":
-    # input parameters:
-    q = torch.tensor([0.0, -math.pi / 4.0, 0.0, math.pi / 2.0, 0.0, math.pi / 4.0, 0.0])
-    xdot = np.array([0.2, 0.5, 0.2, 1., 0., 0., 0.])
-
     kuka_kinematics = KinematicsKuka()
-    qdot = kuka_kinematics.get_qdot_from_linear_angular_vel(q=q, xdot=xdot)
-    qdot_from_pos = kuka_kinematics.get_qdot_from_linear_velocity(q=q, xdot=xdot[3:])
-
-    print("qdot:", qdot)
-    print("qdot_pos:", qdot_from_pos)

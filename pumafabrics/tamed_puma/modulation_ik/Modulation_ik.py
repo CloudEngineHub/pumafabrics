@@ -3,29 +3,32 @@ import numpy as np
 import time
 import os
 from scipy.spatial.transform import Rotation as R
-# from functions_stableMP_fabrics.kinematics_kuka import KinematicsKuka
-# from kinematics_kuka import KinematicsKuka
+from pumafabrics.tamed_puma.kinematics.kinematics_basics import KinematicsBasics
+from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 import copy
 import spatial_casadi as sc
 
 class IKGomp():
-    def __init__(self, q_home=None, end_link_name='iiwa_link_7'):
+    def __init__(self, q_home=None, end_link_name='iiwa_link_7', robot_name="iiwa14"):
         # Current robot's state
         if q_home is None:
             self.q_home = np.array([0.0, 0.0, 1.5, 1.5, 0.0, 0.0, 0.0], dtype=float)
         else:
             self.q_home = q_home
         self.end_link_name = end_link_name
+        self.robot_name = robot_name
+        self.urdf_path = "/../config/urdfs/" + robot_name + ".urdf"
+        self.kinematics_basics = KinematicsBasics(end_link_name=self.end_link_name, robot_name=robot_name)
 
-    def construct_ik(self, urdf_path="/../config/urdfs/iiwa14.urdf", nr_obst=0):
+    def construct_ik(self, nr_obst=0):
         # URDF model
         absolute_path = os.path.dirname(os.path.abspath(__file__))
-        URDF_FILE = absolute_path + urdf_path #"/examples/urdfs/iiwa14.urdf"
+        URDF_FILE = absolute_path + self.urdf_path
 
         # Create IK solver
         self.planner = IK_OPTIM(urdf=URDF_FILE,
                            root_link='world',
-                           end_link='iiwa_link_7')
+                           end_link=self.end_link_name)
         self.planner.set_init_guess(self.q_home)
         self.planner.set_boundary_conditions()  # joint limits
 

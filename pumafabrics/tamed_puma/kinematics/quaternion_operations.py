@@ -10,6 +10,24 @@ class QuaternionOperations():
     def __init__(self):
         pass
 
+    def quat_product(self, p, q):
+        p_w = p[0]
+        q_w = q[0]
+        p_v = p[1:4]
+        q_v = q[1:4]
+
+        if isinstance(p, np.ndarray):
+            pq_w = p_w*q_w - np.matmul(p_v, q_v)
+            pq_v = p_w*q_v + q_w*p_v + np.cross(p_v, q_v)
+            pq = np.append(pq_w, pq_v)
+        elif isinstance(p, ca.SX):
+            pq_w = p_w*q_w - ca.dot(p_v, q_v)
+            pq_v = p_w*q_v + q_w*p_v + ca.cross(p_v, q_v)
+            pq = ca.vcat((pq_w, pq_v))
+        else:
+            print("no matching type found in quat_product")
+        return pq
+
     def quat_to_rot_matrix(self, quat):
         if type(quat) == list:
             quat = torch.FloatTensor(quat).cuda()
@@ -59,6 +77,12 @@ class QuaternionOperations():
         quat_vel = 0.5*np.dot(H.transpose(), vel_angular)
         return quat_vel
 
+    def symbolic_rot_matrix_to_quaternions(self, rot_matrix):
+        r = sc.Rotation.from_matrix(rot_matrix)
+        quatern = r.as_quat()
+        quat = [quatern[3], quatern[0], quatern[1], quatern[2]]
+        return quatern
+
     # --------------------------- check flips of quaternions -------------------------------#
     def check_quaternion_flipped(self, quat, quat_prev):
         dist_quat = np.linalg.norm(quat - quat_prev)
@@ -92,21 +116,3 @@ class QuaternionOperations():
             print("Flipped: ", angular_distance_2)
 
         return quat_new
-
-    def quat_product(self, p, q):
-        p_w = p[0]
-        q_w = q[0]
-        p_v = p[1:4]
-        q_v = q[1:4]
-
-        if isinstance(p, np.ndarray):
-            pq_w = p_w*q_w - np.matmul(p_v, q_v)
-            pq_v = p_w*q_v + q_w*p_v + np.cross(p_v, q_v)
-            pq = np.append(pq_w, pq_v)
-        elif isinstance(p, ca.SX):
-            pq_w = p_w*q_w - ca.dot(p_v, q_v)
-            pq_v = p_w*q_v + q_w*p_v + ca.cross(p_v, q_v)
-            pq = ca.vcat((pq_w, pq_v))
-        else:
-            print("no matching type found in quat_product")
-        return pq

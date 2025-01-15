@@ -147,6 +147,6 @@ class KinematicsBasics():
                         child_link=end_link_name)
         pos = x_fk[:3, 3]
         rot_matrix = x_fk[:3, :3]
-        quat = self.symbolic_rot_matrix_to_quaternions(rot_matrix=rot_matrix)
+        quat = self.quaternion_operations.symbolic_rot_matrix_to_quaternions(rot_matrix=rot_matrix)
         x_pose = ca.vcat((pos, quat))
         return x_pose
