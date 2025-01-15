@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import importlib
 from pumafabrics.puma_adapted.initializer import initialize_framework
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
-from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
+from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 from pumafabrics.tamed_puma.tamedpuma.combining_actions import combine_fabrics_safeMP
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 

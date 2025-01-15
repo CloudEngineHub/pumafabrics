@@ -17,7 +17,7 @@ import copy
 import pybullet
 
 class example_kuka_fabrics():
-    def __init__(self, file_name="kuka_stableMP_fabrics_2nd"):
+    def __init__(self, file_name="kuka_TamedPUMA_tomato"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
@@ -62,12 +62,12 @@ class example_kuka_fabrics():
         action_t_gpu = transition_info["desired velocity"]
         action_stableMP = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN="1st") #because we use velocity action!
         action_quat_vel = action_stableMP[3:]
-        action_quat_vel_sys = kuka_kinematics.quat_vel_with_offset(quat_vel_NN=action_quat_vel,
+        action_quat_vel_sys = kuka_kinematics.quaternion_operations.quat_vel_with_offset(quat_vel_NN=action_quat_vel,
                                                                    quat_offset=offset_orientation)
         xdot_pos_quat = np.append(action_stableMP[:3], action_quat_vel_sys)
 
         # --- if necessary, also get rpy velocities corresponding to quat vel ---#
-        vel_rpy = kuka_kinematics.quat_vel_to_angular_vel(angle_quaternion=xee_orientation,
+        vel_rpy = kuka_kinematics.quaternion_operations.quat_vel_to_angular_vel(angle_quaternion=xee_orientation,
                                                             vel_quaternion=xdot_pos_quat[3:7]) / self.params["dt"]  # action_quat_vel
         return xdot_pos_quat, vel_rpy
 
@@ -75,7 +75,7 @@ class example_kuka_fabrics():
         action_t_gpu = transition_info["desired acceleration"]
         action_stableMP = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN="2nd") #because we use velocity action!
         action_quat_acc = action_stableMP[3:]
-        action_quat_acc_sys = kuka_kinematics.quat_vel_with_offset(quat_vel_NN=action_quat_acc,
+        action_quat_acc_sys = kuka_kinematics.quaternion_operations.quat_vel_with_offset(quat_vel_NN=action_quat_acc,
                                                                    quat_offset=offset_orientation)
         xddot_pos_quat = np.append(action_stableMP[:3], action_quat_acc_sys)
         return xddot_pos_quat

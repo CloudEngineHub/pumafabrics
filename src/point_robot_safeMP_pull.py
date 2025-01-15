@@ -18,7 +18,7 @@ import importlib
 from pumafabrics.puma_adapted.initializer import initialize_framework
 from pumafabrics.tamed_puma.utils.normalizations import normalizaton_sim_NN
 from pumafabrics.tamed_puma.kinematics.geometry_IL import construct_IL_geometry
-from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
+from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 
 # Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
 # mass to compute actions for a simulated 3D point mass.

@@ -5,7 +5,7 @@ from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 
 from mpscenes.goals.goal_composition import GoalComposition
 from pumafabrics.tamed_puma.kinematics.geometry_IL import construct_IL_geometry
-from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
+from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 from fabrics.planner.parameterized_planner import ParameterizedFabricPlanner
 from agent.utils.normalizations import normalizaton_sim_NN
 from functions_safeMP_fabrics.environments import trial_environments

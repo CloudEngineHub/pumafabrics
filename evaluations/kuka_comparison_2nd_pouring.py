@@ -257,8 +257,8 @@ if __name__ == "__main__":
     if len(q_init_list) > 2:
         goal_vel_list[2] = [-0.01, 0., 0.0]
     n_runs = len(q_init_list)
-    network_yaml = "kuka_stableMP_fabrics_2nd_pouring"
-    network_yaml_GOMP = "kuka_GOMP_pouring"
+    network_yaml = "kuka_TamedPUMA_pouring"
+    network_yaml_GOMP = "kuka_ModulationIK_pouring"
     kuka_class = comparison_kuka_class(n_runs=n_runs)
     if LOAD_RESULTS == False:
         # Regenerate the results:

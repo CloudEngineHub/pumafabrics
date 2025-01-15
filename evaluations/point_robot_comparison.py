@@ -8,7 +8,7 @@ from examples.point_robot_PUMA import example_point_robot_PUMA
 from examples.point_robot_TamedPUMA_FPM import example_point_robot_TamedPUMA_FPM
 from examples.point_robot_TamedPUMA_CPM import example_point_robot_TamedPUMA_CPM
 from examples.point_robot_Fabrics import example_point_robot_fabrics
-from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
+from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 
 # --- Initial parameters --- #
 mode = "acc"

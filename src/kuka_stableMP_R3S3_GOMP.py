@@ -20,7 +20,7 @@ class example_kuka_stableMP_R3S3():
         self.IN_COLLISION = False
         self.time_to_goal = -1
         self.solver_times = []
-        with open("../pumafabrics/tamed_puma/config/kuka_GOMP.yaml", "r") as setup_stream:
+        with open("../pumafabrics/tamed_puma/config/kuka_ModulationIK_tomato.yaml", "r") as setup_stream:
             self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]

@@ -3,7 +3,7 @@ import numpy as np
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from mpscenes.goals.goal_composition import GoalComposition
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
+from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 from pumafabrics.tamed_puma.tamedpuma.combining_actions import combine_fabrics_safeMP
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 
@@ -78,8 +78,6 @@ class example_point_robot_fabrics():
         """
         # --- parameters --- #
         dof = 2
-        scaling_factor = 10
-        scaling_room = {"x": [-10, 10], "y":[-10, 10]}
         if mode == "vel":
             str_mode = "velocity"
         elif mode == "acc":

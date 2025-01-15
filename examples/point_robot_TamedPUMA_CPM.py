@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import importlib
 from pumafabrics.puma_adapted.initializer import initialize_framework
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
-from pumafabrics.tamed_puma.utils.plotting_functions import plotting_functions
+from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 from pumafabrics.tamed_puma.tamedpuma.combining_actions import combine_fabrics_safeMP
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.tamedpuma.energy_regulator import energy_regulation
@@ -102,7 +102,6 @@ class example_point_robot_TamedPUMA_CPM():
         # --- parameters --- #
         dof = 2
         scaling_factor = 10
-        scaling_room = {"x": [-10, 10], "y":[-10, 10]}
         if mode == "vel":
             str_mode = "velocity"
         elif mode == "acc":

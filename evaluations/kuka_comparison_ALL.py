@@ -40,7 +40,7 @@ class obtain_total_results():
 
     def table_results_total(self, results):
 
-        with open("simulation_kuka_results_ALL.pkl", 'wb') as f:
+        with open("results_evaluations/simulation_kuka_results_ALL.pkl", 'wb') as f:
             pickle.dump(results, f)
 
         # --- create and plot table --- #
@@ -166,8 +166,8 @@ class obtain_total_results():
         if len(q_init_list) > 2:
             goal_vel_list[2] = [-0.01, 0., 0.0]
         n_runs = len(q_init_list)
-        network_yaml = "kuka_stableMP_fabrics_2nd"
-        network_yaml_GOMP = "kuka_GOMP"
+        network_yaml = "kuka_TamedPUMA_tomato"
+        network_yaml_GOMP = "kuka_ModulationIK_tomato"
 
         self.kuka_class_tomato = comparison_kuka_class(results=self.results, n_runs=n_runs)
         if LOAD_RESULTS == False:
@@ -270,8 +270,8 @@ class obtain_total_results():
         if len(q_init_list) > 2:
             goal_vel_list[2] = [-0.01, 0., 0.0]
         n_runs = len(q_init_list)
-        network_yaml = "kuka_stableMP_fabrics_2nd_pouring"
-        network_yaml_GOMP = "kuka_GOMP_pouring"
+        network_yaml = "kuka_TamedPUMA_pouring"
+        network_yaml_GOMP = "kuka_ModulationIK_pouring"
 
         self.kuka_class_pouring = comparison_kuka_class(results=self.results, n_runs=n_runs)
         if LOAD_RESULTS == False:

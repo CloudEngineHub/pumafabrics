@@ -16,7 +16,7 @@ from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
 import time
 
 class example_kuka_PUMA_modulationIK():
-    def __init__(self, file_name="kuka_GOMP"):
+    def __init__(self, file_name="kuka_ModulationIK_tomato"):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")

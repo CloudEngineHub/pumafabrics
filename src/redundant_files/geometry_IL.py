@@ -1,13 +1,8 @@
 import numpy as np
 import casadi as ca
 import quaternionic
-# from fabrics.diffGeometry.spec import Spec
-# from fabrics.diffGeometry.geometry import Geometry
-from fabrics.diffGeometry.diffMap import DifferentialMap, DynamicDifferentialMap
-from fabrics.helpers.variables import Variables
-from fabrics.diffGeometry.geometry import Geometry
+from fabrics.diffGeometry.diffMap import DifferentialMap
 from scipy.spatial.transform import Rotation as R
-import math
 import spatial_casadi as sc
 
 class construct_IL_geometry(object):
