@@ -78,7 +78,7 @@ class obtain_total_results():
         print("results[case][goal_reached]:", results["GF"]["goal_reached"])
 
     def produce_results_tomato(self, results=None, nr_obst=2):
-        LOAD_RESULTS = False
+        LOAD_RESULTS = True
         nr_obst = nr_obst
         q_init_list = [
             # with goal changing:

@@ -13,14 +13,14 @@ from pumafabrics.tamed_puma.create_environment.environments import trial_environ
 # mass to compute actions for a simulated 3D point mass.
 
 class example_point_robot_PUMA():
-    def __init__(self, v_min=0, v_max=0, acc_min=0, acc_max=0):
-        dt = 0.01
+    def __init__(self, v_min=0, v_max=0, acc_min=0, acc_max=0, dof=2):
         self.v_min = v_min
         self.v_max = v_max
         self.acc_min = acc_min
         self.acc_max = acc_max
         self.INT_COLLISION_CHECK = 0
         self.BOOL_COLLISION_CHECK = 0
+        self.dof = dof
         self.params = {}
         self.params["x_min"] = np.array([-10, -10])
         self.params["x_max"] = np.array([10, 10])
@@ -76,7 +76,6 @@ class example_point_robot_PUMA():
         # Parameters
         params_name = '2nd_order_2D'
         x_t_init = np.array([np.append(ob['robot_0']["joint_state"]["position"][0:2], ob['robot_0']["joint_state"]["velocity"][0:2])]) # initial states
-        # simulation_length = 2000
         results_base_directory = '../pumafabrics/puma_adapted/'
 
         # Load parameters
@@ -94,7 +93,6 @@ class example_point_robot_PUMA():
         state_goal = np.array((goal._sub_goals[0]._config["desired_position"]))
         goal_normalized = normalizations.call_normalize_state(state=state_goal)
         translation = normalizations.get_translation(goal_pos=goal_normalized, goal_pos_NN=goal_NN)
-        translation_gpu = torch.FloatTensor(translation).cuda()
 
         # Initialize dynamical system
         min_vel = learner.min_vel
@@ -108,7 +106,6 @@ class example_point_robot_PUMA():
         fig.set_size_inches(8, 8)
         fig.show()
         trajectory_plotter = TrajectoryPlotter(fig, x0=x_init_cpu.T, pause_time=1e-5, goal=data['goals training'][0])
-        # x_t_NN = torch.FloatTensor(x_t_init_scaled).cuda()
 
         for w in range(n_steps):
             # --- state from observation --- #

@@ -14,9 +14,11 @@ import copy
 import yaml
 from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
 import time
+from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 
-class example_kuka_PUMA_modulationIK():
+class example_kuka_PUMA_modulationIK(ExampleGeneric):
     def __init__(self, file_name="kuka_ModulationIK_tomato"):
+        super(ExampleGeneric, self).__init__()
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
@@ -27,41 +29,9 @@ class example_kuka_PUMA_modulationIK():
         self.robot_name = self.params["robot_name"]
         warnings.filterwarnings("ignore")
 
-    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None, goal_vel=None):
-        if render is not None:
-            self.params["render"] = render
-        if init_pos is not None:
-            self.params["init_pos"] = init_pos
-        if goal_pos is not None:
-            self.params["goal_pos"] = goal_pos
-        if orientation_goal is not None:
-            self.params["orientation_goal"] = orientation_goal
-        if nr_obst is not None:
-            self.params["nr_obst"] = nr_obst
-        if bool_energy_regulator is not None:
-            self.params["bool_energy_regulator"] = bool_energy_regulator
-        if bool_combined is not None:
-            self.params["bool_combined"] = bool_combined
-        if positions_obstacles is not None:
-            self.params["positions_obstacles"] = positions_obstacles
-        if params_name_1st is not None:
-            self.params["params_name_1st"] = params_name_1st
-        if speed_obstacles is not None:
-            self.params["speed_obstacles"] = speed_obstacles
-        if goal_vel is not None:
-            self.params["goal_vel"] = goal_vel
-
     def initialize_environment(self):
         envir_trial = trial_environments()
         (self.env, self.goal) = envir_trial.initialize_environment_kuka(params=self.params)
-
-    def check_goal_reached(self, x_ee, x_goal):
-        dist = np.linalg.norm(x_ee - x_goal)
-        if dist<0.02:
-            self.GOAL_REACHED = True
-            return True
-        else:
-            return False
 
     def construct_fk(self):
         absolute_path = os.path.dirname(os.path.abspath(__file__))
@@ -183,8 +153,6 @@ class example_kuka_PUMA_modulationIK():
                                                   positions_obsts=positions_obstacles,
                                                   q_init_guess=q,
                                                   q_home=q)
-            # if solver_flag == False:
-            #     q_d = q
             xee_IK, _ = self.gomp_class.get_current_pose(q=q_d, quat_prev=quat_prev)
             # print("solver_flag:", solver_flag)
             action = self.pdcontroller.control(desired_velocity=q_d, current_velocity=q)
@@ -211,15 +179,6 @@ class example_kuka_PUMA_modulationIK():
 
         self.env.close()
 
-        # results = {
-        #     "min_distance": self.utils_analysis.get_min_dist(),
-        #     "collision": self.IN_COLLISION,
-        #     "goal_reached": self.GOAL_REACHED,
-        #     "time_to_goal": self.time_to_goal,
-        #     "solver_times": self.solver_times,
-        #     "solver_time": np.mean(self.solver_times),
-        #     "solver_time_std": np.std(self.solver_times),
-        # }
         results = {
             "min_distance": self.utils_analysis.get_min_dist(),
             "collision": self.IN_COLLISION,
@@ -260,7 +219,7 @@ def main(render=True):
     ]
 
     example_class = example_kuka_PUMA_modulationIK()
-    example_class.overwrite_defaults(init_pos=q_init_list[1], positions_obstacles=positions_obstacles_list[1], render=render)
+    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[1], positions_obstacles=positions_obstacles_list[1], render=render)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

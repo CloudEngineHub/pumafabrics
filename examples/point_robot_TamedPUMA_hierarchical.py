@@ -68,7 +68,6 @@ class example_point_robot_hierarchical():
                 goal=goal,
                 number_obstacles=2,
             )
-        # planner.concretize(extensive_concretize=True, bool_speed_control=bool_speed_control)
         planner.concretize_extensive(mode=mode, time_step=dt, extensive_concretize=True, bool_speed_control=bool_speed_control)
         return planner
 

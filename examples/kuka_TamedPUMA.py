@@ -13,12 +13,14 @@ from pumafabrics.tamed_puma.nullspace_control.nullspace_controller import Cartes
 from pumafabrics.puma_adapted.initializer import initialize_framework
 from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 from pumafabrics.tamed_puma.utils.filters import PDController
+from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 import copy
 import time
 import pybullet
 
-class example_kuka_TamedPUMA():
-    def __init__(self, file_name="kuka_TamedPUMA_tomato"): #, bool_energy_regulator=False, bool_combined=True, robot_name="iiwa14"):
+class example_kuka_TamedPUMA(ExampleGeneric):
+    def __init__(self, file_name="kuka_TamedPUMA_tomato"):
+        super(ExampleGeneric, self).__init__()
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
@@ -27,38 +29,6 @@ class example_kuka_TamedPUMA():
             self.params = yaml.safe_load(setup_stream)
         self.network_yaml = file_name
         self.robot_name = self.params["robot_name"]
-
-    def overwrite_defaults(self, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, bool_combined=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None, goal_vel=None):
-        if render is not None:
-            self.params["render"] = render
-        if init_pos is not None:
-            self.params["init_pos"] = init_pos
-        if goal_pos is not None:
-            self.params["goal_pos"] = goal_pos
-        if orientation_goal is not None:
-            self.params["orientation_goal"] = orientation_goal
-        if nr_obst is not None:
-            self.params["nr_obst"] = nr_obst
-        if bool_energy_regulator is not None:
-            self.params["bool_energy_regulator"] = bool_energy_regulator
-        if bool_combined is not None:
-            self.params["bool_combined"] = bool_combined
-        if positions_obstacles is not None:
-            self.params["positions_obstacles"] = positions_obstacles
-        if params_name_1st is not None:
-            self.params["params_name_1st"] = params_name_1st
-        if speed_obstacles is not None:
-            self.params["speed_obstacles"] = speed_obstacles
-        if goal_vel is not None:
-            self.params["goal_vel"] = goal_vel
-
-    def check_goal_reached(self, x_ee, x_goal):
-        dist = np.linalg.norm(x_ee - x_goal)
-        if dist<0.02:
-            self.GOAL_REACHED = True
-            return True
-        else:
-            return False
 
     def initialize_environment(self):
         envir_trial = trial_environments()
@@ -73,34 +43,30 @@ class example_kuka_TamedPUMA():
             root_link=self.params["root_link"],
             end_links=self.params["end_links"],
         )
-    def set_planner(self, goal: GoalComposition): #, degrees_of_freedom: int = 7, mode="acc", dt=0.01, bool_speed_control=True):
+    def set_planner(self, goal: GoalComposition):
         """
         Initializes the fabric planner for the panda robot.
         """
-        if goal is not None:
-            goal  = self.goal
         self.construct_fk()
         absolute_path = os.path.dirname(os.path.abspath(__file__))
         with open(absolute_path + "/../pumafabrics/tamed_puma/config/urdfs/"+self.robot_name+".urdf", "r", encoding="utf-8") as file:
             urdf = file.read()
         forward_kinematics = GenericURDFFk(
             urdf,
-            root_link="iiwa_link_0",
-            end_links=["iiwa_link_7"],
+            root_link=self.params["root_link"],
+            end_links=self.params["end_links"],
         )
         planner = ParameterizedFabricPlannerExtended(
             self.params["dof"],
             self.forward_kinematics,
             time_step=self.params["dt"],
-            # collision_geometry=self.params["collision_geometry"],
-            # collision_finsler=self.params["collision_finsler"],
         )
         # The planner hides all the logic behind the function set_components.
         planner.set_components(
             collision_links=self.params["collision_links"],
             goal=goal,
             number_obstacles=self.params["nr_obst"],
-            number_plane_constraints=0,
+            number_plane_constraints=0, #todo
             limits=self.params["iiwa_limits"],
         )
         planner.concretize_extensive(mode=self.params["mode"], time_step=self.params["dt"], extensive_concretize=self.params["bool_extensive_concretize"], bool_speed_control=self.params["bool_speed_control"])
@@ -131,17 +97,12 @@ class example_kuka_TamedPUMA():
         return action_avoidance, M_avoidance, f_avoidance, qddot_speed
 
     def combine_action(self, M_avoidance, M_attractor, f_avoidance, f_attractor, qddot_speed, qdot = []):
-        #xddot_combined = -0.5*np.dot(self.planner_avoidance.Minv(M_avoidance), f_avoidance) - 0.5*np.dot(self.planner_avoidance.Minv(M_attractor), f_attractor) # + qddot_speed
         xddot_combined = -np.dot(self.planner_avoidance.Minv(M_avoidance + M_attractor), f_avoidance + f_attractor) + qddot_speed
         if self.planner_avoidance._mode == "vel":
             action_combined = qdot + self.planner_avoidance._time_step * xddot_combined
         else:
             action_combined = xddot_combined
         return action_combined
-
-    def integrate_to_vel(self, qdot, action_acc, dt):
-        qdot_action = action_acc *dt +qdot
-        return qdot_action
 
     def vel_NN_rescale(self, transition_info, offset_orientation, xee_orientation, normalizations, kuka_kinematics):
         action_t_gpu = transition_info["desired velocity"]
@@ -175,7 +136,7 @@ class example_kuka_TamedPUMA():
         self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
         self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])
 
-    def run_kuka_example(self): #, n_steps=2000, goal_pos=[-0.24355761, -0.75252747, 0.5], mode="acc", mode_NN = "1st", dt=0.01, mode_env=None):
+    def run_kuka_example(self):
         # --- parameters --- #
         n_steps = self.params["n_steps"]
         orientation_goal = np.array(self.params["orientation_goal"])
@@ -420,12 +381,10 @@ def main(render=True):
         goal_vel_list[1] = [-0.01, 0., 0.]
     if len(q_init_list) > 2:
         goal_vel_list[2] = [-0.01, 0., 0.0]
-    n_runs = len(q_init_list)
     network_yaml = "kuka_TamedPUMA_tomato"
-    network_yaml_GOMP = "kuka_ModulationIK_tomato"
     example_class = example_kuka_TamedPUMA(file_name=network_yaml)
     index = 1
-    example_class.overwrite_defaults(init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=render, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
+    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=render, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

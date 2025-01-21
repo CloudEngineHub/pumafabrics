@@ -15,7 +15,6 @@ class energy_regulation():
         return x_cpu
 
     def relationship_dq_dx(self, offset_orientation, translation_cpu, kuka_kinematics, normalizations, fk):
-        # qq = ca.SX.sym("q", 7, 1)
         qq = fk._q_ca
         x_pose = kuka_kinematics.forward_kinematics_symbolic(fk=fk)
         x_NN = normalizations.normalize_pose_to_NN([x_pose], translation_cpu, offset_orientation)

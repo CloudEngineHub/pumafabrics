@@ -70,7 +70,6 @@ class example_point_robot_TamedPUMA_FPM():
                 goal=goal,
                 number_obstacles=2,
             )
-        # planner.concretize(extensive_concretize=True, bool_speed_control=bool_speed_control)
         planner.concretize_extensive(mode=mode, time_step=dt, extensive_concretize=True, bool_speed_control=bool_speed_control)
         return planner
 
@@ -97,7 +96,6 @@ class example_point_robot_TamedPUMA_FPM():
         else:
             print("this control mode is not defined")
 
-        # (env, goal) = initalize_environment(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)
         planner = self.set_planner(goal, bool_speed_control=True, mode=mode, dt=dt)
         planner_goal = self.set_planner(goal=goal, ONLY_GOAL=True, bool_speed_control=True, mode=mode, dt=dt)
         planner_avoidance = self.set_planner(goal=None, bool_speed_control=True, mode=mode, dt=dt)

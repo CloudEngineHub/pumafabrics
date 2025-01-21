@@ -143,16 +143,8 @@ class ParameterizedFabricPlannerExtended(ParameterizedFabricPlanner):
         try:
             evaluations = self._funs_full.evaluate(**kwargs)
             M, f, action, xddot_speed = self.get_M_f_action(evaluations=evaluations)
-            # action_magnitude = np.linalg.norm(action)
-            # if action_magnitude < eps:
-            #     logging.warning(f"Fabrics: Avoiding small action with magnitude {action_magnitude}")
-            #     action *= 0.0
-            # elif action_magnitude > 1 / eps:
-            #     logging.warning(f"Fabrics: Avoiding large action with magnitude {action_magnitude}")
-            #     action *= 0.0
         except:
             print("If you have no goal component, use compute_M_f_action_avoidance instead of this function")
-        # action_Mf = self.Minv(M)*f  #if you want to check inf inv(M)*f == action
         return M, f, action, xddot_speed
 
     def compute_M_f_action_avoidance(self, **kwargs):

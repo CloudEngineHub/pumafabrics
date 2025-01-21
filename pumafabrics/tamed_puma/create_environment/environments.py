@@ -252,8 +252,9 @@ class trial_environments():
         static_obst_dict = {
             "type": "sphere",
             # "geometry": {"position": positions_obstacles[0], "radius": 0.05},
-            "geometry": {"trajectory": [str(positions_obstacles[0][0]) + "+t*"+str(speed_obstacles[0][0]), str(positions_obstacles[0][1]),
-                                        str(positions_obstacles[0][2])], "radius": 0.05},
+            "geometry": {"trajectory": [str(positions_obstacles[0][0]) + "+t*" + str(speed_obstacles[0][0]),
+                                        str(positions_obstacles[0][1]) + "+t*" + str(speed_obstacles[0][1]),
+                                        str(positions_obstacles[0][2]) + "+t*" + str(speed_obstacles[0][2])], "radius": 0.05},
             "rgba": [1, 0, 0, 1]
             # todo: IMPORTANT when z=0.5: fabrics becomes unstable/local minima
         }
