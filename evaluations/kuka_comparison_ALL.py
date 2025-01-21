@@ -286,7 +286,7 @@ class obtain_total_results():
         return results_pouring
 
 if __name__ == "__main__":
-    LOAD_RESULTS=True
+    LOAD_RESULTS=False
     total_results = obtain_total_results()
     if LOAD_RESULTS == False:
         results_tomato = total_results.produce_results_tomato()
