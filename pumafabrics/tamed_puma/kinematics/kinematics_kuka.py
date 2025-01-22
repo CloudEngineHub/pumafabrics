@@ -17,14 +17,14 @@ class KinematicsKuka(KinematicsBasics):
 
     def get_initial_pose(self, q_init, offset_orientation):
         # initial state pose:
-        x_t_init_pose = self.forward_kinematics(q_init)
+        x_t_init_pose = self.forward_kinematics(q_init, end_link_name=self.end_link_name)
         x_t_init_pose[3:7] = self.quaternion_operations.check_quaternion_initial(x_orientation=x_t_init_pose[3:], quat_offset=offset_orientation)
         xee_orientation = x_t_init_pose[3:7]
         return x_t_init_pose, xee_orientation
 
     def get_pose(self, q, quat_prev):
         # --- End-effector state ---#
-        x_t_pose = self.forward_kinematics(q)
+        x_t_pose = self.forward_kinematics(q, end_link_name=self.end_link_name)
         x_t_pose[3:7] = self.quaternion_operations.check_quaternion_flipped(quat=x_t_pose[3:7], quat_prev=quat_prev)
         xee_orientation = x_t_pose[3:7]
         return x_t_pose, xee_orientation

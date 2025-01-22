@@ -8,8 +8,8 @@ import yaml
 from pumafabrics.tamed_puma.nullspace_control.nullspace_controller import CartesianImpedanceController
 import pybullet
 
-class example_kuka_fabrics(ExampleGeneric):
-    def __init__(self, file_name="kuka_TamedPUMA_tomato"):
+class example_kinova_fabrics(ExampleGeneric):
+    def __init__(self, file_name="kinova_TamedPUMA_tomato"):
         super(ExampleGeneric, self).__init__()
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
@@ -23,7 +23,7 @@ class example_kuka_fabrics(ExampleGeneric):
 
     def initialize_environment(self):
         envir_trial = trial_environments()
-        (self.env, self.goal) = envir_trial.initialize_environment_kuka(params=self.params)
+        (self.env, self.goal) = envir_trial.initialize_environment_kinova(params=self.params)
 
     def construct_example(self):
         # --- parameters --- #
@@ -32,24 +32,23 @@ class example_kuka_fabrics(ExampleGeneric):
         self.initialize_environment()
         self.fabrics_controller = FabricsController(params=self.params)
         self.planner, fk = self.fabrics_controller.set_full_planner(goal=self.goal)
-        self.kuka_kinematics = KinematicsKuka()
+        self.kinova_kinematics = KinematicsKuka(end_link_name=self.params["end_links"][0], robot_name=self.robot_name)
         self.utils_analysis = UtilsAnalysis(forward_kinematics=fk,
                                             collision_links=self.params["collision_links"],
                                             collision_radii=self.params["collision_radii"],
-                                            kinematics=self.kuka_kinematics)
-        self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])
+                                            kinematics=self.kinova_kinematics)
 
-    def run_kuka_example(self):
+    def run_kinova_example(self):
         # --- parameters --- #
         offset_orientation = np.array(self.params["orientation_goal"])
         goal_pos = self.params["goal_pos"]
         dof = self.params["dof"]
-        action = np.zeros(dof)
+        action = np.zeros(dof+1)
         ob, *_ = self.env.step(action)
 
         # initial state:
         q_init = ob['robot_0']["joint_state"]["position"][0:dof]
-        x_t_init = self.kuka_kinematics.get_initial_state_task(q_init=q_init, qdot_init=np.zeros((dof, 1)), offset_orientation=offset_orientation, mode_NN=self.params["mode_NN"])
+        x_t_init = self.kinova_kinematics.get_initial_state_task(q_init=q_init, qdot_init=np.zeros((dof, 1)), offset_orientation=offset_orientation, mode_NN=self.params["mode_NN"])
         ob, *_ = self.env.step(np.zeros(self.dof))
         quat_prev = x_t_init[3:7]
         xee_list = []
@@ -81,6 +80,7 @@ class example_kuka_fabrics(ExampleGeneric):
                 action = np.clip(action, -1 * np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
             else:
                 action = action
+            print("action[-1]", action[-1])
             ob, *_ = self.env.step(action)
 
             # result analysis:
@@ -112,7 +112,7 @@ class example_kuka_fabrics(ExampleGeneric):
         return results
 
 def main(render=True):
-    example_class = example_kuka_fabrics()
+    example_class = example_kinova_fabrics()
     q_init_list = [
         # with goal changing:
         np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
@@ -208,7 +208,7 @@ def main(render=True):
                                      render=render,
                                      )
     example_class.construct_example()
-    res = example_class.run_kuka_example()
+    res = example_class.run_kinova_example()
 
     print(" -------------------- results -----------------------")
     print("min_distance:", res["min_distance"])

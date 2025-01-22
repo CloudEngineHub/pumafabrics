@@ -36,7 +36,8 @@ class example_kuka_TamedPUMA(ExampleGeneric):
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"], end_link_name=self.params["end_links"][0], robot_name=self.params["robot_name"])
         self.utils_analysis = UtilsAnalysis(forward_kinematics=self.fk,
                                             collision_links=self.params["collision_links"],
-                                            collision_radii=self.params["collision_radii"])
+                                            collision_radii=self.params["collision_radii"],
+                                            kinematics=self.kuka_kinematics)
         self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
         self.puma_controller = PUMAControl(params=self.params, kinematics=self.kuka_kinematics)
         self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])

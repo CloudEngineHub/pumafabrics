@@ -6,13 +6,13 @@ from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 
 class UtilsAnalysis():
-    def __init__(self, forward_kinematics: GenericURDFFk, collision_links:list, collision_radii: dict) -> None:
+    def __init__(self, forward_kinematics: GenericURDFFk, collision_links:list, collision_radii: dict, kinematics) -> None:
         self.min_dist = 1000
         self.collision_links = collision_links
         self.collision_radii = collision_radii
         self.fk = forward_kinematics
         self.goal_reach_thr = 0.05
-        self.kuka_kinematics = KinematicsKuka()
+        self.kuka_kinematics = kinematics
 
     def check_distance_collision(self, q: np.ndarray, obstacles: list, margin=0.0, parent_link='iiwa_link_0') -> bool:
         """

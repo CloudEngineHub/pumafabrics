@@ -56,7 +56,8 @@ class example_kuka_modulation_IK_1000(ExampleGeneric):
         self.construct_fk()
         self.utils_analysis = UtilsAnalysis(forward_kinematics=self.forward_kinematics,
                                             collision_links=self.params["collision_links"],
-                                            collision_radii=self.params["collision_radii"])
+                                            collision_radii=self.params["collision_radii"],
+                                            kinematics=self.kuka_kinematics)
 
         # Parameters
         if self.params["mode_NN"] == "1st":

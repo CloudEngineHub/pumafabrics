@@ -1,0 +1,47 @@
+#robot:
+dof: 10
+dim_task: 7
+dim_pos: 3
+robot_name: "dinova"
+root_link: "kinova_base_link"
+end_links: ["end_effector_link"]
+collision_links: []
+collision_radii: {}
+vel_limits: [1., 1., 1., 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0000000001]
+iiwa_limits: [
+    [-10, 10],
+    [-10, 10],
+    [-10, 10],
+    [-2.8973, 2.8973],
+    [-1.7628, 1.7628],
+    [-2.8973, 0.7],
+    [-3.0718, -0.0698],
+    [-2.8973, 2.8973],
+    [-0.0175, 3.7525],
+    [-10, 10],
+  ]
+#fabrics:
+collision_geometry: "-0.01 / (x ** 1) * xdot ** 2"
+collision_finsler: "0.01/(x**2) * xdot**2"
+#default settings:
+render: True
+bool_energy_regulator: True
+bool_combined: True
+bool_speed_control: True
+bool_extensive_concretize: True
+mode: "acc"        # mode of fabrics (vel or acc)
+mode_NN: "2nd"
+mode_env: "vel"
+dt: 0.02 #0.00769
+nr_obst: 2
+positions_obstacles: [[0.5, -0.30, 0.5], [0.24355761, 0.45252747, 0.2]]
+speed_obstacles: [[0., 0., 0.], [0., 0., 0.]]
+nr_obst_dyn: 0
+goal_reached_threshold: 0.02
+n_steps: 2000
+init_pos: [-0.702, 0.355, -0.016, -1.212, 0.012, -0.502]
+goal_pos: [0.58, -0.214,  0.115]
+goal_vel: [0., 0., 0.]
+orientation_goal: [ 0.4426, -0.5459,  0.5806, -0.4112]
+params_name_1st: "1st_order_R3S3_converge"
+params_name_2nd: "2nd_order_R3S3_tomato_31may"
