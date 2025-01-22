@@ -4,13 +4,11 @@ import numpy as np
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from mpscenes.goals.goal_composition import GoalComposition
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from pumafabrics.tamed_puma.tamedpuma.energy_regulator import energy_regulation
-import importlib
+from pumafabrics.tamed_puma.tamedpuma.puma_controller import PUMAControl
 from pumafabrics.tamed_puma.nullspace_control.nullspace_controller import CartesianImpedanceController
-from pumafabrics.puma_adapted.initializer import initialize_framework
 from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 from pumafabrics.tamed_puma.utils.filters import PDController
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
@@ -109,44 +107,17 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
         qddot_speed = np.zeros((self.params["dof"],))  # todo: think about what to do with speed regulation term!!
         return action_avoidance, M_avoidance, f_avoidance, qddot_speed
 
-    def combine_action(self, M_avoidance, M_attractor, f_avoidance, f_attractor, qddot_speed, qdot = []):
-        xddot_combined = -np.dot(self.planner_avoidance.Minv(M_avoidance + M_attractor), f_avoidance + f_attractor) + qddot_speed
-        if self.planner_avoidance._mode == "vel":
-            action_combined = qdot + self.planner_avoidance._time_step * xddot_combined
-        else:
-            action_combined = xddot_combined
-        return action_combined
-
-    def vel_NN_rescale(self, transition_info, offset_orientation, xee_orientation, normalizations, kuka_kinematics):
-        action_t_gpu = transition_info["desired velocity"]
-        action_stableMP = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN="1st") #because we use velocity action!
-        action_quat_vel = action_stableMP[3:]
-        action_quat_vel_sys = kuka_kinematics.quaternion_operations.quat_vel_with_offset(quat_vel_NN=action_quat_vel,
-                                                                   quat_offset=offset_orientation)
-        xdot_pos_quat = np.append(action_stableMP[:3], action_quat_vel_sys)
-
-        # --- if necessary, also get rpy velocities corresponding to quat vel ---#
-        vel_rpy = kuka_kinematics.quaternion_operations.quat_vel_to_angular_vel(angle_quaternion=xee_orientation,
-                                                            vel_quaternion=xdot_pos_quat[3:7]) / self.params["dt"]  # action_quat_vel
-        return xdot_pos_quat, vel_rpy
-
-    def acc_NN_rescale(self, transition_info, offset_orientation, xee_orientation, normalizations, kuka_kinematics):
-        action_t_gpu = transition_info["desired acceleration"]
-        action_stableMP = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN="2nd") #because we use velocity action!
-        action_quat_acc = action_stableMP[3:]
-        action_quat_acc_sys = kuka_kinematics.quaternion_operations.quat_vel_with_offset(quat_vel_NN=action_quat_acc,
-                                                                   quat_offset=offset_orientation)
-        xddot_pos_quat = np.append(action_stableMP[:3], action_quat_acc_sys)
-        return xddot_pos_quat
-
     def construct_example(self):
         self.initialize_environment()
+        # self.fabrics_controller = FabricsController(self.params)
+        # self.planner_avoidance, self.fk = self.fabrics_controller.set_avoidance_planner(goal=None)
         self.planner_avoidance, self.fk = self.set_planner(goal=None)
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"], end_link_name=self.params["end_links"][0], robot_name=self.params["robot_name"])
         self.utils_analysis = UtilsAnalysis(forward_kinematics=self.forward_kinematics,
                                             collision_links=self.params["collision_links"],
                                             collision_radii=self.params["collision_radii"])
         self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
+        self.puma_controller = PUMAControl(params=self.params, kinematics=self.kuka_kinematics)
         self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])
 
     def run_kuka_example(self): #, n_steps=2000, goal_pos=[-0.24355761, -0.75252747, 0.5], mode="acc", mode_NN = "1st", dt=0.01, mode_env=None):
@@ -159,37 +130,9 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
         action = np.zeros(dof)
         ob, *_ = self.env.step(action)
 
-        # Construct classes:
-        results_base_directory = '../pumafabrics/puma_adapted/'
-
-        # Parameters
-        if self.params["mode_NN"] == "1st":
-            self.params_name = self.params["params_name_1st"]
-        else:
-            self.params_name = self.params["params_name_2nd"]
-        print("self.params_name:", self.params_name)
         q_init = ob['robot_0']["joint_state"]["position"][0:dof]
-
-        # Load parameters
-        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + self.params_name), 'Params')
-        params = Params(results_base_directory)
-        params.results_path += params.selected_primitives_ids + '/'
-        params.load_model = True
-
-        # Initialize framework
-        learner, _, data = initialize_framework(params, self.params_name, verbose=False)
-        goal_NN = data['goals training'][0]
-
-        # Normalization class
-        normalizations = normalization_functions(x_min=data["x min"], x_max=data["x max"], dof_task=self.params["dim_task"], dt=self.params["dt"], mode_NN=self.params["mode_NN"], learner=learner)
-
-        # Translation of goal:
-        translation_gpu, translation_cpu = normalizations.translation_goal(state_goal = np.append(goal_pos, orientation_goal), goal_NN=goal_NN)
-
-        # initial state:
-        x_t_init = self.kuka_kinematics.get_initial_state_task(q_init=q_init, qdot_init=np.zeros((dof, 1)), offset_orientation=offset_orientation, mode_NN=self.params["mode_NN"])
-        x_init_gpu = normalizations.normalize_state_to_NN(x_t=[x_t_init], translation_cpu=translation_cpu, offset_orientation=offset_orientation)
-        dynamical_system = learner.init_dynamical_system(initial_states=x_init_gpu, delta_t=1)
+        x_t_init, x_init_gpu, translation_cpu, goal_NN = self.puma_controller.initialize_PUMA(q_init=q_init, goal_pos=goal_pos, offset_orientation=offset_orientation)
+        dynamical_system, normalizations = self.puma_controller.return_classes()
 
         # energization:
         energy_regulation_class = energy_regulation(dim_task=7, mode_NN=self.params["mode_NN"], dof=dof, dynamical_system=dynamical_system)
@@ -226,8 +169,8 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
 
             # # -- transform to configuration space --#
             # --- rescale velocities and pose (correct offset and normalization) ---#
-            xdot_pos_quat, euler_vel = self.vel_NN_rescale(transition_info, offset_orientation, xee_orientation, normalizations, self.kuka_kinematics)
-            xddot_pos_quat = self.acc_NN_rescale(transition_info, offset_orientation, xee_orientation, normalizations, self.kuka_kinematics)
+            xdot_pos_quat, euler_vel = self.puma_controller.vel_NN_rescale(transition_info, offset_orientation, xee_orientation, normalizations, self.kuka_kinematics)
+            xddot_pos_quat = self.puma_controller.acc_NN_rescale(transition_info, offset_orientation, xee_orientation, normalizations, self.kuka_kinematics)
             x_t_action = normalizations.reverse_transformation_pos_quat(state_gpu=transition_info["desired state"], offset_orientation=offset_orientation)
 
             # ---- velocity action_stableMP: option 1 ---- #

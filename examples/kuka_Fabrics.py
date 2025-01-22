@@ -18,6 +18,7 @@ class example_kuka_fabrics(ExampleGeneric):
         with open("../pumafabrics/tamed_puma/config/" + file_name + ".yaml", "r") as setup_stream:
              self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
+        self.params["bool_extensive_concretize"] = False
         self.robot_name = self.params["robot_name"]
 
     def initialize_environment(self):

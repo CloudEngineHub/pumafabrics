@@ -45,7 +45,7 @@ class obtain_total_results():
 
         # --- create and plot table --- #
         rows = []
-        title_row = [' ','Success-Rate', 'Time-to-Success [s]', "Min Clearance [m]", "Computation time [ms]", 'Path difference to PUMA', "Input difference to PUMA"]
+        title_row = [' ','Success-Rate', 'Time-to-Success [s]', "Min Clearance [m]", "Computation time [ms]", 'Path difference to PUMA'] #, "Input difference to PUMA"]
         nr_column = len(title_row)
         n_runs = len(results[self.cases[0]]["goal_reached"])
         rows.append(title_row)
@@ -67,7 +67,7 @@ class obtain_total_results():
                          min_clearance_str,
                          str(np.round(np.nanmean(np.concatenate(results[case]["solver_times"], axis=0)), decimals=6)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["solver_times"], axis=0)), decimals=6)),
                          str(np.round(np.nanmean(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)),
-                         str(np.round(np.nanmean(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)),
+                         #str(np.round(np.nanmean(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)),
                          ])
         table = Texttable()
         table.set_cols_align(["c"] * nr_column)
@@ -78,7 +78,7 @@ class obtain_total_results():
         print("results[case][goal_reached]:", results["GF"]["goal_reached"])
 
     def produce_results_tomato(self, results=None, nr_obst=2):
-        LOAD_RESULTS = True
+        LOAD_RESULTS = False
         nr_obst = nr_obst
         q_init_list = [
             # with goal changing:
@@ -286,7 +286,7 @@ class obtain_total_results():
         return results_pouring
 
 if __name__ == "__main__":
-    LOAD_RESULTS=False
+    LOAD_RESULTS=True
     total_results = obtain_total_results()
     if LOAD_RESULTS == False:
         results_tomato = total_results.produce_results_tomato()

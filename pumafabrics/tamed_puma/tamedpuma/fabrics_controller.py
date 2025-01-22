@@ -24,7 +24,7 @@ class FabricsController:
             end_links=self.params["end_links"],
         )
 
-    def set_planner(self, goal: GoalComposition):
+    def set_planner(self, goal: GoalComposition, nr_plane_constraints=1):
         """
         Initializes the fabric planner for the panda robot.
         """
@@ -38,11 +38,15 @@ class FabricsController:
             collision_links=self.params["collision_links"],
             goal=goal,
             number_obstacles=self.params["nr_obst"],
-            number_plane_constraints=1, #todo
+            number_plane_constraints=nr_plane_constraints, #todo
             limits=self.params["iiwa_limits"],
         )
-        planner.concretize_extensive(mode=self.params["mode"], time_step=self.params["dt"], extensive_concretize=False, bool_speed_control=self.params["bool_speed_control"])
+        planner.concretize_extensive(mode=self.params["mode"], time_step=self.params["dt"], extensive_concretize=self.params["bool_extensive_concretize"], bool_speed_control=self.params["bool_speed_control"])
         return planner, self.forward_kinematics
+
+    def set_avoidance_planner(self, goal=None):
+        self.planner_avoidance, self.fk = self.set_planner(goal=goal, nr_plane_constraints=0)
+        return self.planner_avoidance, self.fk
 
     def set_full_planner(self, goal:GoalComposition):
         self.planner_full, self.fk = self.set_planner(goal=goal)
@@ -78,6 +82,30 @@ class FabricsController:
             **arguments_dict)
         self.solver_times.append(time.perf_counter() - time0)
         return action, [], [], []
+
+    def compute_action_avoidance(self, q, ob_robot):
+        nr_obst = self.params["nr_obst"]
+        if nr_obst>0:
+            arguments_dict = dict(
+                q=q,
+                qdot=ob_robot["joint_state"]["velocity"],
+                x_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['position'],
+                radius_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['size'],
+                x_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['position'],
+                radius_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['size'],
+                radius_body_links=self.params["collision_radii"],
+                constraint_0=np.array([0, 0, 1, 0.0]))
+        else:
+            arguments_dict = dict(
+                q=q,
+                qdot=ob_robot["joint_state"]["velocity"],
+                radius_body_links=self.params["collision_radii"],
+                constraint_0=np.array([0, 0, 1, 0.0]))
+
+        M_avoidance, f_avoidance, action_avoidance, xddot_speed_avoidance = self.planner_avoidance.compute_M_f_action_avoidance(
+            **arguments_dict)
+        qddot_speed = np.zeros((self.params["dof"],))  # todo: think about what to do with speed regulation term!!
+        return action_avoidance, M_avoidance, f_avoidance, qddot_speed
 
     def request_solver_times(self):
         return self.solver_times
