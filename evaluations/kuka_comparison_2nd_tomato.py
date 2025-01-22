@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 class comparison_kuka_class():
     def __init__(self, results=None, n_runs=10):
-        self.cases = ["PUMA$_free$", "PUMA$_obst$",  "Occlusion-IK", "GF", "GM", "CM"]
+        self.cases = ["PUMA$_free$", "PUMA$_obst$",  "Occlusion-IK", "Fabrics", "FPM", "CPM"]
         if results is None:
             self.results = {"min_distance": [], "collision": [], "goal_reached": [], "time_to_goal": [], "xee_list": [],
                    "qdot_diff_list": [],
@@ -51,16 +51,16 @@ class comparison_kuka_class():
             position_set[:, i] = interp_function(timesteps_fixed)
         return position_set
 
-    def distance_to_NN(self, xee_list_SMP, xee_list):
+    def distance_to_NN(self, xee_list_PUMA, xee_list):
         """
         Note: currently distance position AND orientation!!
         """
-        len_SMP = len(xee_list_SMP)
-        if len_SMP != len(xee_list):
-            xee_list_i = self.resample_path(xee_list, len_SMP)
+        len_PUMA = len(xee_list_PUMA)
+        if len_PUMA != len(xee_list):
+            xee_list_i = self.resample_path(xee_list, len_PUMA)
         else:
             xee_list_i = xee_list
-        distances = np.absolute(np.array(xee_list_i) - np.array(xee_list_SMP))
+        distances = np.absolute(np.array(xee_list_i) - np.array(xee_list_PUMA))
         distance = np.mean(distances)
         distance_std = np.std(distances)
         return distances, distance, distance_std
@@ -80,7 +80,6 @@ class comparison_kuka_class():
         plt.plot(xee_list[:, 0], xee_list[:, 1], label='x_ee', color='purple', marker='o', linewidth=3)
         plt.plot(x_demonstrations[:, 0], x_demonstrations[:, 1], label='demonstrations', color='blue', marker='o')
         plt.plot(x_demonstrations[-1, 0], x_demonstrations[-1, 1], label="goal", color='green', marker='x', linewidth=5)
-        # plt.axis([0.3, 1., -0.6, 0.6])
         plt.legend()
         plt.title("trajectories for" + case)
         plt.show()
@@ -104,7 +103,7 @@ class comparison_kuka_class():
         distance_std = np.std(distances)
         return distances, distance, distance_std
 
-    def run_i(self, example_class, case:str, q_init_list:list, results_stableMP=None, positions_obstacles_list=[],
+    def run_i(self, example_class, case:str, q_init_list:list, results_PUMA=None, positions_obstacles_list=[],
               speed_obstacles_list=[], goal_pos_list=None, goal_vel_list=None, xee_demonstrations=None):
         results_tot = copy.deepcopy(self.results)
         example_class.overwrite_defaults(params=example_class.params, render=False)
@@ -119,12 +118,12 @@ class comparison_kuka_class():
             results_i = example_class.run_kuka_example()
             if xee_demonstrations == None:
                 print("wrong distance checker activitated!!!!!!")
-                if case == "GF" and results_i["goal_reached"] == False:
+                if case == "Fabrics" and results_i["goal_reached"] == False:
                     print("i_run:", i_run)
-                if results_stableMP is None:
+                if results_PUMA is None:
                     distances, _, _ = self.distance_to_NN(results_i["xee_list"], results_i["xee_list"])
                 else:
-                    distances, _, _ = self.distance_to_NN(results_stableMP["xee_list"][i_run], results_i["xee_list"])
+                    distances, _, _ = self.distance_to_NN(results_PUMA["xee_list"][i_run], results_i["xee_list"])
             else:
                 xee_positions_list = [results_i["xee_list"][z][0:3] for z in range(len(results_i["xee_list"]))]
                 distances, _, _ = self.distance_to_demonstration(xee_positions_list,
@@ -141,48 +140,48 @@ class comparison_kuka_class():
                        goal_vel_list=None, xee_demonstrations=None):
 
         # --- run safe MP (only) example ---#
-        class_SMP = example_kuka_TamedPUMA(file_name=network_yaml)
-        class_SMP.overwrite_defaults(params=class_SMP.params, bool_combined=False, nr_obst=0)
-        results_stableMP = self.run_i(class_SMP, case=self.cases[0], q_init_list=q_init_list, results_stableMP=None,
+        class_PUMA = example_kuka_TamedPUMA(file_name=network_yaml)
+        class_PUMA.overwrite_defaults(params=class_PUMA.params, bool_combined=False, nr_obst=0)
+        results_PUMA = self.run_i(class_PUMA, case=self.cases[0], q_init_list=q_init_list, results_PUMA=None,
                                       positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
                                       goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         # --- run safe MP (only) example ---#
-        class_SMP_obst = example_kuka_TamedPUMA(file_name=network_yaml)
-        class_SMP_obst.overwrite_defaults(params=class_SMP_obst.params, bool_combined=False, nr_obst=nr_obst)
-        results_stableMP_obst = self.run_i(class_SMP_obst, case=self.cases[1], q_init_list=q_init_list, results_stableMP=None,
+        class_PUMA_obst = example_kuka_TamedPUMA(file_name=network_yaml)
+        class_PUMA_obst.overwrite_defaults(params=class_PUMA_obst.params, bool_combined=False, nr_obst=nr_obst)
+        results_PUMA_obst = self.run_i(class_PUMA_obst, case=self.cases[1], q_init_list=q_init_list, results_PUMA=None,
                                            positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
                                            goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         # run the occlusion-based IK baseline ---#
         class_IK = example_kuka_PUMA_modulationIK(file_name=network_yaml_GOMP)
         class_IK.overwrite_defaults(params=class_IK.params, bool_energy_regulator=True, bool_combined=True, render=True, nr_obst=nr_obst)
-        results_IK = self.run_i(class_IK, case=self.cases[2], q_init_list=q_init_list, results_stableMP=results_stableMP,
+        results_IK = self.run_i(class_IK, case=self.cases[2], q_init_list=q_init_list, results_PUMA=results_PUMA,
                                 positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
                                 goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         # --- run fabrics (only) example ---#
         class_fabrics = example_kuka_fabrics(file_name=network_yaml)
         class_fabrics.overwrite_defaults(params=class_fabrics.params, nr_obst=nr_obst)
-        results_fabrics = self.run_i(class_fabrics, case=self.cases[3], q_init_list=q_init_list, results_stableMP=results_stableMP,
+        results_fabrics = self.run_i(class_fabrics, case=self.cases[3], q_init_list=q_init_list, results_PUMA=results_PUMA,
                                      positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
                                      goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         # run safe MP + fabrics example ---#
-        class_GM = example_kuka_TamedPUMA(file_name=network_yaml)
-        class_GM.overwrite_defaults(params=class_GM.params, bool_energy_regulator=False, bool_combined=True, nr_obst=nr_obst)
-        results_stableMP_fabrics = self.run_i(class_GM, case=self.cases[4], q_init_list=q_init_list, results_stableMP=results_stableMP,
+        class_FPM = example_kuka_TamedPUMA(file_name=network_yaml)
+        class_FPM.overwrite_defaults(params=class_FPM.params, bool_energy_regulator=False, bool_combined=True, nr_obst=nr_obst)
+        results_FPM = self.run_i(class_FPM, case=self.cases[4], q_init_list=q_init_list, results_PUMA=results_PUMA,
                                               positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
                                               goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         # run theorem III.5 ---#
-        class_CM = example_kuka_TamedPUMA(file_name=network_yaml)
-        class_CM.overwrite_defaults(params=class_CM.params, bool_energy_regulator=True, bool_combined=True, nr_obst=nr_obst)
-        results_CM = self.run_i(class_CM, case=self.cases[5], q_init_list=q_init_list, results_stableMP=results_stableMP,
+        class_CPM = example_kuka_TamedPUMA(file_name=network_yaml)
+        class_CPM.overwrite_defaults(params=class_CPM.params, bool_energy_regulator=True, bool_combined=True, nr_obst=nr_obst)
+        results_CPM = self.run_i(class_CPM, case=self.cases[5], q_init_list=q_init_list, results_PUMA=results_PUMA,
                                 positions_obstacles_list=positions_obstacles_list, speed_obstacles_list=speed_obstacles_list,
                                 goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
-        self.results = {self.cases[0]: results_stableMP, self.cases[1]: results_stableMP_obst, self.cases[2]: results_IK, self.cases[3]: results_fabrics, self.cases[4]: results_stableMP_fabrics, self.cases[5]: results_CM}
+        self.results = {self.cases[0]: results_PUMA, self.cases[1]: results_PUMA_obst, self.cases[2]: results_IK, self.cases[3]: results_fabrics, self.cases[4]: results_FPM, self.cases[5]: results_CPM}
         with open("../pumafabrics/puma_adapted/results/data_files/simulation_kuka_2nd"+network_yaml+".pkl", 'wb') as f:
             pickle.dump(self.results, f)
         return self.results
@@ -200,10 +199,6 @@ class comparison_kuka_class():
         n_runs = len(results[self.cases[0]]["goal_reached"])
         rows.append(title_row)
         for case in self.cases:
-            if case == "SMP":
-                collision_episodes_rate_str = "-"
-            else:
-                collision_episodes_rate_str = np.round(np.sum(results[case]["collision"]) / len(results[case]["collision"]), decimals=8)
             if results[case]["min_distance"] == [1000]*len(results[case]["min_distance"]):
                 min_clearance_str = "-"
             else:
@@ -211,20 +206,18 @@ class comparison_kuka_class():
                     np.round(np.nanstd(results[case]["min_distance"]), decimals=2))
 
             rows.append([case,
-                         str(np.round(np.sum(results[case]["goal_reached"]) / n_runs, decimals=1)), #+ "+-" + str(np.round(np.nanstd(results[case]["goal_reached"]), decimals=4)),
+                         str(np.round(np.sum(results[case]["goal_reached"]) / n_runs, decimals=1)),
                          str(np.round(np.nanmean(results[case]["time_to_goal"]), decimals=4)) + " $\pm$ " + str(np.round(np.nanstd(results[case]["time_to_goal"]), decimals=4)),
-                         # collision_episodes_rate_str,
                          min_clearance_str,
                          str(np.round(np.nanmean(np.concatenate(results[case]["solver_times"], axis=0)), decimals=6)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["solver_times"], axis=0)), decimals=6)),
                          str(np.round(np.nanmedian(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)),
-                         #str(np.round(np.nanmean(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)),
                          ])
         table = Texttable()
         table.set_cols_align(["c"] * nr_column)
         table.set_deco(Texttable.HEADER | Texttable.VLINES)
         table.add_rows(rows)
         print('\nTexttable Latex:')
-        print(latextable.draw_latex(table)) #, caption="\small{Statistics for 50 simulated scenarios of our proposed methods \ac{gm} and \ac{cm} compared to 50 scenarios of \ac{gf} and \ac{smp}}"))
+        print(latextable.draw_latex(table))
         print("results[case][goal_reached]:", results["GF"]["goal_reached"])
 
 if __name__ == "__main__":
@@ -327,8 +320,4 @@ if __name__ == "__main__":
 
     #plot the results:
     kuka_class.table_results(results)
-
-    #plot results in figure:
-    # plots_class = plotting_functions()
-    # plots_class.comparison_plot_iiwa(results=results, cases=cases)
 

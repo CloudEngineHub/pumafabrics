@@ -109,8 +109,6 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
 
     def construct_example(self):
         self.initialize_environment()
-        # self.fabrics_controller = FabricsController(self.params)
-        # self.planner_avoidance, self.fk = self.fabrics_controller.set_avoidance_planner(goal=None)
         self.planner_avoidance, self.fk = self.set_planner(goal=None)
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"], end_link_name=self.params["end_links"][0], robot_name=self.params["robot_name"])
         self.utils_analysis = UtilsAnalysis(forward_kinematics=self.forward_kinematics,
@@ -120,7 +118,7 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
         self.puma_controller = PUMAControl(params=self.params, kinematics=self.kuka_kinematics)
         self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])
 
-    def run_kuka_example(self): #, n_steps=2000, goal_pos=[-0.24355761, -0.75252747, 0.5], mode="acc", mode_NN = "1st", dt=0.01, mode_env=None):
+    def run_kuka_example(self):
         # --- parameters --- #
         n_steps = self.params["n_steps"]
         orientation_goal = np.array(self.params["orientation_goal"])
@@ -142,9 +140,6 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
         xee_list = []
         qdot_diff_list = []
         quat_prev = copy.deepcopy(x_t_init[3:7])
-        Jac_dot_prev = np.zeros((7, 7))
-        Jac_prev = np.zeros((7, 7))
-        time_list = []
 
         for w in range(n_steps):
             # --- state from observation --- #
@@ -159,46 +154,32 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
             # --- end-effector states and normalized states --- #
             x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, quat_prev, mode_NN=self.params["mode_NN"], qdot=qdot)
             quat_prev = copy.deepcopy(xee_orientation)
-            x_t_gpu = normalizations.normalize_state_to_NN(x_t=x_t, translation_cpu=translation_cpu, offset_orientation=offset_orientation)
 
             # --- action by NN --- #
             time0 = time.perf_counter()
-            transition_info = dynamical_system.transition(space='task', x_t=x_t_gpu)
-            time00 = time.perf_counter()
-            time_list.append(time00 - time0)
-
-            # # -- transform to configuration space --#
-            # --- rescale velocities and pose (correct offset and normalization) ---#
-            xdot_pos_quat, euler_vel = self.puma_controller.vel_NN_rescale(transition_info, offset_orientation, xee_orientation, normalizations, self.kuka_kinematics)
-            xddot_pos_quat = self.puma_controller.acc_NN_rescale(transition_info, offset_orientation, xee_orientation, normalizations, self.kuka_kinematics)
-            x_t_action = normalizations.reverse_transformation_pos_quat(state_gpu=transition_info["desired state"], offset_orientation=offset_orientation)
-
-            # ---- velocity action_stableMP: option 1 ---- #
-            qdot_stableMP_pulled = self.kuka_kinematics.inverse_diff_kinematics_quat(xdot=xdot_pos_quat,
-                                                                                    angle_quaternion=xee_orientation).numpy()[0]
-            #### --------------- directly from acceleration!! -----#
-            qddot_stableMP, Jac_prev, Jac_dot_prev = self.kuka_kinematics.inverse_2nd_kinematics_quat(q=q, qdot=qdot_stableMP_pulled, xddot=xddot_pos_quat, angle_quaternion=xee_orientation, Jac_prev=Jac_prev)
-            qddot_stableMP = qddot_stableMP.numpy()[0]
-            action_nullspace = self.controller_nullspace._nullspace_control(q=q, qdot=qdot)
-            qddot_stableMP = qddot_stableMP + action_nullspace
-            #qddot_stableMP = self.pdcontroller.control(desired_velocity=qdot_stableMP_pulled, current_velocity=qdot)
-
+            qddot_PUMA, transition_info = self.puma_controller.request_PUMA(q=q,
+                                                                                qdot=qdot,
+                                                                                x_t=x_t,
+                                                                                xee_orientation=xee_orientation,
+                                                                                offset_orientation=offset_orientation,
+                                                                                translation_cpu=translation_cpu
+                                                                                )
             if self.params["bool_combined"] == True:
                 # ----- Fabrics action ----#
                 action_avoidance, M_avoidance, f_avoidance, qddot_speed = self.compute_action_fabrics(q=q, ob_robot=ob_robot)
 
                 if self.params["bool_energy_regulator"] == True:
-                    # ---- get action by NN via theorem III.5 in https://arxiv.org/pdf/2309.07368.pdf ---#
+                    # ---- get action by CPM via theorem III.5 in https://arxiv.org/pdf/2309.07368.pdf ---#
                     action_combined = energy_regulation_class.compute_action_theorem_III5(q=q, qdot=qdot,
-                                                                                          qddot_attractor = qddot_stableMP,
+                                                                                          qddot_attractor = qddot_PUMA,
                                                                                           action_avoidance=action_avoidance,
                                                                                           M_avoidance=M_avoidance,
                                                                                           transition_info=transition_info)
                 else:
-                    # --- get action by a simpler combination, sum of dissipative systems ---#
-                    action_combined = qddot_stableMP + action_avoidance
-            else: #otherwise only apply action by stable MP
-                action_combined = qddot_stableMP
+                    # --- get action by FPM, sum of dissipative systems ---#
+                    action_combined = qddot_PUMA + action_avoidance
+            else: #otherwise only apply action by PUMA
+                action_combined = qddot_PUMA
 
             if self.params["mode_env"] is not None:
                 if self.params["mode_env"] == "vel": # todo: fix nicely or mode == "acc"): #mode_NN=="2nd":
@@ -214,7 +195,7 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
             # result analysis:
             x_ee, _ = self.utils_analysis._request_ee_state(q, quat_prev)
             xee_list.append(x_ee[0])
-            qdot_diff_list.append(np.mean(np.absolute(qddot_stableMP   - action_combined)))
+            qdot_diff_list.append(np.mean(np.absolute(qddot_PUMA   - action_combined)))
             self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q, obstacles=self.obstacles)
             self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, quat_prev, x_goal=goal_pos)
             if self.GOAL_REACHED:
@@ -225,9 +206,6 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
                 self.time_to_goal = float("nan")
                 break
         self.env.close()
-
-        print("time network average:", np.array(time_list).mean())
-        print("standard deviation", np.array(time_list).std())
 
         results = {
             "min_distance": self.utils_analysis.get_min_dist(),

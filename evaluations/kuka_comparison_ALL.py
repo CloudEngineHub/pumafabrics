@@ -7,7 +7,7 @@ import pickle
 
 class obtain_total_results():
     def __init__(self):
-        self.cases = ["PUMA$_free$", "PUMA$_obst$",  "Occlusion-IK", "GF", "GM", "CM"]
+        self.cases = ["PUMA$_free$", "PUMA$_obst$",  "Occlusion-IK", "Fabrics", "FPM", "CPM"]
         self.results_tot = {"PUMA$_free$": {"solver_times":[]}, "PUMA$_obst$": {"solver_times":[]},  "Occlusion-IK": {"solver_times":[]}, "GF": {"solver_times":[]}, "GM": {"solver_times":[]}, "CM": {"solver_times":[]}}
         self.results = {"min_distance": [], "collision": [], "goal_reached": [], "time_to_goal": [], "xee_list": [], "qdot_diff_list": [],
            "dist_to_NN": [],  "vel_to_NN": [], "solver_times": [], "solver_time": [], "solver_time_std": []}
@@ -50,10 +50,6 @@ class obtain_total_results():
         n_runs = len(results[self.cases[0]]["goal_reached"])
         rows.append(title_row)
         for case in self.cases:
-            if case == "SMP":
-                collision_episodes_rate_str = "-"
-            else:
-                collision_episodes_rate_str = np.round(np.sum(results[case]["collision"]) / len(results[case]["collision"]), decimals=8)
             if results[case]["min_distance"] == [1000]*len(results[case]["min_distance"]):
                 min_clearance_str = "-"
             else:
@@ -61,20 +57,18 @@ class obtain_total_results():
                     np.round(np.nanstd(results[case]["min_distance"]), decimals=2))
 
             rows.append([case,
-                         str(np.round(np.sum(results[case]["goal_reached"]) / n_runs, decimals=2)), #+ "+-" + str(np.round(np.nanstd(results[case]["goal_reached"]), decimals=4)),
+                         str(np.round(np.sum(results[case]["goal_reached"]) / n_runs, decimals=2)),
                          str(np.round(np.nanmean(results[case]["time_to_goal"]), decimals=4)) + " $\pm$ " + str(np.round(np.nanstd(results[case]["time_to_goal"]), decimals=4)),
-                         # collision_episodes_rate_str,
                          min_clearance_str,
                          str(np.round(np.nanmean(np.concatenate(results[case]["solver_times"], axis=0)), decimals=6)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["solver_times"], axis=0)), decimals=6)),
                          str(np.round(np.nanmean(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["dist_to_NN"], axis=0)), decimals=2)),
-                         #str(np.round(np.nanmean(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)) + " $\pm$ " + str(np.round(np.nanstd(np.concatenate(results[case]["qdot_diff_list"], axis=0)), decimals=2)),
                          ])
         table = Texttable()
         table.set_cols_align(["c"] * nr_column)
         table.set_deco(Texttable.HEADER | Texttable.VLINES)
         table.add_rows(rows)
         print('\nTexttable Latex:')
-        print(latextable.draw_latex(table)) #, caption="\small{Statistics for 50 simulated scenarios of our proposed methods \ac{gm} and \ac{cm} compared to 50 scenarios of \ac{gf} and \ac{smp}}"))
+        print(latextable.draw_latex(table))
         print("results[case][goal_reached]:", results["GF"]["goal_reached"])
 
     def produce_results_tomato(self, results=None, nr_obst=2):
@@ -286,11 +280,11 @@ class obtain_total_results():
         return results_pouring
 
 if __name__ == "__main__":
-    LOAD_RESULTS=True
+    LOAD_RESULTS=False
     total_results = obtain_total_results()
     if LOAD_RESULTS == False:
-        results_tomato = total_results.produce_results_tomato()
-        results_tomato_no_obst = total_results.produce_results_tomato(nr_obst=0)
+        # results_tomato = total_results.produce_results_tomato()
+        # results_tomato_no_obst = total_results.produce_results_tomato(nr_obst=0)
         results_pouring = total_results.produce_results_pouring()
         results_pouring_no_obst = total_results.produce_results_pouring(nr_obst=0)
     else:

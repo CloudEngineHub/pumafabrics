@@ -22,11 +22,11 @@ class PUMAControl():
 
     def vel_NN_rescale(self, transition_info, offset_orientation, xee_orientation, normalizations, kuka_kinematics):
         action_t_gpu = transition_info["desired velocity"]
-        action_stableMP = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN="1st") #because we use velocity action!
-        action_quat_vel = action_stableMP[3:]
+        action_PUMA = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN="1st") #because we use velocity action!
+        action_quat_vel = action_PUMA[3:]
         action_quat_vel_sys = kuka_kinematics.quaternion_operations.quat_vel_with_offset(quat_vel_NN=action_quat_vel,
                                                                    quat_offset=offset_orientation)
-        xdot_pos_quat = np.append(action_stableMP[:3], action_quat_vel_sys)
+        xdot_pos_quat = np.append(action_PUMA[:3], action_quat_vel_sys)
 
         # --- if necessary, also get rpy velocities corresponding to quat vel ---#
         vel_rpy = kuka_kinematics.quaternion_operations.quat_vel_to_angular_vel(angle_quaternion=xee_orientation,
@@ -35,11 +35,11 @@ class PUMAControl():
 
     def acc_NN_rescale(self, transition_info, offset_orientation, xee_orientation, normalizations, kuka_kinematics):
         action_t_gpu = transition_info["desired acceleration"]
-        action_stableMP = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN="2nd") #because we use velocity action!
-        action_quat_acc = action_stableMP[3:]
+        action_PUMA = normalizations.reverse_transformation(action_gpu=action_t_gpu, mode_NN="2nd") #because we use velocity action!
+        action_quat_acc = action_PUMA[3:]
         action_quat_acc_sys = kuka_kinematics.quaternion_operations.quat_vel_with_offset(quat_vel_NN=action_quat_acc,
                                                                    quat_offset=offset_orientation)
-        xddot_pos_quat = np.append(action_stableMP[:3], action_quat_acc_sys)
+        xddot_pos_quat = np.append(action_PUMA[:3], action_quat_acc_sys)
         return xddot_pos_quat
 
     def initialize_PUMA(self, q_init, goal_pos, offset_orientation):
@@ -78,36 +78,35 @@ class PUMAControl():
     def return_classes(self):
         return self.dynamical_system, self.normalizations
 
-    # def request_PUMA(self, q, qdot, x_t, xee_orientation, offset_orientation, translation_cpu):
-    #     x_t_gpu = self.normalizations.normalize_state_to_NN(x_t=x_t, translation_cpu=translation_cpu,
-    #                                                    offset_orientation=offset_orientation)
-    #
-    #     # --- action by NN --- #
-    #     time0 = time.perf_counter()
-    #     transition_info = self.dynamical_system.transition(space='task', x_t=x_t_gpu)
-    #     time00 = time.perf_counter()
-    #     self.time_list.append(time00 - time0)
-    #
-    #     # # -- transform to configuration space --#
-    #     # --- rescale velocities and pose (correct offset and normalization) ---#
-    #     xdot_pos_quat, euler_vel = self.vel_NN_rescale(transition_info, offset_orientation, xee_orientation,
-    #                                                    self.normalizations, self.kuka_kinematics)
-    #     xddot_pos_quat = self.acc_NN_rescale(transition_info, offset_orientation, xee_orientation, self.normalizations,
-    #                                          self.kuka_kinematics)
-    #     x_t_action = self.normalizations.reverse_transformation_pos_quat(state_gpu=transition_info["desired state"],
-    #                                                                 offset_orientation=offset_orientation)
-    #
-    #     # ---- velocity action_stableMP: option 1 ---- #
-    #     qdot_stableMP_pulled = self.kuka_kinematics.inverse_diff_kinematics_quat(xdot=xdot_pos_quat,
-    #                                                                              angle_quaternion=xee_orientation).numpy()[
-    #         0]
-    #     #### --------------- directly from acceleration!! -----#
-    #     qddot_stableMP, Jac_prev, Jac_dot_prev = self.kuka_kinematics.inverse_2nd_kinematics_quat(q=q,
-    #                                                                                               qdot=qdot_stableMP_pulled,
-    #                                                                                               xddot=xddot_pos_quat,
-    #                                                                                               angle_quaternion=xee_orientation,
-    #                                                                                               Jac_prev=self.Jac_prev)
-    #     qddot_stableMP = qddot_stableMP.numpy()[0]
-    #     action_nullspace = self.controller_nullspace._nullspace_control(q=q, qdot=qdot)
-    #     qddot_stableMP = qddot_stableMP + action_nullspace
-    #     return qddot_stableMP, transition_info, time0
+    def request_PUMA(self, q, qdot, x_t, xee_orientation, offset_orientation, translation_cpu):
+        # normalization
+        x_t_gpu = self.normalizations.normalize_state_to_NN(x_t=x_t, translation_cpu=translation_cpu,
+                                                       offset_orientation=offset_orientation)
+
+        # compute action network
+        transition_info = self.dynamical_system.transition(space='task', x_t=x_t_gpu)
+
+        # # -- transform to configuration space --#
+        # --- rescale velocities and pose (correct offset and normalization) ---#
+        xdot_pos_quat, euler_vel = self.vel_NN_rescale(transition_info, offset_orientation,
+                                                                       xee_orientation, self.normalizations,
+                                                                       self.kuka_kinematics)
+        xddot_pos_quat = self.acc_NN_rescale(transition_info, offset_orientation, xee_orientation,
+                                                             self.normalizations, self.kuka_kinematics)
+        x_t_action = self.normalizations.reverse_transformation_pos_quat(state_gpu=transition_info["desired state"],
+                                                                    offset_orientation=offset_orientation)
+
+        # ---- velocity action_PUMA: option 1 ---- #
+        qdot_PUMA_pulled = self.kuka_kinematics.inverse_diff_kinematics_quat(xdot=xdot_pos_quat,
+                                                                                 angle_quaternion=xee_orientation).numpy()[
+            0]
+        #### --------------- directly from acceleration!! -----#
+        qddot_PUMA, self.Jac_prev, Jac_dot_prev = self.kuka_kinematics.inverse_2nd_kinematics_quat(q=q,
+                                                                                                  qdot=qdot_PUMA_pulled,
+                                                                                                  xddot=xddot_pos_quat,
+                                                                                                  angle_quaternion=xee_orientation,
+                                                                                                  Jac_prev=self.Jac_prev)
+        qddot_PUMA = qddot_PUMA.numpy()[0]
+        action_nullspace = self.controller_nullspace._nullspace_control(q=q, qdot=qdot)
+        qddot_PUMA = qddot_PUMA + action_nullspace
+        return qddot_PUMA, transition_info
