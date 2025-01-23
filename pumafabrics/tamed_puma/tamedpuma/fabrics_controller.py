@@ -75,9 +75,11 @@ class FabricsController:
             weight_goal_2=ob_robot['FullSensor']['goals'][4 + nr_obst]['weight'],
             x_obsts=[obstacles[i]["position"] for i in range(len(obstacles))],
             radius_obsts=[obstacles[i]["size"] for i in range(len(obstacles))],
-            radius_body_links=self.params["collision_radii"],
+            # radius_body_links=self.params["collision_radii"],
             constraint_0=[0, 0, 1, 0],
         )
+        for i, collision_link in enumerate(self.params["collision_links"]):
+            arguments_dict["radius_body_"+collision_link] = list(self.params["collision_radii"].values())[i]
         action = self.planner_full.compute_action(
             **arguments_dict)
         self.solver_times.append(time.perf_counter() - time0)

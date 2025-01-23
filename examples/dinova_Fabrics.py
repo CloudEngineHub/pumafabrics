@@ -32,7 +32,7 @@ class example_dinova_fabrics(ExampleGeneric):
         self.initialize_environment()
         self.fabrics_controller = FabricsController(params=self.params)
         self.planner, fk = self.fabrics_controller.set_full_planner(goal=self.goal)
-        self.kinova_kinematics = KinematicsKuka(end_link_name=self.params["end_links"][0], robot_name=self.robot_name)
+        self.kinova_kinematics = KinematicsKuka(end_link_name=self.params["end_links"][0], robot_name=self.robot_name, root_link_name=self.params["root_link"])
         self.utils_analysis = UtilsAnalysis(forward_kinematics=fk,
                                             collision_links=self.params["collision_links"],
                                             collision_radii=self.params["collision_radii"],
@@ -80,13 +80,12 @@ class example_dinova_fabrics(ExampleGeneric):
                 action = np.clip(action, -1 * np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
             else:
                 action = action
-            print("action[-1]", action[-1])
             ob, *_ = self.env.step(action)
 
             # result analysis:
             x_ee, _ = self.utils_analysis._request_ee_state(q, quat_prev)
             xee_list.append(x_ee[0])
-            self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q, obstacles=self.obstacles)
+            self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q, obstacles=self.obstacles, parent_link=self.params["root_link"])
             self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, quat_prev, x_goal=goal_pos)
 
             if self.GOAL_REACHED:
@@ -115,90 +114,24 @@ def main(render=True):
     example_class = example_dinova_fabrics()
     q_init_list = [
         # with goal changing:
-        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
-        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        # others:
-        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
-        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-        np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
-        np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
-        np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
-        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+        np.array((0., 0., 0., 0.87, 0.14, -0.37, -1.81, 0.46, -1.63)),
     ]
     positions_obstacles_list = [
         # # with goal changing:
         [[0.5, 0., 0.55], [0.5, 0., 10.1]],
-        [[0.55, 0.15, 0.05], [0.55, 0.15, 0.23]],
-        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
-        [[0.45, 0.02, 0.28], [0.7, 0.02, 0.28]],
-        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
-        # others:
-        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
-        [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
-        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
-        [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
-        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
-        [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
-        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
-        [[0.5, -0.0, 0.28], [0.5, 0.2, 10.4]],
-        [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
-        [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
     speed_obstacles_list = [
         # # with goal changing:
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        # others:
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
-        [[0., 0., 0.], [0., 0., 0.]],
         [[0., 0., 0.], [0., 0., 0.]],
     ]
     goal_pos_list = [
         # # #changing goal pose:
         [0.58, -0.014, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.7, -0.214, 0.315],
-        [0.7, -0.214, 0.115],
-        # others:
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.25, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
-        [0.58, -0.214, 0.115],
     ]
     goal_vel_list = [
         [0., 0., 0.] for _ in range(len(q_init_list))
     ]
-    goal_vel_list[0] = [0., 0., 0.]
-    if len(q_init_list) > 1:
-        goal_vel_list[1] = [-0.01, 0., 0.]
-    if len(q_init_list) > 2:
-        goal_vel_list[2] = [-0.01, 0., 0.0]
-    id_nr = 1
+    id_nr = 0
     example_class.overwrite_defaults(params = example_class.params,
                                      init_pos=q_init_list[id_nr],
                                      positions_obstacles=positions_obstacles_list[id_nr],

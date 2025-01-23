@@ -411,7 +411,6 @@
   </link>
   <link name="arm_dummy_link"/>
   <link name="arm_tool_frame"/>
-  <link name="arm_orientation_helper_link"/>
   <!-- Joint 1 -->
   <joint name="arm_joint_1" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0.12825"/>
@@ -470,15 +469,9 @@
   </joint>
   <!-- Tool frame used by the arm -->
   <joint name="arm_tool_frame_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0.070"/>
+    <origin rpy="0 0 0" xyz="0 0 0.130"/>
     <parent link="arm_dummy_link"/>
     <child link="arm_tool_frame"/>
-    <axis xyz="0 0 0"/>
-  </joint>
-  <joint name="arm_orientation_helper_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0.1 0"/>
-    <parent link="arm_dummy_link"/>
-    <child link="arm_orientation_helper_link"/>
     <axis xyz="0 0 0"/>
   </joint>
  

@@ -8,23 +8,23 @@ from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 import casadi as ca
 
 class KinematicsBasics():
-    def __init__(self, end_link_name="iiwa_link_7", robot_name="iiwa14", dt=0.01):
+    def __init__(self, end_link_name="iiwa_link_7", robot_name="iiwa14", dt=0.01, root_link_name="iiwa_link_0"):
         self.robot_name = robot_name
-        self.construct_chain(end_link_name=end_link_name)
+        self.construct_chain(end_link_name=end_link_name, root_link_name=root_link_name)
         self.dt=dt
         self.Jacobian_vec = torch.empty(0, requires_grad=True)
         self.len_max_list=10
         self.Jac_dot_list = []
         self.quaternion_operations = QuaternionOperations()
 
-    def construct_chain(self, end_link_name="iiwa_link_7"):
+    def construct_chain(self, end_link_name="iiwa_link_7", root_link_name="iiwa_link_0"):
         """
         To be able to process the urdf, I had to comment out the first line of iiwa7.urdf:
         <!-- ?xml version="1.0" encoding="utf-8"?> -->
         """
         path_parent = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         path_child = path_parent + '/../tamed_puma/config/urdfs/%s.urdf' % self.robot_name
-        self.chain = pk.build_serial_chain_from_urdf(open(path_child).read(), end_link_name)
+        self.chain = pk.build_serial_chain_from_urdf(open(path_child).read(), end_link_name, root_link_name=root_link_name)
 
     ### ---------------- Jacobians ------------------###
     def call_jacobian(self, q):

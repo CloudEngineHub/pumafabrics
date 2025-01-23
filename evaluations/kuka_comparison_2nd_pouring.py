@@ -159,7 +159,7 @@ class comparison_kuka_class():
         table.add_rows(rows)
         print('\nTexttable Latex:')
         print(latextable.draw_latex(table))
-        print("results[case][goal_reached]:", results["GF"]["goal_reached"])
+        print("results[case][goal_reached]:", results["Fabrics"]["goal_reached"])
 
 if __name__ == "__main__":
     LOAD_RESULTS = False

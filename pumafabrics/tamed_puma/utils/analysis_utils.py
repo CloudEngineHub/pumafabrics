@@ -29,8 +29,9 @@ class UtilsAnalysis():
                 child_link=collision_link,
             )
             for obstacle in obstacles:
+                collision_radii_list = list(self.collision_radii.values())
                 dist = np.linalg.norm(pose_link_i[:3, 3] - np.array(obstacle["position"])) - obstacle["size"] - \
-                       self.collision_radii[int(collision_link[-1])] + margin
+                       collision_radii_list[i_link] + margin
                 if dist < self.min_dist:
                     self.min_dist = dist
 

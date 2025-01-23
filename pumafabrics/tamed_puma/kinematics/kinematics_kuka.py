@@ -11,9 +11,10 @@ from pumafabrics.tamed_puma.kinematics.quaternion_operations import QuaternionOp
 from pumafabrics.tamed_puma.kinematics.kinematics_basics import KinematicsBasics
 
 class KinematicsKuka(KinematicsBasics):
-    def __init__(self, end_link_name="iiwa_link_7", robot_name="iiwa14", dt=0.01):
+    def __init__(self, end_link_name="iiwa_link_7", robot_name="iiwa14", dt=0.01, root_link_name="iiwa_link_0"):
         self.end_link_name = end_link_name
-        super().__init__(end_link_name, robot_name, dt)
+        self.root_link_name = root_link_name
+        super().__init__(end_link_name, robot_name, dt, root_link_name=root_link_name)
 
     def get_initial_pose(self, q_init, offset_orientation):
         # initial state pose:

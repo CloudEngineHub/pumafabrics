@@ -282,7 +282,7 @@
     </collision>
   </link>
     <joint name="arm_mount_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <origin rpy="0 0 0" xyz="0 0 0.314"/>
     <parent link="front_b_mount"/>
     <child link="arm_base_link"/>
   </joint>
