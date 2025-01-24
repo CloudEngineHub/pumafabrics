@@ -3,11 +3,11 @@ dof: 9
 dim_task: 7
 dim_pos: 3
 lidar: True
-robot_name: "dinova"
+robot_name: "dinova_lidar"
 root_link: "base_link"
-end_links: ["arm_end_effector_link"]
-collision_links: ["arm_upper_wrist_link"]
-collision_radii: {7: 0.1}
+end_links: ["arm_tool_frame"]
+collision_links: ["chassis_link", "arm_upper_wrist_link", "arm_end_effector_link"]
+collision_radii: {0: 0.55, 1: 0.10, 2: 0.05}
 vel_limits: [1., 1., 1., 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 iiwa_limits: [
     [-10, 10],

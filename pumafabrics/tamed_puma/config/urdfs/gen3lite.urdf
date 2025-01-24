@@ -350,7 +350,7 @@
   <!--        JOINTS     -->
   <!-- ================= -->
   <!-- right_finger_bottom_joint => THIS IS THE ONE THAT YOU ACTUALLY CONTROL, other joints mimic this one -->
-  <joint name="right_finger_bottom_joint" type="revolute">
+  <joint name="right_finger_bottom_joint" type="fixed">
     <origin rpy="0 1.5708 0" xyz="0 -0.030501 0.070003"/>
     <parent link="gripper_base_link"/>
     <child link="right_finger_prox_link"/>

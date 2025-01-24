@@ -394,33 +394,33 @@ class trial_environments():
             #Definition of the goal.
         goal_dict = {
             "subgoal0": {
-                "weight": 1.0,
+                "weight": 3.0,
                 "is_primary_goal": True,
                 "indices": [0, 1, 2],
                 "parent_link": "kinova_base_link",
                 "child_link": end_effector_link,
                 "desired_position": goal_pos,
-                "epsilon": 0.05,
+                "epsilon": 0.03,
                 "type": "staticSubGoal",
             },
             "subgoal1": {
-                "weight": 0.,
+                "weight": 5.,
                 "is_primary_goal": False,
                 "indices": [0, 1, 2],
-                "parent_link": "upper_wrist_link",
-                "child_link": end_effector_link,
-                "desired_position": [0.045, 0., 0.],
-                "epsilon": 0.05,
+                "parent_link": "dummy_link",
+                "child_link": "tool_frame",
+                "desired_position": [0.0, 0., 0.13],
+                "epsilon": 0.03,
                 "type": "staticSubGoal",
             },
             "subgoal2": {
-                "weight": 0.,
+                "weight": 5.,
                 "is_primary_goal": False,
                 "indices": [0, 1, 2],
-                "parent_link": "upper_wrist_link",
-                "child_link": end_effector_link,
-                "desired_position": [0.0, 0.0, 0.045],
-                "epsilon": 0.05,
+                "parent_link": "dummy_link",
+                "child_link": "orientation_helper_link",
+                "desired_position": [0.0, 0.10, 0.0],
+                "epsilon": 0.03,
                 "type": "staticSubGoal",
             },
         }
@@ -474,7 +474,7 @@ class trial_environments():
         nr_dyn_obst = params["nr_obst_dyn"]
         positions_obstacles = params["positions_obstacles"]
         speed_obstacles = params["speed_obstacles"]
-
+        joint_configuration = [0, 0., 0, 0, 1.7, np.pi / 2, -np.pi / 2]
         robots = [
             GenericUrdfReacher(urdf="../pumafabrics/tamed_puma/config/urdfs/"+robot_name+".urdf", mode=mode),
         ]
@@ -517,32 +517,40 @@ class trial_environments():
                 "weight": 1.0,
                 "is_primary_goal": True,
                 "indices": [0, 1, 2],
-                "parent_link": "world",
+                "parent_link": "base_link",
                 "child_link": end_effector_link,
                 "desired_position": goal_pos,
-                "epsilon": 0.05,
+                "epsilon": 0.03,
                 "type": "staticSubGoal",
             },
             "subgoal1": {
                 "weight": 0.,
                 "is_primary_goal": False,
                 "indices": [0, 1, 2],
-                "parent_link": "arm_upper_wrist_link",
+                "parent_link": "arm_dummy_link",
                 "child_link": end_effector_link,
-                "desired_position": [0.045, 0., 0.],
-                "epsilon": 0.05,
+                "desired_position": [0., 0., 0.07],
+                "epsilon": 0.03,
                 "type": "staticSubGoal",
             },
             "subgoal2": {
                 "weight": 0.,
                 "is_primary_goal": False,
                 "indices": [0, 1, 2],
-                "parent_link": "arm_upper_wrist_link",
-                "child_link": end_effector_link,
-                "desired_position": [0.0, 0.0, 0.045],
-                "epsilon": 0.05,
+                "parent_link": "arm_dummy_link",
+                "child_link": "arm_orientation_helper_link",
+                "desired_position": [0.0, 0.10, 0.0],
+                "epsilon": 0.015,
                 "type": "staticSubGoal",
             },
+            "subgoal3": {
+                "weight": 1.0,
+                "is_primary_goal": False,
+                "indices": [2],
+                "desired_position": joint_configuration[0:1],
+                "epsilon": 0.015,
+                "type": "staticJointSpaceSubGoal",
+            }
         }
         goal = GoalComposition(name="goal", content_dict=goal_dict)
         if nr_obst == 1:
@@ -558,7 +566,7 @@ class trial_environments():
         env.add_sensor(full_sensor, [0])
         for obst in obstacles:
             env.add_obstacle(obst)
-        for sub_goal in goal.sub_goals():
+        for sub_goal in goal.sub_goals()[0:3]:
             env.add_goal(sub_goal)
         env.set_spaces()
 

@@ -10,6 +10,8 @@ import casadi as ca
 class KinematicsBasics():
     def __init__(self, end_link_name="iiwa_link_7", robot_name="iiwa14", dt=0.01, root_link_name="iiwa_link_0"):
         self.robot_name = robot_name
+        self.end_link_name = end_link_name
+        self.root_link_name = root_link_name
         self.construct_chain(end_link_name=end_link_name, root_link_name=root_link_name)
         self.dt=dt
         self.Jacobian_vec = torch.empty(0, requires_grad=True)
@@ -139,12 +141,11 @@ class KinematicsBasics():
         return qddot
 
     # ---------------------- Symbolic forward kinematics ---------------------------------- #
-    def forward_kinematics_symbolic(self, end_link_name="iiwa_link_7", fk=None):
-        #x_fk = fk.fk(q=q, parent_link="iiwa_link_0", child_link=end_link_name, positionOnly=False)
+    def forward_kinematics_symbolic(self, fk=None):
         q = fk._q_ca
         x_fk= fk.casadi(q=q,
-                        parent_link="iiwa_link_0",
-                        child_link=end_link_name)
+                        parent_link=self.root_link_name,
+                        child_link=self.end_link_name)
         pos = x_fk[:3, 3]
         rot_matrix = x_fk[:3, :3]
         quat = self.quaternion_operations.symbolic_rot_matrix_to_quaternions(rot_matrix=rot_matrix)

@@ -1,13 +1,13 @@
 #robot:
-dof: 7
+dof: 6
 dim_task: 7
 dim_pos: 3
 robot_name: "gen3lite"
 root_link: "kinova_base_link"
-end_links: ["end_effector_link"]
+end_links: ["tool_frame"]
 collision_links: ["upper_wrist_link"]
 collision_radii: {6: 0.1}
-vel_limits: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.01]
+vel_limits: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 iiwa_limits: [
     [-2.8973, 2.8973],
     [-1.7628, 1.7628],
@@ -15,7 +15,6 @@ iiwa_limits: [
     [-3.0718, -0.0698],
     [-2.8973, 2.8973],
     [-0.0175, 3.7525],
-    [-10., 10.],
   ]
 #fabrics:
 collision_geometry: "-0.01 / (x ** 1) * xdot ** 2"

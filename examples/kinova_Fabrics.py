@@ -43,7 +43,7 @@ class example_kinova_fabrics(ExampleGeneric):
         offset_orientation = np.array(self.params["orientation_goal"])
         goal_pos = self.params["goal_pos"]
         dof = self.params["dof"]
-        action = np.zeros(dof+1)
+        action = np.zeros(dof)
         ob, *_ = self.env.step(action)
 
         # initial state:
@@ -80,7 +80,6 @@ class example_kinova_fabrics(ExampleGeneric):
                 action = np.clip(action, -1 * np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
             else:
                 action = action
-            print("action[-1]", action[-1])
             ob, *_ = self.env.step(action)
 
             # result analysis:

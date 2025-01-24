@@ -5,13 +5,11 @@ Authors:
 """
 
 import numpy as np
-from spatialmath import SO3
 import os
 import pytorch_kinematics as pk
 import torch
-from roboticstoolbox.robot.ERobot import ERobot
 from pumafabrics.tamed_puma.nullspace_control.iiwa_robotics_toolbox import iiwa
-from spatialmath import SO3, UnitQuaternion
+from spatialmath import UnitQuaternion
 
 class CartesianImpedanceController:
     def __init__(self, robot_name="iiwa14"):

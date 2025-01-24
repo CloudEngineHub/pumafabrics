@@ -1,21 +1,19 @@
 import numpy as np
 import importlib
-import copy
-import time
-from pumafabrics.puma_adapted.initializer import initialize_framework
-from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
 from pumafabrics.tamed_puma.nullspace_control.nullspace_controller import CartesianImpedanceController
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
 from pumafabrics.puma_adapted.initializer import initialize_framework
 
 class PUMAControl():
-    def __init__(self, params, kinematics):
+    def __init__(self, params, kinematics, NULLSPACE=True):
         self.update_params(params)
         self.kuka_kinematics = kinematics
         self.time_list = []
-        self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])
-        self.Jac_dot_prev = np.zeros((7, 7))
-        self.Jac_prev = np.zeros((7, 7))
+        self.NULLSPACE = NULLSPACE
+        if self.NULLSPACE:
+            self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])
+        self.Jac_dot_prev = np.zeros((self.params["dim_task"], self.params["dof"]))
+        self.Jac_prev = np.zeros((self.params["dim_task"], self.params["dof"]))
 
     def update_params(self, params):
         self.params = params
@@ -107,6 +105,7 @@ class PUMAControl():
                                                                                                   angle_quaternion=xee_orientation,
                                                                                                   Jac_prev=self.Jac_prev)
         qddot_PUMA = qddot_PUMA.numpy()[0]
-        action_nullspace = self.controller_nullspace._nullspace_control(q=q, qdot=qdot)
-        qddot_PUMA = qddot_PUMA + action_nullspace
+        if self.NULLSPACE:
+            action_nullspace = self.controller_nullspace._nullspace_control(q=q, qdot=qdot)
+            qddot_PUMA = qddot_PUMA + action_nullspace
         return qddot_PUMA, transition_info

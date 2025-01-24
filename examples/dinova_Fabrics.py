@@ -5,7 +5,6 @@ from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 import yaml
-from pumafabrics.tamed_puma.nullspace_control.nullspace_controller import CartesianImpedanceController
 import pybullet
 
 class example_dinova_fabrics(ExampleGeneric):

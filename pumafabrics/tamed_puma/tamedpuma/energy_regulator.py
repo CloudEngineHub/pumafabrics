@@ -57,7 +57,7 @@ class energy_regulation():
             fraction_term = (np.outer(qdot, qdot)) / 1
         else:
             fraction_term = (np.outer(qdot, qdot)) / fraction_denominator
-        energy_regulator = -alpha * fraction_term @ grad_potential[0:self.dim_task] - beta * qdot
+        energy_regulator = -alpha * fraction_term @ grad_potential[0:self.dof] - beta * qdot
         return energy_regulator
 
 

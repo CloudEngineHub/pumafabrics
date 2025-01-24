@@ -21,12 +21,28 @@ def test_kuka_fabrics():
     from examples.kuka_Fabrics import main
     blueprint_test(main)
 
+def test_kinova_fabrics():
+    from examples.kinova_Fabrics import main
+    blueprint_test(main)
+
+def test_dinova_fabrics():
+    from examples.dinova_Fabrics import main
+    blueprint_test(main)
+
 def test_kuka_ModulationIK():
     from examples.kuka_PUMA_3D_ModulationIK import main
     blueprint_test(main)
 
 def test_kuka_TamedPUMA():
     from examples.kuka_TamedPUMA import main
+    blueprint_test(main)
+
+def test_kinova_TamedPUMA():
+    from examples.kinova_TamedPUMA import main
+    blueprint_test(main)
+
+def test_dinova_TamedPUMA():
+    from examples.dinova_TamedPUMA import main
     blueprint_test(main)
 
 def test_pointrobot_fabrics():
