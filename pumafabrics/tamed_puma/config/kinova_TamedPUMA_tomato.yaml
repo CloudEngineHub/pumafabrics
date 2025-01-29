@@ -5,8 +5,8 @@ dim_pos: 3
 robot_name: "gen3lite"
 root_link: "kinova_base_link"
 end_links: ["tool_frame"]
-collision_links: ["upper_wrist_link"]
-collision_radii: {6: 0.1}
+collision_links: ["upper_wrist_link", "end_effector_link"]
+collision_radii: {5: 0.10, 6: 0.05}
 vel_limits: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 iiwa_limits: [
     [-2.8973, 2.8973],

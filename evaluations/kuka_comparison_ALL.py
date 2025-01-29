@@ -8,7 +8,7 @@ import pickle
 class obtain_total_results():
     def __init__(self):
         self.cases = ["PUMA$_free$", "PUMA$_obst$",  "Occlusion-IK", "Fabrics", "FPM", "CPM"]
-        self.results_tot = {"PUMA$_free$": {"solver_times":[]}, "PUMA$_obst$": {"solver_times":[]},  "Occlusion-IK": {"solver_times":[]}, "GF": {"solver_times":[]}, "GM": {"solver_times":[]}, "CM": {"solver_times":[]}}
+        self.results_tot = {"PUMA$_free$": {"solver_times":[]}, "PUMA$_obst$": {"solver_times":[]},  "Occlusion-IK": {"solver_times":[]}, "Fabrics": {"solver_times":[]}, "FPM": {"solver_times":[]}, "CPM": {"solver_times":[]}}
         self.results = {"min_distance": [], "collision": [], "goal_reached": [], "time_to_goal": [], "xee_list": [], "qdot_diff_list": [],
            "dist_to_NN": [],  "vel_to_NN": [], "solver_times": [], "solver_time": [], "solver_time_std": []}
         self.kuka_class_tomato = comparison_kuka_class()
@@ -69,7 +69,7 @@ class obtain_total_results():
         table.add_rows(rows)
         print('\nTexttable Latex:')
         print(latextable.draw_latex(table))
-        print("results[case][goal_reached]:", results["GF"]["goal_reached"])
+        print("results[case][goal_reached]:", results["Fabrics"]["goal_reached"])
 
     def produce_results_tomato(self, results=None, nr_obst=2):
         LOAD_RESULTS = False
@@ -280,21 +280,21 @@ class obtain_total_results():
         return results_pouring
 
 if __name__ == "__main__":
-    LOAD_RESULTS=False
+    LOAD_RESULTS=True
     total_results = obtain_total_results()
     if LOAD_RESULTS == False:
-        # results_tomato = total_results.produce_results_tomato()
-        # results_tomato_no_obst = total_results.produce_results_tomato(nr_obst=0)
+        results_tomato = total_results.produce_results_tomato()
+        results_tomato_no_obst = total_results.produce_results_tomato(nr_obst=0)
         results_pouring = total_results.produce_results_pouring()
         results_pouring_no_obst = total_results.produce_results_pouring(nr_obst=0)
     else:
-        file_i = open(f'../src/simulation_kuka_results_ALL_tomato.pkl', 'rb')
+        file_i = open('results_evaluations/simulation_kuka_results_ALL_tomato.pkl', 'rb')
         results_tomato = pickle.load(file_i)
-        file_i = open(f'../src/simulation_kuka_results_ALL_tomato_no_obst.pkl', 'rb')
+        file_i = open('results_evaluations/simulation_kuka_results_ALL_tomato_no_obst.pkl', 'rb')
         results_tomato_no_obst = pickle.load(file_i)
-        file_i = open(f'../src/simulation_kuka_results_ALL_pouring.pkl', 'rb')
+        file_i = open('results_evaluations/simulation_kuka_results_ALL_pouring.pkl', 'rb')
         results_pouring = pickle.load(file_i)
-        file_i = open(f'../src/simulation_kuka_results_ALL_pouring_no_obst.pkl', 'rb')
+        file_i = open('results_evaluations/simulation_kuka_results_ALL_pouring_no_obst.pkl', 'rb')
         results_pouring_no_obst = pickle.load(file_i)
 
     #save latest results
