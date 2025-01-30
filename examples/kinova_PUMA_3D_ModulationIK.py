@@ -19,13 +19,13 @@ import time
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 
 class example_kuka_PUMA_modulationIK(ExampleGeneric):
-    def __init__(self, file_name="kinova_ModulationIK_tomato"):
+    def __init__(self, file_name="kinova_ModulationIK_tomato", path_config="../pumafabrics/tamed_puma/config/"):
         super(ExampleGeneric, self).__init__()
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
         self.solver_times = []
-        with open("../pumafabrics/tamed_puma/config/" + file_name + ".yaml", "r") as setup_stream:
+        with open(path_config + file_name + ".yaml", "r") as setup_stream:
              self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
@@ -45,11 +45,12 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
             end_links=self.params["end_links"],
         )
 
-    def construct_example(self):
-        self.initialize_environment()
+    def construct_example(self, with_environment=True, results_base_directory='../pumafabrics/puma_adapted/'):
+        if with_environment:
+            self.initialize_environment()
 
         # Construct classes:
-        results_base_directory = '../pumafabrics/puma_adapted/'
+        # results_base_directory = '../pumafabrics/puma_adapted/'
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"],
                                               robot_name=self.params["robot_name"],
                                               root_link_name=self.params["root_link"],

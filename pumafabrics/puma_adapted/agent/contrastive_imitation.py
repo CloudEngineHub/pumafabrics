@@ -5,7 +5,7 @@ from pumafabrics.puma_adapted.agent.neural_network import NeuralNetwork
 from pumafabrics.puma_adapted.agent.utils.ranking_losses import TripletLoss, TripletAngleLoss, TripletCosineLoss, SoftTripletLoss
 from pumafabrics.puma_adapted.agent.dynamical_system import DynamicalSystem
 from pumafabrics.puma_adapted.agent.utils.dynamical_system_operations import normalize_state
-
+import os
 
 class ContrastiveImitation:
     """
@@ -87,7 +87,8 @@ class ContrastiveImitation:
 
         # Load Neural Network if requested
         if self.load_model:
-            self.model.load_state_dict(torch.load(self.results_path + 'model'), strict=False)
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            self.model.load_state_dict(torch.load(current_dir + self.results_path + 'model'), strict=False)
 
         # Initialize latent goals
         self.model.update_goals_latent_space(self.goals_tensor)
