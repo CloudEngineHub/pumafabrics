@@ -1,6 +1,6 @@
 #robot:
 dof: 6
-dim_task: 7
+dim_task: 3 #7
 dim_pos: 3
 robot_name: "gen3lite"
 root_link: "kinova_base_link"
@@ -16,28 +16,24 @@ iiwa_limits: [
     [-2.8973, 2.8973],
     [-0.0175, 3.7525],
   ]
-#fabrics:
-collision_geometry: "-0.01 / (x ** 1) * xdot ** 2"
-collision_finsler: "0.01/(x**2) * xdot**2"
 #default settings:
 render: True
 bool_energy_regulator: True
-bool_combined: True
 bool_speed_control: True
 bool_extensive_concretize: True
-mode: "acc"        # mode of fabrics (vel or acc)
-mode_NN: "2nd"
+mode: "vel"        # mode of fabrics (vel or acc)
+mode_NN: "1st"
 mode_env: "vel"
-dt: 0.02 #0.00769
+dt: 0.00769
 nr_obst: 2
-positions_obstacles: [[0.5, -0.30, 0.5], [0.24355761, 0.45252747, 0.2]]
+positions_obstacles: [[0.5, -0.25, 0.5], [10.24355761, 10.45252747, 10.2]]
 speed_obstacles: [[0., 0., 0.], [0., 0., 0.]]
 nr_obst_dyn: 0
 goal_reached_threshold: 0.02
 n_steps: 2000
-init_pos: [-0.702, 0.355, -0.016, -1.212, 0.012, -0.502]
-goal_pos: [0.58, -0.214,  0.115]
+init_pos: [-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010]
+goal_pos: [0.58, -0.214,  0.115] #[0.60829608, 0.04368581, 0.252421] [0.58, -0.214,  0.115]
 goal_vel: [0., 0., 0.]
-orientation_goal: [ 0.02963833,  0.88385373, -0.01450962,  0.46659793] #[ 0.4426, -0.5459,  0.5806, -0.4112]
-params_name_1st: "1st_order_R3S3_converge"
+orientation_goal: [ 0.02963833,  0.88385373, -0.01450962,  0.46659793] #[ 0.61566569, -0.37995015,  0.67837375, -0.12807299]
+params_name_1st: "1st_order_3D_kinova"
 params_name_2nd: "2nd_order_R3S3_kinova"

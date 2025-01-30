@@ -9,7 +9,7 @@ import copy
 import spatial_casadi as sc
 
 class IKGomp():
-    def __init__(self, q_home=None, end_link_name='iiwa_link_7', robot_name="iiwa14"):
+    def __init__(self, q_home=None, end_link_name='iiwa_link_7', robot_name="iiwa14", root_link_name="iiwa_link_0"):
         # Current robot's state
         if q_home is None:
             self.q_home = np.array([0.0, 0.0, 1.5, 1.5, 0.0, 0.0, 0.0], dtype=float)
@@ -18,9 +18,9 @@ class IKGomp():
         self.end_link_name = end_link_name
         self.robot_name = robot_name
         self.urdf_path = "/../config/urdfs/" + robot_name + ".urdf"
-        self.kinematics_basics = KinematicsBasics(end_link_name=self.end_link_name, robot_name=robot_name)
+        self.kinematics_basics = KinematicsBasics(end_link_name=self.end_link_name, robot_name=robot_name, root_link_name=root_link_name)
 
-    def construct_ik(self, nr_obst=0):
+    def construct_ik(self, nr_obst=0, collision_links=None):
         # URDF model
         absolute_path = os.path.dirname(os.path.abspath(__file__))
         URDF_FILE = absolute_path + self.urdf_path
@@ -37,8 +37,11 @@ class IKGomp():
         self.planner.add_orientation_constraint(name="g_rotation", tolerance=10.)
 
         # Define collision constraint for each link
-        active_links = [f'iiwa_link_{i}' for i in range(8)]
-        active_links.append('iiwa_link_7')
+        if self.robot_name == "iiwa14":
+            active_links = [f'iiwa_link_{i}' for i in range(8)]
+            active_links.append('iiwa_link_7')
+        else:
+            active_links=collision_links
         for i in range(nr_obst):
             self.planner.add_collision_constraint(name="sphere_col_"+str(i),
                                                   link_names=active_links,

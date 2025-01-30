@@ -7,7 +7,7 @@ from pumafabrics.puma_adapted.agent.utils.dynamical_system_operations import den
 import numpy as np
 
 # Parameters
-params_name = '1st_order_R3S3_tomato_31may'
+params_name = '2nd_order_R3S3_tomato_31may'
 results_base_directory = './'
 
 simulation_length = 2000
@@ -57,8 +57,8 @@ params.results_path += params.selected_primitives_ids + '/'
 params.load_model = True
 
 # Extend state if second order
-if params.dynamical_system_order == 2:
-    x_t_init = np.concatenate([x_t_init, np.zeros([x_t_init.shape[0], params.manifold_dimensions])], axis=1)
+# if params.dynamical_system_order == 2:
+#     x_t_init = np.concatenate([x_t_init, np.zeros([x_t_init.shape[0], params.manifold_dimensions])], axis=1)
 
 # Initialize framework
 learner, _, data = initialize_framework(params, params_name, verbose=False)

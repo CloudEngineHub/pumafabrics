@@ -96,8 +96,8 @@ class PUMAControl():
 
         # ---- velocity action_PUMA: option 1 ---- #
         qdot_PUMA_pulled = self.kuka_kinematics.inverse_diff_kinematics_quat(xdot=xdot_pos_quat,
-                                                                                 angle_quaternion=xee_orientation).numpy()[
-            0]
+                                                                                 angle_quaternion=xee_orientation).numpy()[0]
+
         #### --------------- directly from acceleration!! -----#
         qddot_PUMA, self.Jac_prev, Jac_dot_prev = self.kuka_kinematics.inverse_2nd_kinematics_quat(q=q,
                                                                                                   qdot=qdot_PUMA_pulled,

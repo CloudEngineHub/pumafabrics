@@ -158,11 +158,13 @@ class example_kinova_TamedPUMA(ExampleGeneric):
 def main(render=True):
     q_init_list = [
         # with goal changing:
-        np.array((0., 0., 0., 0.87, 0.14, -0.37, -1.81, 0.46, -1.63)),
+        # np.array((-0.06, -0.58, 1.58, 0., -0.015, 0.014))
+        np.array((1.14515927e-04, 3.48547333e-01, 1.57849233e+00, 2.58859258e-04, -1.11692976e-03, 1.42772066e-03))
+        #np.array((0., 0., 0., 0.87, 0.14, -0.37, -1.81, 0.46, -1.63)),
     ]
     positions_obstacles_list = [
         # # with goal changing:
-        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
+        [[10.0, 0., 0.55], [0.5, 0., 10.1]],
     ]
     speed_obstacles_list = [
         # # with goal changing:
@@ -170,7 +172,8 @@ def main(render=True):
     ]
     goal_pos_list = [
         # # #changing goal pose:
-        [0.58, -0.014, 0.115],
+        # [0.58, -0.014, 0.115],
+        [0.53858072, -0.04530622,  0.4580668]
     ]
     goal_vel_list = [
         [0., 0., 0.] for _ in range(len(q_init_list))
