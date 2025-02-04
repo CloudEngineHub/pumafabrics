@@ -14,6 +14,7 @@ class KinematicsKuka(KinematicsBasics):
     def __init__(self, end_link_name="iiwa_link_7", robot_name="iiwa14", dt=0.01, root_link_name="iiwa_link_0"):
         self.end_link_name = end_link_name
         self.root_link_name = root_link_name
+        print("root_link_name:", root_link_name)
         super().__init__(end_link_name, robot_name, dt, root_link_name=root_link_name)
 
     def get_initial_pose(self, q_init, offset_orientation):
@@ -25,6 +26,8 @@ class KinematicsKuka(KinematicsBasics):
 
     def get_pose(self, q, quat_prev):
         # --- End-effector state ---#
+        print("self.end_link_name:", self.end_link_name)
+        
         x_t_pose = self.forward_kinematics(q, end_link_name=self.end_link_name)
         x_t_pose[3:7] = self.quaternion_operations.check_quaternion_flipped(quat=x_t_pose[3:7], quat_prev=quat_prev)
         xee_orientation = x_t_pose[3:7]
