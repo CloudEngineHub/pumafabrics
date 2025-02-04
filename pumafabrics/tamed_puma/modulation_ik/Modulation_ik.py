@@ -49,7 +49,7 @@ class IKGomp():
                                                   r_obst=0.05,
                                                   tolerance=0.01)
         # Formulate problem
-        self.planner.setup_problem(verbose=True)
+        self.planner.setup_problem(verbose=False)
         return
 
     def call_ik(self, goal_position, goal_orientation, positions_obsts: list, q_init_guess:np.ndarray, q_home:np.ndarray):

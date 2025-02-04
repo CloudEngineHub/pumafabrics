@@ -74,6 +74,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         params.load_model = True
 
         # Initialize framework
+        print("self.params_name: ", self.params_name)
         self.learner, _, data = initialize_framework(params, self.params_name, verbose=False)
         self.goal_NN = data['goals training'][0]
 
@@ -88,11 +89,14 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         self.normalizations = normalization_functions(x_min=data["x min"], x_max=data["x max"], dof_task=self.params["dim_task"], dt=self.params["dt"], mode_NN=self.params["mode_NN"])
 
 
-    def initialize_example(self, q_init, goal_pos):
+    def initialize_example(self, q_init):
         self.offset_orientation = np.array(self.params["orientation_goal"])
 
         # Translation of goal:
         goal_pos = self.params["goal_pos"]
+        print("goal_pos: ", goal_pos)
+        print("self.goal_NN: ", self.goal_NN)
+        print("dim task: ", self.params["dim_task"])
         self.translation_gpu, self.translation_cpu = self.normalizations.translation_goal(state_goal = np.array(goal_pos), goal_NN=self.goal_NN)
 
         # initial state:
@@ -135,17 +139,20 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
             action_cpu = action_t_gpu.T.cpu().detach().numpy()
         x_t_action = self.normalizations.reverse_transformation_position(position_gpu=x_t_NN) #, offset_orientation=offset_orientation)
         action_safeMP = self.normalizations.reverse_transformation(action_gpu=action_t_gpu)
+        print("x_t_action: ", x_t_action)
         q_d, solver_flag = self.gomp_class.call_ik(x_t_action[0][0:3], self.params["orientation_goal"],
                                                   positions_obsts=positions_obstacles,
                                                   q_init_guess=q,
                                                   q_home=q)
         xee_IK, _ = self.gomp_class.get_current_pose(q=q_d, quat_prev=self.quat_prev)
-        # print("solver_flag:", solver_flag)
+        print("solver_flag:", solver_flag)
         action = self.pdcontroller.control(desired_velocity=q_d, current_velocity=q)
+        print("action unclipped: ", action)
         self.solver_times.append(time.perf_counter() - time0)
         action = np.clip(action, -1*np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
 
         self.check_goal_reached(x_ee=x_t[0][0:3], x_goal=goal_pos)
+        dist_to_goal = self.return_distance_goal_reached()
 
         # result analysis:
         # x_ee, _ = self.utils_analysis._request_ee_state(q, self.quat_prev)
@@ -155,7 +162,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         # if self.GOAL_REACHED:
         #     self.time_to_goal = w*self.params["dt"]
         
-        return action, self.GOAL_REACHED
+        return action, self.GOAL_REACHED, dist_to_goal
 
 
 
