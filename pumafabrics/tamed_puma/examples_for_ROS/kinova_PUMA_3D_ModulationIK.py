@@ -184,7 +184,8 @@ def main(render=True):
                                      positions_obstacles=positions_obstacles_list[0],
                                      render=render)
     example_class.construct_example()
-    res = example_class.run_kuka_example()
+    example_class.initialize_example(q_init=q_init_list[0])
+    example_class.run()
 
     print(" -------------------- results -----------------------")
     print("min_distance:", res["min_distance"])

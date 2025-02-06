@@ -40,9 +40,9 @@ class PUMAControl():
         xddot_pos_quat = np.append(action_PUMA[:3], action_quat_acc_sys)
         return xddot_pos_quat
 
-    def initialize_PUMA(self, q_init, goal_pos, offset_orientation):
+    def initialize_PUMA(self, q_init, goal_pos, offset_orientation, results_base_directory='../pumafabrics/puma_adapted/'):
         # # Construct classes:
-        results_base_directory = '../pumafabrics/puma_adapted/'
+        # results_base_directory = '../pumafabrics/puma_adapted/'
 
         # Parameters
         if self.params["mode_NN"] == "1st":
