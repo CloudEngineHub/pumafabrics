@@ -49,8 +49,6 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
     def construct_example(self, with_environment=True, results_base_directory='../pumafabrics/puma_adapted/'):
         # Construct classes:
         # results_base_directory = '../pumafabrics/puma_adapted/'
-        print("root link:", self.params["root_link"])
-        print("end link:", self.params["end_links"][0])
         
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"],
                                               robot_name=self.params["robot_name"],
@@ -73,11 +71,9 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + self.params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
-        print("params.results_path:", params.results_path)
         params.load_model = True
 
         # Initialize framework
-        print("self.params_name: ", self.params_name)
         self.learner, _, data = initialize_framework(params, self.params_name, verbose=False)
         self.goal_NN = data['goals training'][0]
 
@@ -97,16 +93,11 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
 
         # Translation of goal:
         goal_pos = self.params["goal_pos"]
-        # print("goal_pos: ", goal_pos)
-        # print("self.goal_NN: ", self.goal_NN)
-        # print("dim task: ", self.params["dim_task"])
         self.translation_gpu, self.translation_cpu = self.normalizations.translation_goal(state_goal = np.array(goal_pos), goal_NN=self.goal_NN)
 
         # initial state:
         x_t_init = self.gomp_class.get_initial_pose(q_init=q_init, offset_orientation=self.offset_orientation)
         x_t, _ = self.gomp_class.get_current_pose(q=q_init, quat_prev=x_t_init[3:])
-        print("x_t_init: ", x_t_init)
-        print("x_t: ", x_t)
         x_init_gpu = self.normalizations.normalize_state_to_NN(x_t=[x_t_init], translation_cpu=self.translation_cpu, offset_orientation=self.offset_orientation)
         self.dynamical_system = self.learner.init_dynamical_system(initial_states=x_init_gpu[:, :3].clone(), delta_t=1)
 
@@ -117,19 +108,13 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         qdot = runtime_arguments["qdot"]
         goal_pos = runtime_arguments["goal_pos"]
         positions_obstacles = runtime_arguments["positions_obstacles"]
-        print("q: ", q) 
-        # print("goal_pos: ", goal_pos)
-        # print("positions_obstacles: ", positions_obstacles)
-        # print("self.offset_orientation: ", self.offset_orientation)
 
         # recompute translation to goal pose:
         self.translation_gpu, self.translation_cpu = self.normalizations.translation_goal(state_goal=np.array(goal_pos), goal_NN=self.goal_NN)
 
         # --- end-effector states and normalized states --- #
         x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, self.quat_prev)
-        print("x_t: ", x_t)
         x_t, xee_orientation = self.gomp_class.get_current_pose(q, quat_prev=self.quat_prev)
-        print("x_t: ", x_t)
 
         self.quat_prev = copy.deepcopy(xee_orientation)
         vel_ee, Jac_current = self.kuka_kinematics.get_state_velocity(q=q, qdot=qdot)

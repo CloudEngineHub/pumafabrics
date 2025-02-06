@@ -26,8 +26,6 @@ class KinematicsKuka(KinematicsBasics):
 
     def get_pose(self, q, quat_prev):
         # --- End-effector state ---#
-        print("self.end_link_name:", self.end_link_name)
-        
         x_t_pose = self.forward_kinematics(q, end_link_name=self.end_link_name)
         x_t_pose[3:7] = self.quaternion_operations.check_quaternion_flipped(quat=x_t_pose[3:7], quat_prev=quat_prev)
         xee_orientation = x_t_pose[3:7]
