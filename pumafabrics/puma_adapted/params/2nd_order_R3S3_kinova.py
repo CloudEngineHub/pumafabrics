@@ -6,7 +6,7 @@ import numpy as np
 class Params:
     """ General parameters """
     dataset_name: str = 'dingo_kinova'  # selects dataset, options: LASA, LAIR, optitrack, interpolation, joint_space, ABB_R3S3
-    results_path: str = '../puma_adapted/results/2nd_order_kinova/'
+    results_path: str = '../puma_adapted/results/2nd_order_R3S3_kinova/'
     multi_motion: bool = False  # true when learning multiple motions together
     selected_primitives_ids: str = '0'  # id number from dataset_keys.py, e.g., '2' or '4,0,6'
     manifold_dimensions: int = 6  # dimensionality of the data manifold

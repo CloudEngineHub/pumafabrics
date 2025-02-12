@@ -102,7 +102,7 @@ kuka = ['pouring',
         'pick_tomato_31may'
         ]
 
-dingo_kinova = ['kinova_30jan_pick',
+dingo_kinova = ['kinova_6feb_pick',
                 'dinova_30jan_pick']
 
 dataset_keys_dic = {'LASA': LASA,

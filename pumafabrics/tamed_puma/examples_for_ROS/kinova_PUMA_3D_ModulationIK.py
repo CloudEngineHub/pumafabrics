@@ -76,6 +76,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         # Initialize framework
         self.learner, _, data = initialize_framework(params, self.params_name, verbose=False)
         self.goal_NN = data['goals training'][0]
+        print("self.goal_NN in construction:", self.goal_NN)
 
         # Initialize GOMP
         self.gomp_class  = IKGomp(  q_home=self.params["init_pos"],
@@ -94,7 +95,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         # Translation of goal:
         goal_pos = self.params["goal_pos"]
         self.translation_gpu, self.translation_cpu = self.normalizations.translation_goal(state_goal = np.array(goal_pos), goal_NN=self.goal_NN)
-
+        print("goal_pos:", goal_pos)
         # initial state:
         x_t_init = self.gomp_class.get_initial_pose(q_init=q_init, offset_orientation=self.offset_orientation)
         x_t, _ = self.gomp_class.get_current_pose(q=q_init, quat_prev=x_t_init[3:])
@@ -107,6 +108,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         q = runtime_arguments["q"]
         qdot = runtime_arguments["qdot"]
         goal_pos = runtime_arguments["goal_pos"]
+        print("goal_pos:", goal_pos)
         positions_obstacles = runtime_arguments["positions_obstacles"]
 
         # recompute translation to goal pose:
@@ -114,7 +116,10 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
 
         # --- end-effector states and normalized states --- #
         x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, self.quat_prev)
+        # print("x_t:", x_t)
         x_t, xee_orientation = self.gomp_class.get_current_pose(q, quat_prev=self.quat_prev)
+        # print("x_t gomp:", x_t)
+        # print("self.goal_NN:", self.goal_NN)
 
         self.quat_prev = copy.deepcopy(xee_orientation)
         vel_ee, Jac_current = self.kuka_kinematics.get_state_velocity(q=q, qdot=qdot)
@@ -143,8 +148,10 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
                                                   q_home=q)
         xee_IK, _ = self.gomp_class.get_current_pose(q=q_d, quat_prev=self.quat_prev)
         # print("solver_flag:", solver_flag)
+        print("q_d:", q_d)
+        print("q:", q)
         action = self.pdcontroller.control(desired_velocity=q_d, current_velocity=q)
-        # print("action unclipped: ", action)
+        print("action unclipped: ", action)
         self.solver_times.append(time.perf_counter() - time0)
         action = np.clip(action, -1*np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
 

@@ -40,4 +40,4 @@ goal_pos: [0.58, -0.214,  0.115]
 goal_vel: [0., 0., 0.]
 orientation_goal: [ 0.02963833,  0.88385373, -0.01450962,  0.46659793] #[ 0.4426, -0.5459,  0.5806, -0.4112]
 params_name_1st: "1st_order_R3S3_converge"
-params_name_2nd: "2nd_order_R3S3_tomato_31may"
+params_name_2nd: "2nd_order_R3S3_tomato_31may" #"2nd_order_R3S3_kinova" #"2nd_order_R3S3_tomato_31may" #
