@@ -7,7 +7,7 @@ import numpy as np
 
 # Parameters
 params_name = "2nd_order_R3S3_kinova"
-# params_name = "1st_order_2D"
+
 if params_name == '1st_order_2D':
     x_t_init = np.array([[0.5, 0.6], [-0.75, 0.9], [0.9, -0.9], [-0.9, -0.9], [0.9, 0.9], [0.9, 0.3], [-0.9, -0.1],
                          [-0.9, 0.0], [0.4, 0.4], [0.9, -0.1], [-0.9, -0.5], [0.9, -0.5]])  # initial states

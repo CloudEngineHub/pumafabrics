@@ -11,7 +11,7 @@ from mpscenes.goals.goal_composition import GoalComposition
 
 class trial_environments():
     def __init__(self):
-        dt = 0.01
+        pass
 
     def initalize_environment_pointmass(self, render, mode="acc", dt=0.01, init_pos=np.array([-0.9, -0.1, 0.0]), goal_pos=[3.5, 0.5]):
         """

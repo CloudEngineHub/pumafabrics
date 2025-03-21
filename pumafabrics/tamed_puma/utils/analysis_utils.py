@@ -3,7 +3,6 @@ This file includes tools for the final analysis of the planner, such as distance
 """
 import numpy as np
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
-from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 
 class UtilsAnalysis():
     def __init__(self, forward_kinematics: GenericURDFFk, collision_links:list, collision_radii: dict, kinematics) -> None:

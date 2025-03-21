@@ -1,13 +1,4 @@
-import torch
-import pytorch_kinematics as pk
-import os
 import numpy as np
-import copy
-import math
-from scipy.linalg import block_diag
-import spatial_casadi as sc
-import casadi as ca
-from pumafabrics.tamed_puma.kinematics.quaternion_operations import QuaternionOperations
 from pumafabrics.tamed_puma.kinematics.kinematics_basics import KinematicsBasics
 
 class KinematicsKuka(KinematicsBasics):

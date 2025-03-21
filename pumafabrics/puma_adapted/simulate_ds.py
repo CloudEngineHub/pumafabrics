@@ -56,10 +56,6 @@ params = Params(results_base_directory)
 params.results_path += params.selected_primitives_ids + '/'
 params.load_model = True
 
-# Extend state if second order
-# if params.dynamical_system_order == 2:
-#     x_t_init = np.concatenate([x_t_init, np.zeros([x_t_init.shape[0], params.manifold_dimensions])], axis=1)
-
 # Initialize framework
 learner, _, data = initialize_framework(params, params_name, verbose=False)
 

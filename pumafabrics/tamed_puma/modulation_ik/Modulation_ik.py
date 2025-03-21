@@ -67,17 +67,7 @@ class IKGomp():
         self.planner.param_ca_dict["objective"]["num_param"] = q_home  # setting home configuration
         self.planner.param_ca_dict["g_position"]["num_param"] = T_W_Ref
         self.planner.param_ca_dict["g_rotation"]["num_param"] = T_W_Ref
-        # if T_W_Obst is not None:
-        #     self.planner.param_ca_dict["sphere_col"]["num_param"] = T_W_Obst[:3, 3]
-
-        start = time.time()
         x, solver_flag = self.planner.solve()
-        end = time.time()
-        # print(f"Computational time: {end - start}")
-        # print(f"Solver status: {solver_flag}")
-        # print("========")
-        # print("Desired T\n", T_W_Ref)
-        # print("solution: q_d:", x)
         return x.full().transpose()[0], solver_flag
 
     def construct_T_matrix(self, position:np.ndarray, orientation=None):

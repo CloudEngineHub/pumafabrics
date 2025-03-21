@@ -16,7 +16,9 @@ import yaml
 from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
 import time
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
-
+"""
+This file is UNDER CONSTRUCTION
+"""
 class example_kuka_PUMA_modulationIK(ExampleGeneric):
     def __init__(self, file_name="kinova_ModulationIK_tomato", path_config="../config/"):
         super(ExampleGeneric, self).__init__()

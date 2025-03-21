@@ -5,8 +5,6 @@ Adapted by:
 import numpy as np
 import os
 from roboticstoolbox.robot.ERobot import ERobot
-from spatialmath import SE3
-
 
 class iiwa(ERobot):
     """
@@ -31,10 +29,7 @@ class iiwa(ERobot):
 
     def __init__(self, model):
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        
-        #print('trying to read: '+ base_dir + '/urdf/%s.urdf.xacro' % model)
-        
-        #links, name = self.URDF_read(
+
         links, name, urdf_string, urdf_filepath = self.URDF_read(
             base_dir + '/../config/urdf/%s.urdf.xacro' % model
         )
@@ -43,16 +38,7 @@ class iiwa(ERobot):
             links, name=name, manufacturer='KUKA', gripper_links=links[9]
         )
 
-        #self.grippers[0].tool = SE3(0, 0, -0.044)
-        #self.grippers[0].tool = SE3(0.1, 0, 0)
-
-        #self.qdlim = np.array(
-         #   [2.1750, 2.1750, 2.1750, 2.1750, 2.6100, 2.6100, 2.6100, 3.0, 3.0]
-        #)
-
         self.addconfiguration("qz", np.array([0, 0, 0, 0, 0, 0, 0]))
-
-        #self.addconfiguration("qr", np.array([0, -0.3, 0, -2.2, 0, 2.0, np.pi / 4]))
 
 
 if __name__ == "__main__":

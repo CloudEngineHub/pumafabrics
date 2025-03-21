@@ -14,7 +14,9 @@ from pumafabrics.tamed_puma.utils.filters import PDController
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 import copy
 import time
-
+"""
+Example of KUKA iiwa 14 running TamedPUMA as a controller with lots of obstacles..
+"""
 class example_kuka_TamedPUMA_1000(ExampleGeneric):
     def __init__(self):
         super(ExampleGeneric, self).__init__()
@@ -30,7 +32,7 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
         envir_trial = trial_environments()
         self.params["nr_obst"]=2
         (self.env, self.goal) = envir_trial.initialize_environment_kuka(params=self.params)
-        self.params["nr_obst"]=1000
+        self.params["nr_obst"]=100
 
     def construct_fk(self):
         absolute_path = os.path.dirname(os.path.abspath(__file__))
@@ -43,7 +45,7 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
         )
     def set_planner(self, goal: GoalComposition): #, degrees_of_freedom: int = 7, mode="acc", dt=0.01, bool_speed_control=True):
         """
-        Initializes the fabric planner for the panda robot.
+        Initializes the fabric planner
         """
         self.construct_fk()
         absolute_path = os.path.dirname(os.path.abspath(__file__))
@@ -63,7 +65,7 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
         planner.set_components(
             collision_links=self.params["collision_links"],
             goal=goal,
-            number_obstacles=100, #self.params["nr_obst"],
+            number_obstacles=self.params["nr_obst"],
             number_plane_constraints=0,
             limits=self.params["iiwa_limits"],
         )
@@ -83,7 +85,7 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
                 q=q,
                 qdot=ob_robot["joint_state"]["velocity"],
                 x_obsts=x_obsts,
-                radius_obsts=radius_obsts, #[radius_obsts.append([np.array([0.1])) for i in range(nr_obst-2)],
+                radius_obsts=radius_obsts,
                 radius_body_links=self.params["collision_radii"],
                 constraint_0=np.array([0, 0, 1, 0.0]))
         elif nr_obst>0:
@@ -223,32 +225,14 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
 
 def main(render=True):
     q_init_list = [
-        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
         np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-        np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
-        np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
-        np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
-        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
     ]
     positions_obstacles_list = [
-        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
-        [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
-        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
         [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
-        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
-        [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
-        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
-        [[0.5, -0.0, 0.28], [0.5, 0.2, 10.4]],
-        [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
-        [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
-    init_pos = [0.5312149701934061, 0.8355097803551061, 0.0700492926199493, -1.6651880968294615, 0.2936679665237496, -0.8774234085561443, -0.24231138029250487]
     example_class = example_kuka_TamedPUMA_1000()
-    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[3], positions_obstacles=positions_obstacles_list[3], render=render, nr_obst=100)
+    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0], render=render, nr_obst=100)
+    # Note: the number of obstacles is set to a 100 here and overwritten to 1000 later, to avoid generating 1000 obstacles in Pybullet, but still considering 1000 obstacles in the controller.
     example_class.construct_example()
     res = example_class.run_kuka_example()
 
