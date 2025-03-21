@@ -4,7 +4,6 @@ import numpy as np
 import pytorch_kinematics as pk
 from scipy.linalg import block_diag
 from pumafabrics.tamed_puma.kinematics.quaternion_operations import QuaternionOperations
-from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 import casadi as ca
 
 class KinematicsBasics():

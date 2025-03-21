@@ -2,8 +2,6 @@ import os
 import numpy as np
 import pybullet
 import warnings
-
-# from pumafabrics.puma_adapted.datasets.dingo_kinova.reformat_dataset import root_link_name
 from pumafabrics.tamed_puma.utils.filters import PDController
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
@@ -17,7 +15,9 @@ import yaml
 from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
 import time
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
-
+"""
+Example of Kinova gen3-lite running ModulationIK.
+"""
 class example_kuka_PUMA_modulationIK(ExampleGeneric):
     def __init__(self, file_name="kinova_ModulationIK_tomato", path_config="../pumafabrics/tamed_puma/config/"):
         super(ExampleGeneric, self).__init__()
@@ -105,7 +105,6 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
 
         # Translation of goal:
         goal_pos = self.params["goal_pos"]
-        print("goal_pos:", goal_pos)
         translation_gpu, translation_cpu = self.normalizations.translation_goal(state_goal = np.array(goal_pos), goal_NN=self.goal_NN)
 
         # initial state:
@@ -130,13 +129,11 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
 
             # recompute translation to goal pose:
             goal_pos = [goal_pos[i] + self.params["goal_vel"][i]*self.params["dt"] for i in range(len(goal_pos))]
-            print("goal_pos:", goal_pos)
             translation_gpu, translation_cpu = self.normalizations.translation_goal(state_goal=np.array(goal_pos), goal_NN=self.goal_NN)
             pybullet.addUserDebugPoints([goal_pos], [[1, 0, 0]], 5, 0.1)
 
             # --- end-effector states and normalized states --- #
             x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, quat_prev)
-            #x_t, xee_orientation = self.gomp_class.get_current_pose(q, quat_prev=quat_prev)
 
             quat_prev = copy.deepcopy(xee_orientation)
             vel_ee, Jac_current = self.kuka_kinematics.get_state_velocity(q=q, qdot=qdot)
@@ -163,15 +160,10 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
                                                   positions_obsts=positions_obstacles,
                                                   q_init_guess=q,
                                                   q_home=q)
-            print("q: ", q)
-            print("q_d:", q_d)
             xee_IK, _ = self.gomp_class.get_current_pose(q=q_d, quat_prev=quat_prev)
-            # print("solver_flag:", solver_flag)
             action = self.pdcontroller.control(desired_velocity=q_d, current_velocity=q)
-            print("action_safeMP", action_safeMP)
             self.solver_times.append(time.perf_counter() - time0)
             action = np.clip(action, -1*np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
-            print("action", action)
 
             self.check_goal_reached(x_ee=x_t[0][0:3], x_goal=goal_pos)
             ob, *_ = self.env.step(action)
@@ -208,17 +200,12 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
 
 def main(render=True):
     q_init_list = [
-        # with goal changing:
         np.array((-0.13467712, -0.26750494,  0.04957501,  1.53952123,  1.4392644,  -1.57109087))
-        #np.array((9.480853480682088e-05, 6.418218227090965e-05, 0.0005355616952149348, 1.6995958518588348, 1.5725444257344245, -1.570403244218001))
-        #1.14515927e-04, 3.48547333e-01, 1.57849233e+00, 2.58859258e-04, -1.11692976e-03, 1.42772066e-03))
     ]
     positions_obstacles_list = [
-        # # with goal changing:
         [[10.0, 0., 0.55], [0.5, 0., 10.1]],
     ]
     goal_pos_list = [
-        # # #changing goal pose:
         [0.53858072, -0.04530622,  0.4580668]
     ]
 

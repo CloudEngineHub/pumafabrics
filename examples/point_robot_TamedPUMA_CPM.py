@@ -15,10 +15,10 @@ from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 from pumafabrics.tamed_puma.tamedpuma.combining_actions import combine_fabrics_safeMP
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from pumafabrics.tamed_puma.tamedpuma.energy_regulator import energy_regulation
-# Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
-# mass to compute actions for a simulated 3D point mass.
-#
-# todo: tune behavior.
+"""
+TamedPUMA - CPM example for a 3D point mass robot. The planner uses a 2D point
+mass to compute actions for a simulated 3D point mass.
+"""
 class example_point_robot_TamedPUMA_CPM():
     def __init__(self, v_min=0, v_max=0, acc_min=0, acc_max=0):
         self.v_min = v_min

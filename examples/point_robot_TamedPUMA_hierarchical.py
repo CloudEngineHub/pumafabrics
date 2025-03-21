@@ -14,8 +14,11 @@ from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_function
 from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 
-# Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
-# mass to compute actions for a simulated 3D point mass.
+"""
+TamedPUMA - hierarchical example for a 3D point mass robot. The planner uses a 2D point
+mass to compute actions for a simulated 3D point mass.
+Although not included in the paper, this example lets fabrics track a end-effector positional reference provided by PUMA.
+"""
 
 class example_point_robot_hierarchical():
     def __init__(self):

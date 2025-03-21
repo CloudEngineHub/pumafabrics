@@ -16,7 +16,9 @@ import yaml
 from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
 import time
 import random
-
+"""
+Example of KUKA iiwa 14 running ModulationIK as a controller with lots of obstacles.
+"""
 class example_kuka_modulation_IK_1000(ExampleGeneric):
     def __init__(self, file_name="kuka_ModulationIK_tomato"):
         super(ExampleGeneric, self).__init__()
@@ -34,7 +36,7 @@ class example_kuka_modulation_IK_1000(ExampleGeneric):
         envir_trial = trial_environments()
         self.params["nr_obst"]=2
         (self.env, self.goal) = envir_trial.initialize_environment_kuka(params=self.params)
-        self.params["nr_obst"]=1000
+        self.params["nr_obst"]=100
 
     def construct_fk(self):
         absolute_path = os.path.dirname(os.path.abspath(__file__))
@@ -185,15 +187,6 @@ class example_kuka_modulation_IK_1000(ExampleGeneric):
 
         self.env.close()
 
-        # results = {
-        #     "min_distance": self.utils_analysis.get_min_dist(),
-        #     "collision": self.IN_COLLISION,
-        #     "goal_reached": self.GOAL_REACHED,
-        #     "time_to_goal": self.time_to_goal,
-        #     "solver_times": self.solver_times,
-        #     "solver_time": np.mean(self.solver_times),
-        #     "solver_time_std": np.std(self.solver_times),
-        # }
         results = {
             "min_distance": self.utils_analysis.get_min_dist(),
             "collision": self.IN_COLLISION,
@@ -209,32 +202,14 @@ class example_kuka_modulation_IK_1000(ExampleGeneric):
 
 def main(render=True):
     q_init_list = [
-        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
-        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-        np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
-        np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
-        np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
-        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
     ]
     positions_obstacles_list = [
-        [[0.5, 0., 0.55], [0.5, 0., 10.1]],
         [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
-        [[0.5, -0.35, 0.5], [0.24, 0.45, 10.2]],
-        [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
-        [[0.5, -0.0, 0.5], [0.3, -0.1, 10.5]],
-        [[0.5, -0.05, 0.3], [0.5, 0.2, 10.25]],
-        [[0.5, -0.0, 0.2], [0.5, 0.2, 10.4]],
-        [[0.5, -0.0, 0.28], [0.5, 0.2, 10.4]],
-        [[0.5, 0.25, 0.55], [0.5, 0.2, 10.4]],
-        [[0.5, 0.1, 0.45], [0.5, 0.2, 10.4]],
     ]
 
     example_class = example_kuka_modulation_IK_1000()
-    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[1], positions_obstacles=positions_obstacles_list[1], render=render)
+    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0], render=render)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

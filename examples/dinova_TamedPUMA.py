@@ -12,7 +12,9 @@ from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 import copy
 import time
 import pybullet
-
+"""
+Example of Clearpath Dingo and Kinova gen3-lite = dinova running TamedPUMA, this example is IN PROGRESS.
+"""
 class example_dinova_TamedPUMA(ExampleGeneric):
     def __init__(self, file_name="dinova_TamedPUMA_tomato"):
         super(ExampleGeneric, self).__init__()
@@ -159,19 +161,15 @@ class example_dinova_TamedPUMA(ExampleGeneric):
 
 def main(render=True):
     q_init_list = [
-        # with goal changing:
         np.array((0., 0., 0., 0.87, 0.14, -0.37, -1.81, 0.46, -1.63)),
     ]
     positions_obstacles_list = [
-        # # with goal changing:
         [[0.5, 0., 0.55], [0.5, 0., 10.1]],
     ]
     speed_obstacles_list = [
-        # # with goal changing:
         [[0., 0., 0.], [0., 0., 0.]],
     ]
     goal_pos_list = [
-        # # #changing goal pose:
         [0.58, -0.014, 1.115],
     ]
     goal_vel_list = [

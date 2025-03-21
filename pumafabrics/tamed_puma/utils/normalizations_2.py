@@ -85,21 +85,14 @@ class normalization_functions(denormalizations):
     def system_quat_to_NN(self, quat, offset):
         offset_inverse = UnitQuaternion(offset).inv()
         if torch.is_tensor(quat):
-            quat2 = self.gpu_to_cpu(quat) #.cpu().numpy()
-            # quat_NN = UnitQuaternion(quat2) / UnitQuaternion(offset)
-            quat_NN = self.quaternion_operations.quat_product(quat2, offset_inverse.A) #UnitQuaternion(quat2) * offset_inverse
+            quat2 = self.gpu_to_cpu(quat)
+            quat_NN = self.quaternion_operations.quat_product(quat2, offset_inverse.A)
         else:
-            # # quat_np = quat.transpose()[0] #todo: check if necessary!
-            # quat2 = UnitQuaternion(s=quat[0], v=quat[1:], norm=True)
-            # if self.quaternion_flipped(quat=quat2.A, quat_prev=quat): #todo, add!!
-            #     # print("flipped!!")
-            #     quat2 = quat2 * -1
-            # quat_NN = quat2 * offset_inverse
             quat_NN = self.quaternion_operations.quat_product(quat, offset_inverse.A)
 
         # ---- checking the norms ---#
         self.check_norm_quaternion(quat_list = [quat_NN, offset])
-        return quat_NN #torch.FloatTensor(quat_NN).cuda() #torch.FloatTensor(quat_NN.A).cuda()
+        return quat_NN
 
     # -------------------- High level functions -----------------------------#
     def translation_goal(self, state_goal, goal_NN):

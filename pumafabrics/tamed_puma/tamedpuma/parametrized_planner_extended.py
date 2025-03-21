@@ -41,7 +41,6 @@ class ParameterizedFabricPlannerExtended(ParameterizedFabricPlanner):
                 # If there is no forcing term, equation 89 simplifies to the following
                 logging.warn("No forcing term, using pure geoemtry with energization.")
                 self._geometry.concretize()
-                #xddot = self._geometry._xddot - self._geometry._alpha * self._geometry._vars.velocity_variable()
                 xddot = self._execution_geometry._xddot - self._execution_geometry._alpha * self._geometry._vars.velocity_variable()
         else: #without speed control (with and without forcing)
             xddot = xddot_nospeed

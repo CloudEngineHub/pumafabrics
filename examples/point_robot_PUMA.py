@@ -9,8 +9,10 @@ from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_function
 from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 
-# Fabrics example for a 3D point mass robot. The fabrics planner uses a 2D point
-# mass to compute actions for a simulated 3D point mass.
+"""
+PUMA example for a 3D point mass robot. The PUMA planner uses a 2D point
+mass to compute actions for a simulated 3D point mass.
+"""
 
 class example_point_robot_PUMA():
     def __init__(self, v_min=0, v_max=0, acc_min=0, acc_max=0, dof=2):
@@ -38,7 +40,6 @@ class example_point_robot_PUMA():
             radius_obst = obst_struct[i+3]["size"]
 
             distance = np.linalg.norm(q[0:2] - pos_obst[0:2]) - radius_obst
-            print("distance:", distance)
             if distance < 0.2 and self.BOOL_COLLISION_CHECK == 0:
                 self.INT_COLLISION_CHECK = w
                 self.BOOL_COLLISION_CHECK = 1

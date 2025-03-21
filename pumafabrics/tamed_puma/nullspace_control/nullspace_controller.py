@@ -76,7 +76,6 @@ class CartesianImpedanceController:
 
     def _elbow_cartesian_impedance_controller(self, q, qdot):
         # Get elbow position and orientation from its pose
-        # q_desired = [-0.01850674,  1.18335387, -0.59194822, -1.70635513, -0.49675492, -1.24385178, -0.89709277]
         elbow_T = self.chain_elbow.forward_kinematics(q, end_only=False)["iiwa_link_3"].get_matrix()
         position_elbow = torch.Tensor.numpy(elbow_T[:, :3, 3])[0]
         orientation_elbow = torch.Tensor.numpy(pk.matrix_to_quaternion(elbow_T[:, :3, :3]))[0]

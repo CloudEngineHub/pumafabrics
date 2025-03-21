@@ -26,7 +26,7 @@ class FabricsController:
 
     def set_planner(self, goal: GoalComposition, nr_plane_constraints=1):
         """
-        Initializes the fabric planner for the panda robot.
+        Initializes the fabric planner.
         """
         self.construct_fk()
         planner = ParameterizedFabricPlannerExtended(
@@ -97,7 +97,6 @@ class FabricsController:
                 radius_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['size'],
                 x_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['position'],
                 radius_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['size'],
-                #radius_body_links=self.params["collision_radii"],
                 constraint_0=np.array([0, 0, 1, 0.0]))
             for i, collision_link in enumerate(self.params["collision_links"]):
                 arguments_dict["radius_body_" + collision_link] = list(self.params["collision_radii"].values())[i]
@@ -105,7 +104,6 @@ class FabricsController:
             arguments_dict = dict(
                 q=q,
                 qdot=ob_robot["joint_state"]["velocity"],
-                #radius_body_links=self.params["collision_radii"],
                 constraint_0=np.array([0, 0, 1, 0.0]))
             for i, collision_link in enumerate(self.params["collision_links"]):
                 arguments_dict["radius_body_" + collision_link] = list(self.params["collision_radii"].values())[i]
