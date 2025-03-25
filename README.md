@@ -1,7 +1,7 @@
 # TamedPUMA: safe and stable imitation learning with geometric fabrics 
 
 Code accompanying the paper "TamedPUMA: safe and stable imitation learning with geometric fabrics" (L4DC 2025) :tiger:. 
-The paper is available at RELEASED_SOON, and our [website](https://autonomousrobots.nl/paper_websites/pumafabrics) contains several videos and background material. 
+The paper is available at [Arxiv](https://arxiv.org/abs/2503.17432v1), and our [website](https://autonomousrobots.nl/paper_websites/pumafabrics) contains several videos and background material. 
 
 TamedPUMA is a safe and stable extension of learned stable motion primitives (PUMA) augmented with the recently developed
 geometric fabrics for safe and stable operations in the presence of obstacles.
