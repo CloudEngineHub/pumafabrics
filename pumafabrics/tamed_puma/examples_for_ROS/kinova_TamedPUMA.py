@@ -55,8 +55,6 @@ class example_kinova_TamedPUMA(ExampleGeneric):
         goal_pos = self.params["goal_pos"]
         dof = self.params["dof"]
         action = np.zeros(dof)
-        # ob, *_ = self.env.step(action)
-        # q_init = ob['robot_0']["joint_state"]["position"][0:dof]
 
         x_t_init, x_init_gpu, self.translation_cpu, self.goal_NN = self.puma_controller.initialize_PUMA(q_init=q_init, 
                                                                                                    goal_pos=goal_pos, 
@@ -74,7 +72,7 @@ class example_kinova_TamedPUMA(ExampleGeneric):
         qdot = runtime_arguments["qdot"]
         goal_pos = runtime_arguments["goal_pos"]
         positions_obstacles = runtime_arguments["positions_obstacles"]
-        radii_obstacles = [0.1, 0.1] #todo
+        radii_obstacles = [0.1, 0.1]
 
         # recompute translation to goal pose:
         goal_pos = [goal_pos[i] + self.params["goal_vel"][i]*self.params["dt"] for i in range(len(goal_pos))]
@@ -86,7 +84,6 @@ class example_kinova_TamedPUMA(ExampleGeneric):
         x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, self.quat_prev, mode_NN=self.params["mode_NN"], qdot=qdot)
         print("x_t: ", x_t)
         
-        exit()
         self.quat_prev = copy.deepcopy(xee_orientation)
 
         # --- action by NN --- #
@@ -98,11 +95,12 @@ class example_kinova_TamedPUMA(ExampleGeneric):
                                                                         offset_orientation=self.offset_orientation,
                                                                         translation_cpu=self.translation_cpu
                                                                         )
-
+        print("qddot_PUMA: ", qddot_PUMA)
         if self.params["bool_combined"] == True:
             # ----- Fabrics action ----#
             action_avoidance, M_avoidance, f_avoidance, qddot_speed = self.fabrics_controller.compute_action_avoidance(q=q, ob_robot=None, qdot=qdot, positions_obstacles=positions_obstacles,
                                                                                                                        radii_obstacles=radii_obstacles)
+            print("action_avoidance: ", action_avoidance)
             if self.params["bool_energy_regulator"] == True:
                 weight_attractor = 1.
                 # ---- get action by CPM via theorem III.5 in https://arxiv.org/pdf/2309.07368.pdf ---#

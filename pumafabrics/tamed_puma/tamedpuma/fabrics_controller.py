@@ -87,23 +87,40 @@ class FabricsController:
         self.solver_times.append(time.perf_counter() - time0)
         return action, [], [], []
 
-    def compute_action_avoidance(self, q, ob_robot):
+    def compute_action_avoidance(self, q, ob_robot=None, qdot=None, positions_obstacles=None, radii_obstacles=None):
         nr_obst = self.params["nr_obst"]
+        if ob_robot is not None and nr_obst>0:
+            qdot=ob_robot["joint_state"]["velocity"]
+            x_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['position']
+            radius_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['size']
+            x_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['position']
+            radius_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['size']
+        elif ob_robot is not None:
+            qdot=ob_robot["joint_state"]["velocity"]
+            
+        if positions_obstacles is not None:
+            x_obst_0=positions_obstacles[0]
+            radius_obst_0=radii_obstacles[0]
+            x_obst_1=positions_obstacles[1]
+            radius_obst_1=radii_obstacles[1]
+                    
         if nr_obst>0:
             arguments_dict = dict(
                 q=q,
-                qdot=ob_robot["joint_state"]["velocity"],
-                x_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['position'],
-                radius_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['size'],
-                x_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['position'],
-                radius_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['size'],
+                qdot=qdot,
+                x_obst_0=x_obst_0,
+                radius_obst_0=radius_obst_0,
+                x_obst_1=x_obst_1,
+                radius_obst_1=radius_obst_1,
+                #radius_body_links=self.params["collision_radii"],
                 constraint_0=np.array([0, 0, 1, 0.0]))
             for i, collision_link in enumerate(self.params["collision_links"]):
                 arguments_dict["radius_body_" + collision_link] = list(self.params["collision_radii"].values())[i]
         else:
             arguments_dict = dict(
                 q=q,
-                qdot=ob_robot["joint_state"]["velocity"],
+                qdot=qdot,
+                #radius_body_links=self.params["collision_radii"],
                 constraint_0=np.array([0, 0, 1, 0.0]))
             for i, collision_link in enumerate(self.params["collision_links"]):
                 arguments_dict["radius_body_" + collision_link] = list(self.params["collision_radii"].values())[i]
