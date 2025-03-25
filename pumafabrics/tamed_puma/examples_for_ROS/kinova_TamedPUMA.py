@@ -113,7 +113,7 @@ class example_kinova_TamedPUMA(ExampleGeneric):
                                                                                           transition_info=transition_info,
                                                                                           weight_attractor=weight_attractor)
             else:
-                # --- get action by FPM, sum of dissipative systems ---#
+                # --- get action by FPM, sum of dissipative systems ---##
                 action_combined = qddot_PUMA + action_avoidance
         else: #otherwise only apply action by PUMA
             action_combined = qddot_PUMA
