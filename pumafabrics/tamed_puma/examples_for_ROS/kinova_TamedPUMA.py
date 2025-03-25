@@ -85,7 +85,8 @@ class example_kinova_TamedPUMA(ExampleGeneric):
         # --- end-effector states and normalized states --- #
         x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, self.quat_prev, mode_NN=self.params["mode_NN"], qdot=qdot)
         print("x_t: ", x_t)
-        # exit()
+        
+        exit()
         self.quat_prev = copy.deepcopy(xee_orientation)
 
         # --- action by NN --- #
