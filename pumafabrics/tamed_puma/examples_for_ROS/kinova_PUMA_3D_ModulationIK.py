@@ -16,11 +16,9 @@ import yaml
 from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
 import time
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
-"""
-This file is UNDER CONSTRUCTION
-"""
+
 class example_kuka_PUMA_modulationIK(ExampleGeneric):
-    def __init__(self, file_name="kinova_ModulationIK_tomato", path_config="../config/"):
+    def __init__(self, file_name="kinova_ModulationIK_tomato", path_config="../pumafabrics/tamed_puma/config/"):
         super(ExampleGeneric, self).__init__()
         current_dir = os.path.dirname(os.path.abspath(__file__))
         config_dir = os.path.join(current_dir, path_config)
@@ -48,9 +46,10 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
             end_links=self.params["end_links"],
         )
 
-    def construct_example(self, with_environment=True, results_base_directory='../../pumafabrics/puma_adapted/'):
+    def construct_example(self, with_environment=True, results_base_directory='../pumafabrics/puma_adapted/'):
         # Construct classes:
         # results_base_directory = '../pumafabrics/puma_adapted/'
+        
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"],
                                               robot_name=self.params["robot_name"],
                                               root_link_name=self.params["root_link"],
@@ -72,12 +71,12 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + self.params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
-        print("params.results_path:", params.results_path)
         params.load_model = True
 
         # Initialize framework
         self.learner, _, data = initialize_framework(params, self.params_name, verbose=False)
         self.goal_NN = data['goals training'][0]
+        print("self.goal_NN in construction:", self.goal_NN)
 
         # Initialize GOMP
         self.gomp_class  = IKGomp(  q_home=self.params["init_pos"],
@@ -90,15 +89,16 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         self.normalizations = normalization_functions(x_min=data["x min"], x_max=data["x max"], dof_task=self.params["dim_task"], dt=self.params["dt"], mode_NN=self.params["mode_NN"])
 
 
-    def initialize_example(self, q_init, goal_pos):
+    def initialize_example(self, q_init):
         self.offset_orientation = np.array(self.params["orientation_goal"])
 
         # Translation of goal:
         goal_pos = self.params["goal_pos"]
         self.translation_gpu, self.translation_cpu = self.normalizations.translation_goal(state_goal = np.array(goal_pos), goal_NN=self.goal_NN)
-
+        print("goal_pos:", goal_pos)
         # initial state:
         x_t_init = self.gomp_class.get_initial_pose(q_init=q_init, offset_orientation=self.offset_orientation)
+        x_t, _ = self.gomp_class.get_current_pose(q=q_init, quat_prev=x_t_init[3:])
         x_init_gpu = self.normalizations.normalize_state_to_NN(x_t=[x_t_init], translation_cpu=self.translation_cpu, offset_orientation=self.offset_orientation)
         self.dynamical_system = self.learner.init_dynamical_system(initial_states=x_init_gpu[:, :3].clone(), delta_t=1)
 
@@ -108,6 +108,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         q = runtime_arguments["q"]
         qdot = runtime_arguments["qdot"]
         goal_pos = runtime_arguments["goal_pos"]
+        print("goal_pos:", goal_pos)
         positions_obstacles = runtime_arguments["positions_obstacles"]
 
         # recompute translation to goal pose:
@@ -115,7 +116,10 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
 
         # --- end-effector states and normalized states --- #
         x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, self.quat_prev)
+        # print("x_t:", x_t)
         x_t, xee_orientation = self.gomp_class.get_current_pose(q, quat_prev=self.quat_prev)
+        # print("x_t gomp:", x_t)
+        # print("self.goal_NN:", self.goal_NN)
 
         self.quat_prev = copy.deepcopy(xee_orientation)
         vel_ee, Jac_current = self.kuka_kinematics.get_state_velocity(q=q, qdot=qdot)
@@ -137,17 +141,22 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
             action_cpu = action_t_gpu.T.cpu().detach().numpy()
         x_t_action = self.normalizations.reverse_transformation_position(position_gpu=x_t_NN) #, offset_orientation=offset_orientation)
         action_safeMP = self.normalizations.reverse_transformation(action_gpu=action_t_gpu)
+        
         q_d, solver_flag = self.gomp_class.call_ik(x_t_action[0][0:3], self.params["orientation_goal"],
                                                   positions_obsts=positions_obstacles,
                                                   q_init_guess=q,
                                                   q_home=q)
         xee_IK, _ = self.gomp_class.get_current_pose(q=q_d, quat_prev=self.quat_prev)
         # print("solver_flag:", solver_flag)
+        print("q_d:", q_d)
+        print("q:", q)
         action = self.pdcontroller.control(desired_velocity=q_d, current_velocity=q)
+        print("action unclipped: ", action)
         self.solver_times.append(time.perf_counter() - time0)
         action = np.clip(action, -1*np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
 
         self.check_goal_reached(x_ee=x_t[0][0:3], x_goal=goal_pos)
+        dist_to_goal = self.return_distance_goal_reached()
 
         # result analysis:
         # x_ee, _ = self.utils_analysis._request_ee_state(q, self.quat_prev)
@@ -157,7 +166,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         # if self.GOAL_REACHED:
         #     self.time_to_goal = w*self.params["dt"]
         
-        return action, self.GOAL_REACHED
+        return action, self.GOAL_REACHED, dist_to_goal
 
 
 
@@ -181,9 +190,9 @@ def main(render=True):
                                      goal_pos=goal_pos_list[0],
                                      positions_obstacles=positions_obstacles_list[0],
                                      render=render)
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    example_class.construct_example(results_base_directory='/../')
-    res = example_class.run_kuka_example()
+    example_class.construct_example()
+    example_class.initialize_example(q_init=q_init_list[0])
+    example_class.run()
 
     print(" -------------------- results -----------------------")
     print("min_distance:", res["min_distance"])

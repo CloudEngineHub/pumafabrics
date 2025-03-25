@@ -36,9 +36,12 @@ class ExampleGeneric:
         return qdot_action
 
     def check_goal_reached(self, x_ee, x_goal):
-        dist = np.linalg.norm(x_ee - x_goal)
-        if dist<0.02:
+        self.dist = np.linalg.norm(x_ee - x_goal)
+        if self.dist<0.02:
             self.GOAL_REACHED = True
             return True
         else:
             return False
+        
+    def return_distance_goal_reached(self):
+        return self.dist

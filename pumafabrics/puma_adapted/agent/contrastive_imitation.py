@@ -87,8 +87,11 @@ class ContrastiveImitation:
 
         # Load Neural Network if requested
         if self.load_model:
-            # current_dir = os.path.dirname(os.path.abspath(__file__))
-            self.model.load_state_dict(torch.load(self.results_path + 'model'), strict=False)
+            try: 
+                self.model.load_state_dict(torch.load(self.results_path + 'model'), strict=False) #todo
+            except:
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                self.model.load_state_dict(torch.load(current_dir + self.results_path + 'model'), strict=False)
 
         # Initialize latent goals
         self.model.update_goals_latent_space(self.goals_tensor)
