@@ -5,11 +5,11 @@ from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from mpscenes.goals.goal_composition import GoalComposition
 
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from pumafabrics.puma_adapted.tools.animation import TrajectoryPlotter
+from pumafabrics.puma_extension.tools.animation import TrajectoryPlotter
 import torch
 import matplotlib.pyplot as plt
 import importlib
-from pumafabrics.puma_adapted.initializer import initialize_framework
+from pumafabrics.puma_extension.initializer import initialize_framework
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
 from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
@@ -110,10 +110,10 @@ class example_point_robot_hierarchical():
         params_name = '2nd_order_2D'
         x_t_init = np.array([np.append(ob['robot_0']["joint_state"]["position"][0:2], ob['robot_0']["joint_state"]["velocity"][0:2])]) # initial states
         # simulation_length = 2000
-        results_base_directory = '../pumafabrics/puma_adapted/'
+        results_base_directory = '../pumafabrics/puma_extension/'
 
         # Load parameters
-        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_extension.params.' + params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True

@@ -9,7 +9,7 @@ from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 import importlib
-from pumafabrics.puma_adapted.initializer import initialize_framework
+from pumafabrics.puma_extension.initializer import initialize_framework
 import copy
 import yaml
 from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp

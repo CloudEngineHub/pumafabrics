@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from pumafabrics.puma_adapted.background_vectorfield import create_background_vectorfield
+from pumafabrics.puma_extension.background_vectorfield import create_background_vectorfield
 import os
 
 class plotting_functions():

@@ -9,7 +9,7 @@ from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 import importlib
-from pumafabrics.puma_adapted.initializer import initialize_framework
+from pumafabrics.puma_extension.initializer import initialize_framework
 import copy
 import yaml
 from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
@@ -65,7 +65,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
             self.params_name = self.params["params_name_2nd"]
 
         # Load parameters
-        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + self.params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_extension.params.' + self.params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True
