@@ -52,7 +52,7 @@ class example_kuka_modulation_IK_1000(ExampleGeneric):
         self.initialize_environment()
 
         # Construct classes:
-        results_base_directory = '../pumafabrics/puma_adapted/'
+        results_base_directory = '../pumafabrics/puma_extension/'
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"], end_link_name=self.params["end_links"][0])
         self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
         self.construct_fk()
@@ -68,7 +68,7 @@ class example_kuka_modulation_IK_1000(ExampleGeneric):
             self.params_name = self.params["params_name_2nd"]
 
         # Load parameters
-        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + self.params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_extension.params.' + self.params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True

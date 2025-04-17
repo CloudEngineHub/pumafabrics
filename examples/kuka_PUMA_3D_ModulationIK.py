@@ -49,7 +49,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         self.initialize_environment()
 
         # Construct classes:
-        results_base_directory = '../pumafabrics/puma_adapted/'
+        results_base_directory = '../pumafabrics/puma_extension/'
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"], end_link_name=self.params["end_links"][0])
         self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
         self.construct_fk()

@@ -8,15 +8,15 @@ class Params:
     dataset_name: str = 'kuka'  # selects dataset, options: LASA, LAIR, optitrack, interpolation, joint_space, ABB_R3S3
     results_path: str = 'results/2nd_order_R3S3_tomato_31may/'
     multi_motion: bool = False  # true when learning multiple motions together
-    selected_primitives_ids: str = '0'  # id number from dataset_keys.py, e.g., '2' or '4,0,6'
+    selected_primitives_ids: str = '6'  # id number from dataset_keys.py, e.g., '2' or '4,0,6'
     manifold_dimensions: int = 6  # dimensionality of the data manifold
     saturate_out_of_boundaries_transitions: bool = True  # True to enforce positively invariant set
     dynamical_system_order: int = 2  # options: 1, 2
     space: str = 'euclidean_sphere'  # data manifold shape
 
     """ Neural Network """
-    latent_space_dim: int = 600  # dimensionality latent space
-    neurons_hidden_layers: int = 600  # number of neurons per layer
+    latent_space_dim: int = 800  # dimensionality latent space #todo: 600
+    neurons_hidden_layers: int = 800  # number of neurons per layer #todo: 600
     batch_size: int = 300  # sampling batch size
     learning_rate: float = 0.0001  # AdamW learning rate
     weight_decay: float = 0.0000  # AdamW weight decay

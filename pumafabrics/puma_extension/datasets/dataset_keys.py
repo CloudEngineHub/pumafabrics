@@ -81,10 +81,13 @@ hammer = ['hammer']
 
 
 # kuka
-kuka = ['pick_tomato_31may',
-        'pouring',
+kuka = ['pouring',
         'pouring_v2',
         'test_15feb',
+        'demo_cart_19apr',
+        'place_16_05_2024',
+        'sweeping_16_05_2024',
+        'pick_tomato_31may'
         ]
 
 dingo_kinova = ['kinova_6feb_pick',

@@ -1,4 +1,4 @@
-from pumafabrics.puma_extension.datasets.dataset_keys import LASA, LASA_S2, LAIR, ABB_R3S3, hammer, kuka
+from pumafabrics.puma_extension.datasets.dataset_keys import LASA, LASA_S2, LAIR, ABB_R3S3, hammer, kuka, dingo_kinova
 from spatialmath import SO3, UnitQuaternion
 import os
 import pickle
@@ -53,6 +53,8 @@ def get_dataset_primitives_names(dataset_name):
         dataset_primitives_names = hammer
     elif dataset_name == 'kuka':
         dataset_primitives_names = kuka
+    elif dataset_name == 'dingo_kinova':
+        dataset_primitives_names = dingo_kinova
     else:
         raise NameError('Dataset %s does not exist' % dataset_name)
 
@@ -92,6 +94,10 @@ def get_data_loader(dataset_name, dim_manifold):
     elif dataset_name == 'kuka' and dim_manifold == 3:
         data_loader = load_R3
     elif dataset_name == 'kuka' and dim_manifold == 6:
+        data_loader = load_R3S3
+    elif dataset_name == 'dingo_kinova' and dim_manifold == 3:
+        data_loader = load_R3
+    elif dataset_name == 'dingo_kinova' and dim_manifold == 6:
         data_loader = load_R3S3
     else:
         raise NameError('Dataset %s does not exist' % dataset_name)

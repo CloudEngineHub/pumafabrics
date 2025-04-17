@@ -47,7 +47,7 @@ class example_kinova_tamedpuma_R3S3_hierarchical(ExampleGeneric):
             end_links=self.params["end_links"],
         )
 
-    def construct_example(self, with_environment=True, results_base_directory='../pumafabrics/puma_adapted/'):
+    def construct_example(self, with_environment=True, results_base_directory='../pumafabrics/puma_extension/'):
         if with_environment:
             self.initialize_environment()
 

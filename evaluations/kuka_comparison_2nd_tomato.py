@@ -181,12 +181,12 @@ class comparison_kuka_class():
                                 goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         self.results = {self.cases[0]: results_PUMA, self.cases[1]: results_PUMA_obst, self.cases[2]: results_IK, self.cases[3]: results_fabrics, self.cases[4]: results_FPM, self.cases[5]: results_CPM}
-        with open("../pumafabrics/puma_adapted/results/data_files/simulation_kuka_2nd"+network_yaml+".pkl", 'wb') as f:
+        with open("../pumafabrics/puma_extension/results/data_files/simulation_kuka_2nd"+network_yaml+".pkl", 'wb') as f:
             pickle.dump(self.results, f)
         return self.results
 
     def KukaComparisonLoad(self):
-        file_i = open(f"../pumafabrics/puma_adapted/results/data_files/simulation_kuka_2nd"+network_yaml+".pkl", 'rb')
+        file_i = open(f"../pumafabrics/puma_extension/results/data_files/simulation_kuka_2nd"+network_yaml+".pkl", 'rb')
         results= pickle.load(file_i)
         return results
 

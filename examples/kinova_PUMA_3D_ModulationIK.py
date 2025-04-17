@@ -45,12 +45,11 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
             end_links=self.params["end_links"],
         )
 
-    def construct_example(self, with_environment=True, results_base_directory='../pumafabrics/puma_adapted/'):
+    def construct_example(self, with_environment=True, results_base_directory='../pumafabrics/puma_extension/'):
         if with_environment:
             self.initialize_environment()
 
         # Construct classes:
-        # results_base_directory = '../pumafabrics/puma_adapted/'
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"],
                                               robot_name=self.params["robot_name"],
                                               root_link_name=self.params["root_link"],
@@ -69,7 +68,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
             self.params_name = self.params["params_name_2nd"]
 
         # Load parameters
-        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + self.params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_extension.params.' + self.params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True
