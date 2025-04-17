@@ -57,7 +57,8 @@ class example_point_robot_hierarchical():
             forward_kinematics,
             time_step=dt,
             collision_geometry=collision_geometry,
-            collision_finsler=collision_finsler
+            collision_finsler=collision_finsler,
+            damper_beta =  "0.9 * (ca.tanh(-0.5 * (ca.norm_2(x) - 0.02)) + 1) * 6.5 + 0.01 + ca.fmax(0, sym('a_ex') - sym('a_le'))"
         )
         collision_links = ["base_link_y"]
         # The planner hides all the logic behind the function set_components.
@@ -168,7 +169,7 @@ class example_point_robot_hierarchical():
                 q=ob_robot["joint_state"]["position"][0:dof],
                 qdot=ob_robot["joint_state"]["velocity"][0:dof],
                 x_goal_0=pos_safeMP,
-                weight_goal_0=30, #ob_robot['FullSensor']['goals'][2]['weight'],
+                weight_goal_0=1000, #ob_robot['FullSensor']['goals'][2]['weight'],
                 x_obst_0=ob_robot['FullSensor']['obstacles'][3]['position'],
                 radius_obst_0=ob_robot['FullSensor']['obstacles'][3]['size'],
                 x_obst_1=ob_robot['FullSensor']['obstacles'][4]['position'],
@@ -205,7 +206,7 @@ def main(render=True):
 
     # --- run example --- #
     example_class = example_point_robot_hierarchical()
-    res = example_class.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
+    res = example_class.run_point_robot_urdf(n_steps=5000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
                                dt=dt, mode=mode, mode_NN=mode_NN)
     return {}
 

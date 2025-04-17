@@ -8,6 +8,7 @@ from examples.point_robot_PUMA import example_point_robot_PUMA
 from examples.point_robot_TamedPUMA_FPM import example_point_robot_TamedPUMA_FPM
 from examples.point_robot_TamedPUMA_CPM import example_point_robot_TamedPUMA_CPM
 from examples.point_robot_Fabrics import example_point_robot_fabrics
+from examples.point_robot_TamedPUMA_hierarchical import example_point_robot_hierarchical
 from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 
 # --- Initial parameters --- #
@@ -37,10 +38,10 @@ q_list_fabrics = example_fabrics.run_point_robot_urdf(n_steps=1000, env=env, goa
 example_safeMP = example_point_robot_PUMA(v_min=v_min, v_max=v_max, acc_min=acc_min, acc_max=acc_max)
 q_list_safeMP = example_safeMP.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos, dt=dt, mode=mode, mode_NN = mode_NN)
 
-# --- hierarchical method ---#
+# # --- hierarchical method ---#
 # (env, goal) = envir_trial.initalize_environment_pointmass(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)
 # example_hierachical = example_point_robot_hierarchical()
-# q_list_hierarchical = example_hierachical.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos, dt=dt, mode=mode, mode_NN=mode_NN)
+# q_list_hierarchical = example_hierachical.run_point_robot_urdf(n_steps=3000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos, dt=dt, mode=mode, mode_NN=mode_NN)
 
 # run safe MP + fabrics example ---#
 (env, goal) = envir_trial.initalize_environment_pointmass(render, mode=mode, dt=dt, init_pos=init_pos, goal_pos=goal_pos)

@@ -38,6 +38,6 @@ n_steps: 2000
 init_pos: [-0.702, 0.355, -0.016, -1.212, 0.012, -0.502]
 goal_pos: [0.58, -0.214,  0.115]
 goal_vel: [0., 0., 0.]
-orientation_goal: [ 0.02963833,  0.88385373, -0.01450962,  0.46659793]
+orientation_goal: [ 0.7048338 , -0.04542186,  0.70644414,  0.04563833] #[-0.02963833,  -0.88385373, 0.01450962,  -0.46659793]
 params_name_1st: "1st_order_R3S3_converge"
-params_name_2nd: "2nd_order_R3S3_kinova"
+params_name_2nd: "2nd_order_R3S3_tomato_31may" #"2nd_order_R3S3_kinova" #"2nd_order_R3S3_tomato_31may"

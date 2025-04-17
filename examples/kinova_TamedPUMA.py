@@ -15,7 +15,7 @@ import pybullet
 Example of the Kinova gen3-lite running TamedPUMA, this example is IN PROGRESS.
 """
 class example_kinova_TamedPUMA(ExampleGeneric):
-    def __init__(self, file_name="dinova_TamedPUMA_tomato"):
+    def __init__(self, file_name="kinova_TamedPUMA_tomato"):
         super(ExampleGeneric, self).__init__()
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
