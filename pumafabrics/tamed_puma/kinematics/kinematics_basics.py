@@ -78,7 +78,7 @@ class KinematicsBasics():
         Uses position + velocity
         y vectors to compute inverse differentiable kinematics
         """
-        invJ = torch.linalg.pinv(self.Jacobian + 1e-3*np.eye(self.Jacobian.size()[1]))
+        invJ = torch.linalg.pinv(self.Jacobian)
         qdot = invJ @ xdot
 
         #check if unstable:
@@ -107,7 +107,7 @@ class KinematicsBasics():
         H = self.quaternion_operations.map_angular_quat(angle_quaternion=angle_quaternion)
         E_tot = block_diag(np.eye(3), 2*H)
 
-        invJ_quat = torch.linalg.pinv(self.Jacobian+ 1e-3*np.eye(self.Jacobian.size()[1])) @ E_tot
+        invJ_quat = torch.linalg.pinv(self.Jacobian) @ E_tot
         qdot =  invJ_quat @ xdot
 
         self.check_instability_jacobian(invJ=invJ_quat)
@@ -122,7 +122,7 @@ class KinematicsBasics():
         E_tot = block_diag(np.eye(3), 2*H)
         self.Jac_quat = self.diff_kinematics_quat(q, angle_quaternion)
 
-        invJ_quat = torch.linalg.pinv(self.Jacobian + 1e-3*np.eye(self.Jacobian.size()[1])) @ E_tot
+        invJ_quat = torch.linalg.pinv(self.Jacobian) @ E_tot
         self.Jdot = (self.J_quat - Jac_prev)/self.dt
         qdot =  invJ_quat @ xddot - invJ_quat @ (self.Jdot @ qdot)
 
