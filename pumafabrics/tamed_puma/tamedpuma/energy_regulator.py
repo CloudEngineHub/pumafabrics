@@ -16,7 +16,7 @@ class energy_regulation():
 
     def relationship_dq_dx(self, offset_orientation, translation_cpu, kuka_kinematics, normalizations, fk):
         qq = fk._q_ca
-        x_pose = kuka_kinematics.forward_kinematics_symbolic(fk=fk)
+        x_pose, _ = kuka_kinematics.forward_kinematics_symbolic(fk=fk)
         x_NN = normalizations.normalize_pose_to_NN([x_pose], translation_cpu, offset_orientation)
         dxdq = ca.jacobian(x_NN[0], qq)
         self.dxdq_fun = ca.Function("q_to_x", [qq], [dxdq], ["q"], ["dxdq"])

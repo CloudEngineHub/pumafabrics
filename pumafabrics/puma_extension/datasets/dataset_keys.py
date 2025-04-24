@@ -91,4 +91,5 @@ kuka = ['pouring',
         ]
 
 dingo_kinova = ['kinova_6feb_pick',
-                'dinova_30jan_pick']
+                'dinova_30jan_pick',
+                'kinova_23apr']

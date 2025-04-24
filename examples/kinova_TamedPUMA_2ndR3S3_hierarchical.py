@@ -14,14 +14,13 @@ import importlib
 from pumafabrics.puma_extension.initializer import initialize_framework
 import copy
 import yaml
-from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
 import time
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 """
 Example of Kinova gen3-lite running ModulationIK.
 """
 class example_kinova_tamedpuma_R3S3_hierarchical(ExampleGeneric):
-    def __init__(self, file_name="kinova_TamedPUMA_tomato", path_config="../pumafabrics/tamed_puma/config/"):
+    def __init__(self, file_name="kinova_hierarchical_tomato", path_config="../pumafabrics/tamed_puma/config/"):
         super(ExampleGeneric, self).__init__()
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
@@ -81,17 +80,8 @@ class example_kinova_tamedpuma_R3S3_hierarchical(ExampleGeneric):
         self.learner, _, data = initialize_framework(params, self.params_name, verbose=False)
         self.goal_NN = data['goals training'][0]
 
-        # self.puma_controller = PUMAControl(params=self.params, kinematics=self.kuka_kinematics, NULLSPACE=False)
-
-        # # Initialize GOMP
-        self.gomp_class  = IKGomp(  q_home=self.params["init_pos"],
-                                    end_link_name = self.params["end_links"][0],
-                                    robot_name = self.params["robot_name"],
-                                    root_link_name=self.params["root_link"])
-        self.gomp_class.construct_ik(nr_obst=self.params["nr_obst"], collision_links=self.params["collision_links"])
-
         # Normalization class
-        self.normalizations = normalization_functions(x_min=data["x min"], x_max=data["x max"], dof_task=self.params["dim_task"], dt=self.params["dt"], mode_NN=self.params["mode_NN"])
+        # self.normalizations = normalization_functions(x_min=data["x min"], x_max=data["x max"], dof_task=self.params["dim_task"], dt=self.params["dt"], mode_NN=self.params["mode_NN"])
 
         self.puma_controller = PUMAControl(params=self.params, kinematics=self.kuka_kinematics, NULLSPACE=False)
 
@@ -132,7 +122,7 @@ class example_kinova_tamedpuma_R3S3_hierarchical(ExampleGeneric):
 
             # recompute translation to goal pose:
             goal_pos = [goal_pos[i] + self.params["goal_vel"][i]*self.params["dt"] for i in range(len(goal_pos))]
-            translation_gpu, translation_cpu = self.normalizations.translation_goal(state_goal=np.append(goal_pos, orientation_goal), goal_NN=self.goal_NN)
+            translation_gpu, translation_cpu = normalizations.translation_goal(state_goal=np.append(goal_pos, orientation_goal), goal_NN=self.goal_NN)
             pybullet.addUserDebugPoints([goal_pos], [[1, 0, 0]], 5, 0.1)
 
             # --- end-effector states and normalized states --- #
@@ -154,7 +144,7 @@ class example_kinova_tamedpuma_R3S3_hierarchical(ExampleGeneric):
                                                                           nr_obst=self.params["nr_obst"],
                                                                           obstacles=self.obstacles,
                                                                           goal_pos=x_t_action,
-                                                                          weight_goal_0=1)
+                                                                          weight_goal_0=10)
 
             pybullet.addUserDebugPoints(list([x_t_action[0:3]]), [[1, 0, 0]], 5, 0.1)
             self.solver_times.append(time.perf_counter() - time0)
@@ -198,12 +188,11 @@ def main(render=True):
         np.array((-0.13467712, -0.26750494,  0.04957501,  1.53952123,  1.4392644,  -1.57109087))
     ]
     positions_obstacles_list = [
-        [[10.0, 0., 0.55], [0.5, 0., 10.1]],
+        [[0.0, 0., 1.55], [0.5, 0., 0.1]],
     ]
     goal_pos_list = [
         [0.53858072, -0.04530622,  0.4580668]
     ]
-
     example_class = example_kinova_tamedpuma_R3S3_hierarchical()
     example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0],
                                      goal_pos=goal_pos_list[0],

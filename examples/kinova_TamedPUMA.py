@@ -63,6 +63,8 @@ class example_kinova_TamedPUMA(ExampleGeneric):
         energy_regulation_class = energy_regulation(dim_task=7, mode_NN=self.params["mode_NN"], dof=dof, dynamical_system=dynamical_system)
         energy_regulation_class.relationship_dq_dx(offset_orientation, translation_cpu, self.kuka_kinematics, normalizations, self.fk)
 
+        # _, Jac_function = self.kuka_kinematics.forward_kinematics_symbolic(fk=self.fk)
+
         # Initialize lists
         xee_list = []
         qdot_diff_list = []
@@ -89,6 +91,10 @@ class example_kinova_TamedPUMA(ExampleGeneric):
             x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, quat_prev, mode_NN=self.params["mode_NN"], qdot=qdot)
             quat_prev = copy.deepcopy(xee_orientation)
 
+            # jacobian_casadi = Jac_function(q)
+            # print("casadi jacobian:")
+            # self.kuka_kinematics.check_instability_jacobian(np.linalg.inv(jacobian_casadi + 1e-3*np.eye(6)))
+            # print("end check instability jacobian casadi")
             # --- action by NN --- #
             time0 = time.perf_counter()
             qddot_PUMA, transition_info = self.puma_controller.request_PUMA(q=q,
