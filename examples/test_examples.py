@@ -49,16 +49,12 @@ def test_dinova_TamedPUMA_3D_hierarchical():
     from examples.dinova_TamedPUMA_3D_hierarchical import main
     blueprint_test(main)
 
-def test_kinova_TamedPUMA_1stR3S3_hierarchical():
-    from examples.kinova_TamedPUMA_1stR3S3_hierarchical import main
+def test_kinova_TamedPUMA_R3S3_hierarchical():
+    from examples.kinova_TamedPUMA_R3S3_hierarchical import main
     blueprint_test(main)
 
-def test_dinova_TamedPUMA_1stR3S3_hierarchical():
-    from examples.dinova_TamedPUMA_1stR3S3_hierarchical import main
-    blueprint_test(main)
-
-def test_kinova_TamedPUMA_2ndR3S3_hierarchical():
-    from examples.kinova_TamedPUMA_1stR3S3_hierarchical import main
+def test_dinova_TamedPUMA_R3S3_hierarchical():
+    from examples.dinova_TamedPUMA_R3S3_hierarchical import main
     blueprint_test(main)
 
 def test_pointrobot_fabrics():

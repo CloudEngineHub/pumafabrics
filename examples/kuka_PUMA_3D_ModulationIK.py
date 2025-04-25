@@ -21,10 +21,6 @@ class example_kuka_PUMA_modulationIK(PUMA_modulationIK):
         ob, *_ = self.env.step(action)
 
         q_init = ob['robot_0']["joint_state"]["position"][0:dof]
-        if self.params["nr_obst"] > 0:
-            self.obstacles = list(ob["robot_0"]["FullSensor"]["obstacles"].values())
-        else:
-            self.obstacles = []
 
         self.initialize_example(q_init=q_init)
 
@@ -40,15 +36,17 @@ class example_kuka_PUMA_modulationIK(PUMA_modulationIK):
             qdot = ob_robot["joint_state"]["velocity"][0:dof]
             if self.params["nr_obst"] > 0:
                 positions_obstacles = [ob_robot["FullSensor"]["obstacles"][self.params["nr_obst"]]["position"], ob_robot["FullSensor"]["obstacles"][self.params["nr_obst"]+1]["position"]]
+                obstacles = list(ob["robot_0"]["FullSensor"]["obstacles"].values())
             else:
                 positions_obstacles = []
+                obstacles = []
             goal_pos = [goal_pos[i] + self.params["goal_vel"][i] * self.params["dt"] for i in range(len(goal_pos))]
 
             runtime_arguments["q"] = q
             runtime_arguments["qdot"] = qdot
             runtime_arguments["positions_obstacles"] = positions_obstacles
             runtime_arguments["goal_pos"] = goal_pos
-            runtime_arguments["obstacles"] = self.obstacles
+            runtime_arguments["obstacles"] = obstacles
 
             action, self.GOAL_REACHED, dist_to_goal, self.IN_COLLISION, x_t_action = self.run(runtime_arguments)
             ob, *_ = self.env.step(action)

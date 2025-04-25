@@ -1,29 +1,18 @@
-import os
 import numpy as np
 import pybullet
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
-from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from pumafabrics.tamed_puma.examples_for_ROS.TamedPUMA_hierarchical import TamedPUMAhierarchical
 """
-Example of dinova: dingo + kinova gen3-lite running ModulationIK.
+Example of Kinova gen3-lite running ModulationIK.
 """
-class example_dinova_tamedpuma_3D_hierarchical(TamedPUMAhierarchical):
-    def __init__(self, file_name="dinova_ModulationIK_tomato", path_config="../pumafabrics/tamed_puma/config/", mode_NN="1st"):
+class example_kinova_tamedpuma_R3S3_hierarchical(TamedPUMAhierarchical):
+    def __init__(self, file_name="kinova_hierarchical_tomato", path_config="../pumafabrics/tamed_puma/config/", mode_NN="1st"):
         super().__init__(file_name=file_name, path_config=path_config, mode_NN=mode_NN)
 
     def initialize_environment(self):
         envir_trial = trial_environments()
         (self.env, self.goal) = envir_trial.initialize_environment_robots(params=self.params)
 
-    def construct_fk(self):
-        absolute_path = os.path.dirname(os.path.abspath(__file__))
-        with open(absolute_path + "/../pumafabrics/tamed_puma/config/urdfs/"+self.robot_name+".urdf", "r", encoding="utf-8") as file:
-            urdf = file.read()
-        self.forward_kinematics = GenericURDFFk(
-            urdf,
-            root_link=self.params["root_link"],
-            end_links=self.params["end_links"],
-        )
 
     def run_kuka_example(self):
         dof = self.params["dof"]
@@ -60,13 +49,13 @@ class example_dinova_tamedpuma_3D_hierarchical(TamedPUMAhierarchical):
             runtime_arguments["goal_pos"] = goal_pos
             runtime_arguments["obstacles"] = obstacles
 
+            # # ----- Fabrics action ----#
             self.fabrics_controller.set_defaults_from_observation(ob_robot=ob_robot)
             action, self.GOAL_REACHED, dist_to_goal, self.IN_COLLISION, x_t_action = self.run(runtime_arguments)
-
-            pybullet.addUserDebugPoints([list(x_t_action)], [[1, 0, 0]], 5, 0.1)
+            pybullet.addUserDebugPoints(list([x_t_action[0:3]]), [[1, 0, 0]], 10, 0.1)
             ob, *_ = self.env.step(action)
 
-            # result analysis:
+            # # result analysis:
             x_ee, _ = self.utils_analysis._request_ee_state(q, self.quat_prev)
             xee_list.append(x_ee[0])
             qdot_diff_list.append(1)
@@ -96,16 +85,16 @@ class example_dinova_tamedpuma_3D_hierarchical(TamedPUMAhierarchical):
 
 def main(render=True, n_steps=None):
     q_init_list = [
-        np.array((0., 0., 0., -0.13467712, -0.26750494,  0.04957501,  1.53952123,  1.4392644,  -1.57109087))
+        np.array((-0.13467712, -0.26750494,  0.04957501,  1.53952123,  1.4392644,  -1.57109087))
     ]
     positions_obstacles_list = [
-        [[0.0, 0., 1.55], [0.5, 0., 3.1]],
+        [[0.0, 0., 1.55], [0.5, 0.2, 0.6]],
     ]
     goal_pos_list = [
-        [0.53858072, -0.04530622,  0.8580668]
+        [0.53858072, -0.04530622,  0.4580668]
     ]
-
-    example_class = example_dinova_tamedpuma_3D_hierarchical()
+    mode_NN = "1st"
+    example_class = example_kinova_tamedpuma_R3S3_hierarchical(mode_NN=mode_NN)
     example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0],
                                      goal_pos=goal_pos_list[0],
                                      positions_obstacles=positions_obstacles_list[0],
