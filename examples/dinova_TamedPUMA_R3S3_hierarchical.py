@@ -93,7 +93,7 @@ def main(render=True, n_steps=None):
     goal_pos_list = [
         [0.53858072, -0.04530622,  0.8580668]
     ]
-    mode_NN = "2nd"
+    mode_NN = "1st"
     example_class = example_dinova_tamedpuma_R3S3_hierarchical(mode_NN=mode_NN)
     example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0],
                                      goal_pos=goal_pos_list[0],
