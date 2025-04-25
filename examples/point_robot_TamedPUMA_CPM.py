@@ -239,7 +239,7 @@ class example_point_robot_TamedPUMA_CPM():
         make_plots.plotting_q_values(q_list, dt=dt, q_start=q_list[:, 0], q_goal=np.array(goal_pos), file_name="point_robot_q_CPM")
         return q_list
 
-def main(render=True):
+def main(render=True, n_steps=1000):
     # --- Initial parameters --- #
     mode = "acc"
     mode_NN = "2nd"
@@ -260,7 +260,7 @@ def main(render=True):
 
     # --- run example ---#
     example_class = example_point_robot_TamedPUMA_CPM(v_min=v_min, v_max=v_max, acc_min=acc_min, acc_max=acc_max)
-    res = example_class.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
+    res = example_class.run_point_robot_urdf(n_steps=n_steps, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
                                dt=dt, mode=mode, mode_NN=mode_NN)
     return {}
 

@@ -18,10 +18,10 @@ from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
 import time
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 """
-Example of Kinova gen3-lite running ModulationIK.
+Example of dinova: dingo + kinova gen3-lite running ModulationIK.
 """
-class example_kinova_tamedpuma_3D_hierarchical(ExampleGeneric):
-    def __init__(self, file_name="kinova_ModulationIK_tomato", path_config="../pumafabrics/tamed_puma/config/"):
+class example_dinova_tamedpuma_3D_hierarchical(ExampleGeneric):
+    def __init__(self, file_name="dinova_ModulationIK_tomato", path_config="../pumafabrics/tamed_puma/config/"):
         super(ExampleGeneric, self).__init__()
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
@@ -35,7 +35,7 @@ class example_kinova_tamedpuma_3D_hierarchical(ExampleGeneric):
 
     def initialize_environment(self):
         envir_trial = trial_environments()
-        (self.env, self.goal) = envir_trial.initialize_environment_kinova(params=self.params)
+        (self.env, self.goal) = envir_trial.initialize_environment_dinova(params=self.params)
 
     def construct_fk(self):
         absolute_path = os.path.dirname(os.path.abspath(__file__))
@@ -199,16 +199,16 @@ class example_kinova_tamedpuma_3D_hierarchical(ExampleGeneric):
 
 def main(render=True, n_steps=None):
     q_init_list = [
-        np.array((-0.13467712, -0.26750494,  0.04957501,  1.53952123,  1.4392644,  -1.57109087))
+        np.array((0., 0., 0., -0.13467712, -0.26750494,  0.04957501,  1.53952123,  1.4392644,  -1.57109087))
     ]
     positions_obstacles_list = [
-        [[10.0, 0., 0.55], [0.5, 0., 10.1]],
+        [[0.0, 0., 1.55], [0.5, 0., 3.1]],
     ]
     goal_pos_list = [
-        [0.53858072, -0.04530622,  0.4580668]
+        [0.53858072, -0.04530622,  0.8580668]
     ]
 
-    example_class = example_kinova_tamedpuma_3D_hierarchical()
+    example_class = example_dinova_tamedpuma_3D_hierarchical()
     example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0],
                                      goal_pos=goal_pos_list[0],
                                      positions_obstacles=positions_obstacles_list[0],

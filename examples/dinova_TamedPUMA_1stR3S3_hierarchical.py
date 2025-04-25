@@ -132,15 +132,18 @@ class example_dinova_tamedpuma_R3S3_hierarchical(ExampleGeneric):
             # --- action by NN --- #
             time0 = time.perf_counter()
 
-            #loop over actions to get action further away:
-            x_t_action, transition_info = self.puma_controller.request_PUMA(q=q,
-                                                                            qdot=qdot,
-                                                                            x_t=x_t,
-                                                                            xee_orientation=xee_orientation,
-                                                                            offset_orientation=offset_orientation,
-                                                                            translation_cpu=translation_cpu,
-                                                                            POS_OUTPUT= True
-                                                                            )
+            #get one action further away to avoid small drag
+            x_t_propagate = x_t
+            for z in range(2):
+                x_t_action, transition_info = self.puma_controller.request_PUMA(q=q,
+                                                                                qdot=qdot,
+                                                                                x_t=x_t_propagate,
+                                                                                xee_orientation=xee_orientation,
+                                                                                offset_orientation=offset_orientation,
+                                                                                translation_cpu=translation_cpu,
+                                                                                POS_OUTPUT= True
+                                                                                )
+                x_t_propagate = np.array([copy.deepcopy(x_t_action)])
             pybullet.addUserDebugPoints(list([x_t_action[0:3]]), [[1, 0, 0]], 10, 0.1)
             # ----- Fabrics action ----#
             action, _, _, _ = self.fabrics_controller.compute_action_full(q=q, ob_robot=ob_robot,
@@ -185,7 +188,7 @@ class example_dinova_tamedpuma_R3S3_hierarchical(ExampleGeneric):
         }
         return results
 
-def main(render=True):
+def main(render=True, n_steps=None):
     q_init_list = [
         np.array((0, 0, 0, -0.13467712, -0.26750494,  0.04957501,  1.53952123,  1.4392644,  -1.57109087))
     ]
@@ -199,7 +202,7 @@ def main(render=True):
     example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0],
                                      goal_pos=goal_pos_list[0],
                                      positions_obstacles=positions_obstacles_list[0],
-                                     render=render)
+                                     render=render, n_steps=n_steps)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

@@ -156,7 +156,7 @@ class example_kuka_TamedPUMA(ExampleGeneric):
         }
         return results
 
-def main(render=True):
+def main(render=True, n_steps=None):
     q_init_list = [
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
     ]
@@ -176,7 +176,9 @@ def main(render=True):
     network_yaml = "kuka_TamedPUMA_tomato"
     example_class = example_kuka_TamedPUMA(file_name=network_yaml)
     index = 0
-    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index], render=render, speed_obstacles=speed_obstacles_list[index], goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
+    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[index], positions_obstacles=positions_obstacles_list[index],
+                                     render=render, speed_obstacles=speed_obstacles_list[index], n_steps=n_steps,
+                                     goal_pos=goal_pos_list[index], goal_vel=goal_vel_list[index])
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

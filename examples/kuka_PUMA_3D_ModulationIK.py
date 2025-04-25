@@ -196,7 +196,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         }
         return results
 
-def main(render=True):
+def main(render=True, n_steps=None):
     q_init_list = [
         np.array((1.81414, -1.77245, 1.18276, 1.47711, 2.75051, -1.18862, -1.57065)),  # 1
     ]
@@ -219,7 +219,7 @@ def main(render=True):
                                      positions_obstacles=positions_obstacles_list[0],
                                      speed_obstacles=speed_obstacles_list[0],
                                      goal_pos=goal_pos_list[0],
-                                     render=render)
+                                     render=render, n_steps=n_steps)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

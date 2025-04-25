@@ -112,7 +112,7 @@ class example_dinova_fabrics(ExampleGeneric):
         }
         return results
 
-def main(render=True):
+def main(render=True, n_steps=None):
     example_class = example_dinova_fabrics()
     q_init_list = [
         np.array((0., 0., 0., 0.87, 0.14, -0.37, -1.81, 0.46, -1.63)),
@@ -136,7 +136,7 @@ def main(render=True):
                                      speed_obstacles=speed_obstacles_list[id_nr],
                                      goal_pos=goal_pos_list[id_nr],
                                      goal_vel=goal_vel_list[id_nr],
-                                     render=render,
+                                     render=render, n_steps=n_steps
                                      )
     example_class.construct_example()
     res = example_class.run_dinova_example()

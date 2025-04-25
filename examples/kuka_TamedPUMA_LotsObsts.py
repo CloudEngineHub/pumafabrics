@@ -223,7 +223,7 @@ class example_kuka_TamedPUMA_1000(ExampleGeneric):
         }
         return results
 
-def main(render=True):
+def main(render=True, n_steps=None):
     q_init_list = [
         np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
     ]
@@ -231,7 +231,8 @@ def main(render=True):
         [[0.45, 0.02, 0.2], [0.6, 0.02, 0.2]],
     ]
     example_class = example_kuka_TamedPUMA_1000()
-    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0], render=render, nr_obst=100)
+    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0],
+                                     render=render, nr_obst=100, n_steps=n_steps)
     # Note: the number of obstacles is set to a 100 here and overwritten to 1000 later, to avoid generating 1000 obstacles in Pybullet, but still considering 1000 obstacles in the controller.
     example_class.construct_example()
     res = example_class.run_kuka_example()

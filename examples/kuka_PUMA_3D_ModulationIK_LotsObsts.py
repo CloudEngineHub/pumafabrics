@@ -200,7 +200,7 @@ class example_kuka_modulation_IK_1000(ExampleGeneric):
         }
         return results
 
-def main(render=True):
+def main(render=True, n_steps=None):
     q_init_list = [
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
     ]
@@ -209,7 +209,8 @@ def main(render=True):
     ]
 
     example_class = example_kuka_modulation_IK_1000()
-    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0], render=render)
+    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0],
+                                     render=render, n_steps=n_steps)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

@@ -54,7 +54,7 @@ class FabricsController:
         self.rot_matrix = pk.quaternion_to_matrix(torch.FloatTensor(self.params["orientation_goal"]).cuda()).cpu().detach().numpy()
         return self.planner_full, self.fk
 
-    def compute_action_full(self, q, ob_robot, obstacles: list, nr_obst=0, goal_pos=None, weight_goal_0=None, weight_goal_3=1., x_goal_3=0.):
+    def compute_action_full(self, q, ob_robot, obstacles: list, nr_obst=0, goal_pos=None, weight_goal_0=None, weight_goal_3=1., x_goal_3=0., goal_orient=None, weight_goal_1=None, weight_goal_2=None):
         time0 = time.perf_counter()
         x_goal_1_x = ob_robot['FullSensor']['goals'][nr_obst+3]['position']
         x_goal_2_z = ob_robot['FullSensor']['goals'][nr_obst+4]['position']
@@ -65,6 +65,12 @@ class FabricsController:
             goal_pos = ob_robot['FullSensor']['goals'][2 + nr_obst]['position']
         if weight_goal_0 is None:
             weight_goal_0 = ob_robot['FullSensor']['goals'][2 + nr_obst]['weight']
+        if weight_goal_1 is None:
+            weight_goal_1 = ob_robot['FullSensor']['goals'][3+nr_obst]['weight']
+        if weight_goal_2 is None:
+            weight_goal_2 = ob_robot['FullSensor']['goals'][4 + nr_obst]['weight']
+        if goal_orient is not None:
+            self.rot_matrix = pk.quaternion_to_matrix(torch.FloatTensor(goal_orient).cuda()).cpu().detach().numpy()
 
         arguments_dict = dict(
             q=q,
@@ -72,11 +78,11 @@ class FabricsController:
             x_goal_0 = goal_pos[0:3],
             weight_goal_0 = weight_goal_0,
             x_goal_1 = p_orient_rot_x,
-            weight_goal_1 = ob_robot['FullSensor']['goals'][3+nr_obst]['weight'],
+            weight_goal_1 = weight_goal_1,
             x_goal_2=p_orient_rot_z,
-            weight_goal_2=ob_robot['FullSensor']['goals'][4 + nr_obst]['weight'],
+            weight_goal_2= weight_goal_2,
             x_goal_3=x_goal_3,
-            weight_goal_3 = 0, #weight_goal_3,
+            weight_goal_3 = weight_goal_3,
             x_obsts=[obstacles[i]["position"] for i in range(len(obstacles))],
             radius_obsts=[obstacles[i]["size"] for i in range(len(obstacles))],
             # radius_body_links=self.params["collision_radii"],

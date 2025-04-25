@@ -1,6 +1,6 @@
 #robot:
 dof: 9
-dim_task: 7
+dim_task: 3
 dim_pos: 3
 robot_name: "dinova_lidar"
 root_link: "base_link"
@@ -19,17 +19,13 @@ iiwa_limits: [
     [-2.8973, 2.8973],
     [-0.0175, 3.7525],
   ]
-#fabrics:
-collision_geometry: "-0.01 / (x ** 1) * xdot ** 2"
-collision_finsler: "0.01/(x**2) * xdot**2"
 #default settings:
 render: True
 bool_energy_regulator: True
-bool_combined: True
 bool_speed_control: True
 bool_extensive_concretize: True
 mode: "vel"        # mode of fabrics (vel or acc)
-mode_NN: "2nd"
+mode_NN: "1st"
 mode_env: "vel"
 dt: 0.02
 nr_obst: 2
@@ -38,9 +34,9 @@ speed_obstacles: [[0., 0., 0.], [0., 0., 0.]]
 nr_obst_dyn: 0
 goal_reached_threshold: 0.02
 n_steps: 2000
-init_pos: [0., 0., 0., -0.702, 0.355, -0.016, -1.212, 0.012, -0.502]
-goal_pos: [0.58, -0.214,  0.115]
+init_pos: [0, 0, 0, -0.702, 0.355, -0.016, -1.212, 0.012, -0.502]
+goal_pos: [0.53858072, -0.04530622,  0.4580668]
 goal_vel: [0., 0., 0.]
 orientation_goal: [0.508545530058851,  0.017629995214429883, 0.8602857705757865, -0.031289296424281195]
-params_name_1st: "1st_order_R3S3_kinova"
+params_name_1st: "1st_order_3D_kinova"
 params_name_2nd: "2nd_order_R3S3_kinova"

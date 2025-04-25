@@ -4,7 +4,9 @@ class ExampleGeneric:
     def __init__(self):
         pass
 
-    def overwrite_defaults(self, params, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None, positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None, goal_vel=None, bool_combined=None):
+    def overwrite_defaults(self, params, render=None, init_pos=None, goal_pos=None, nr_obst=None, bool_energy_regulator=None,
+                           positions_obstacles=None, orientation_goal=None, params_name_1st=None, speed_obstacles=None, goal_vel=None,
+                           bool_combined=None, n_steps=None):
         self.params = params
         if render is not None:
             self.params["render"] = render
@@ -30,6 +32,8 @@ class ExampleGeneric:
             self.params["speed_obstacles"] = speed_obstacles
         if goal_vel is not None:
             self.params["goal_vel"] = goal_vel
+        if n_steps is not None:
+            self.params["n_steps"] = n_steps
 
     def integrate_to_vel(self, qdot, action_acc, dt):
         qdot_action = action_acc *dt +qdot

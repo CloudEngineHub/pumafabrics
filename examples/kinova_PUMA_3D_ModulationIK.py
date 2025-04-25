@@ -18,7 +18,7 @@ from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 """
 Example of Kinova gen3-lite running ModulationIK.
 """
-class example_kuka_PUMA_modulationIK(ExampleGeneric):
+class example_kinova_PUMA_modulationIK(ExampleGeneric):
     def __init__(self, file_name="kinova_ModulationIK_tomato", path_config="../pumafabrics/tamed_puma/config/"):
         super(ExampleGeneric, self).__init__()
         self.GOAL_REACHED = False
@@ -197,7 +197,7 @@ class example_kuka_PUMA_modulationIK(ExampleGeneric):
         }
         return results
 
-def main(render=True):
+def main(render=True, n_steps=None):
     q_init_list = [
         np.array((-0.13467712, -0.26750494,  0.04957501,  1.53952123,  1.4392644,  -1.57109087))
     ]
@@ -208,11 +208,11 @@ def main(render=True):
         [0.53858072, -0.04530622,  0.4580668]
     ]
 
-    example_class = example_kuka_PUMA_modulationIK()
+    example_class = example_kinova_PUMA_modulationIK()
     example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0],
                                      goal_pos=goal_pos_list[0],
                                      positions_obstacles=positions_obstacles_list[0],
-                                     render=render)
+                                     render=render, n_steps=n_steps)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 
