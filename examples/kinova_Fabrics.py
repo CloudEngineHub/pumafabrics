@@ -37,6 +37,9 @@ class example_kinova_fabrics(FabricsExample):
                 obstacles = list(ob["robot_0"]["FullSensor"]["obstacles"].values())
             else:
                 obstacles = []
+            # recompute goal position
+            goal_pos = [goal_pos[i] + self.params["goal_vel"][i] * self.params["dt"] for i in range(len(goal_pos))]
+            pybullet.addUserDebugPoints([goal_pos], [[1, 0, 0]], 5, 0.1)
 
             runtime_arguments["q"] = q
             runtime_arguments["qdot"] = qdot
@@ -44,10 +47,6 @@ class example_kinova_fabrics(FabricsExample):
             runtime_arguments["goal_pos"] = goal_pos
             runtime_arguments["obstacles"] = obstacles
             self.fabrics_controller.set_defaults_from_observation(ob_robot=ob_robot)
-
-            # recompute goal position
-            goal_pos = [goal_pos[i] + self.params["goal_vel"][i] * self.params["dt"] for i in range(len(goal_pos))]
-            pybullet.addUserDebugPoints([goal_pos], [[1, 0, 0]], 5, 0.1)
 
             action, self.GOAL_REACHED, error, self.IN_COLLISION, _ =  self.run(runtime_arguments)
             ob, *_ = self.env.step(action)

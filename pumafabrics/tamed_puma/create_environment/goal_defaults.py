@@ -1,4 +1,5 @@
 from mpscenes.goals.goal_composition import GoalComposition
+import numpy as np
 def goal_default(robot_name="panda", goal_pos=None, end_effector_link=None, joint_configuration=None):
     if robot_name == "pointrobot":
         goal_dict = {
@@ -116,6 +117,8 @@ def goal_default(robot_name="panda", goal_pos=None, end_effector_link=None, join
             },
         }
     elif robot_name[0:6] == "dinova":
+        if joint_configuration == None:
+            joint_configuration = [0, 0., 0, 0, 1.7, np.pi / 2, -np.pi / 2]
         goal_dict = {
             "subgoal0": {
                 "weight": 1.0,

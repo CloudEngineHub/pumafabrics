@@ -55,7 +55,7 @@ class FabricsExample(ExampleGeneric):
         else:
             action = action
 
-        self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q[0:6], obstacles=obstacles,
+        self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q[0:self.dof], obstacles=obstacles,
                                                                          parent_link=self.params["root_link"])
         self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, self.quat_prev, x_goal=goal_pos)
         return action, self.GOAL_REACHED, error, self.IN_COLLISION, {}
