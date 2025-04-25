@@ -13,6 +13,17 @@ class trial_environments():
     def __init__(self):
         pass
 
+    def initialize_environment_robots(self, params):
+        if params["robot_name"][0:8] == "gen3lite":
+            (self.env, self.goal) = self.initialize_environment_kinova(params=params)
+        elif params["robot_name"][0:6] == "dinova":
+            (self.env, self.goal) = self.initialize_environment_dinova(params=params)
+        elif params["robot_name"][0:4] == "iiwa":
+            (self.env, self.goal) = self.initialize_environment_kuka(params=params)
+        else:
+            print("No proper robot name provided, check your config file!")
+        return (self.env, self.goal)
+
     def initalize_environment_pointmass(self, render, mode="acc", dt=0.01, init_pos=np.array([-0.9, -0.1, 0.0]), goal_pos=[3.5, 0.5]):
         """
         Initializes the simulation environment.

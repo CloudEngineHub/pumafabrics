@@ -154,8 +154,8 @@ class example_dinova_tamedpuma_3D_hierarchical(ExampleGeneric):
                 x_t_propagate[0][0:3] = x_t_action
 
             # ----- Fabrics action ----#
-            action, _, _, _ = self.fabrics_controller.compute_action_full(q=q, ob_robot=ob_robot,
-                                                                          nr_obst=self.params["nr_obst"],
+            self.fabrics_controller.set_defaults_from_observation(ob_robot=ob_robot)
+            action, _, _, _ = self.fabrics_controller.compute_action_full(q=q, qdot=qdot,
                                                                           obstacles=self.obstacles,
                                                                           goal_pos=x_t_action,
                                                                           weight_goal_0=30)

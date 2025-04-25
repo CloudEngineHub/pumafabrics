@@ -14,6 +14,15 @@ class FabricsController:
     def update_params(self, params):
         self.params = params
 
+    def set_defaults_from_observation(self, ob_robot):
+        nr_obst = self.params["nr_obst"]
+        self.x_goal_1_x = ob_robot['FullSensor']['goals'][nr_obst + 3]['position']
+        self.x_goal_2_z = ob_robot['FullSensor']['goals'][nr_obst + 4]['position']
+        self.goal_pos = ob_robot['FullSensor']['goals'][2 + nr_obst]['position']
+        self.weight_goal_0 = ob_robot['FullSensor']['goals'][2 + nr_obst]['weight']
+        self.weight_goal_1 = ob_robot['FullSensor']['goals'][3 + nr_obst]['weight']
+        self.weight_goal_2 = ob_robot['FullSensor']['goals'][4 + nr_obst]['weight']
+
     def construct_fk(self):
         absolute_path = os.path.dirname(os.path.abspath(__file__))
         with open(absolute_path + "/../config/urdfs/"+self.params["robot_name"]+".urdf", "r", encoding="utf-8") as file:
@@ -54,27 +63,25 @@ class FabricsController:
         self.rot_matrix = pk.quaternion_to_matrix(torch.FloatTensor(self.params["orientation_goal"]).cuda()).cpu().detach().numpy()
         return self.planner_full, self.fk
 
-    def compute_action_full(self, q, ob_robot, obstacles: list, nr_obst=0, goal_pos=None, weight_goal_0=None, weight_goal_3=1., x_goal_3=0., goal_orient=None, weight_goal_1=None, weight_goal_2=None):
+    def compute_action_full(self, q, qdot, obstacles: list, goal_pos=None, weight_goal_0=None, weight_goal_3=1., x_goal_3=0., goal_orient=None, weight_goal_1=None, weight_goal_2=None):
         time0 = time.perf_counter()
-        x_goal_1_x = ob_robot['FullSensor']['goals'][nr_obst+3]['position']
-        x_goal_2_z = ob_robot['FullSensor']['goals'][nr_obst+4]['position']
-        p_orient_rot_x = self.rot_matrix @ x_goal_1_x
-        p_orient_rot_z = self.rot_matrix @ x_goal_2_z
+        p_orient_rot_x = self.rot_matrix @ self.x_goal_1_x
+        p_orient_rot_z = self.rot_matrix @ self.x_goal_2_z
 
         if goal_pos is None:
-            goal_pos = ob_robot['FullSensor']['goals'][2 + nr_obst]['position']
+            goal_pos = self.goal_pos
         if weight_goal_0 is None:
-            weight_goal_0 = ob_robot['FullSensor']['goals'][2 + nr_obst]['weight']
+            weight_goal_0 = self.weight_goal_0
         if weight_goal_1 is None:
-            weight_goal_1 = ob_robot['FullSensor']['goals'][3+nr_obst]['weight']
+            weight_goal_1 = self.weight_goal_1
         if weight_goal_2 is None:
-            weight_goal_2 = ob_robot['FullSensor']['goals'][4 + nr_obst]['weight']
+            weight_goal_2 = self.weight_goal_2
         if goal_orient is not None:
             self.rot_matrix = pk.quaternion_to_matrix(torch.FloatTensor(goal_orient).cuda()).cpu().detach().numpy()
 
         arguments_dict = dict(
             q=q,
-            qdot=ob_robot["joint_state"]["velocity"],
+            qdot=qdot,
             x_goal_0 = goal_pos[0:3],
             weight_goal_0 = weight_goal_0,
             x_goal_1 = p_orient_rot_x,
@@ -95,23 +102,21 @@ class FabricsController:
         self.solver_times.append(time.perf_counter() - time0)
         return action, [], [], []
 
-    def compute_action_avoidance(self, q, ob_robot):
+    def compute_action_avoidance(self, q, qdot, obstacles):
         nr_obst = self.params["nr_obst"]
         if nr_obst>0:
             arguments_dict = dict(
                 q=q,
-                qdot=ob_robot["joint_state"]["velocity"],
-                x_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['position'],
-                radius_obst_0=ob_robot['FullSensor']['obstacles'][nr_obst]['size'],
-                x_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['position'],
-                radius_obst_1=ob_robot['FullSensor']['obstacles'][nr_obst + 1]['size'],
+                qdot=qdot,
+                x_obsts=[obstacles[i]["position"] for i in range(len(obstacles))],
+                radius_obsts=[obstacles[i]["size"] for i in range(len(obstacles))],
                 constraint_0=np.array([0, 0, 1, 0.0]))
             for i, collision_link in enumerate(self.params["collision_links"]):
                 arguments_dict["radius_body_" + collision_link] = list(self.params["collision_radii"].values())[i]
         else:
             arguments_dict = dict(
                 q=q,
-                qdot=ob_robot["joint_state"]["velocity"],
+                qdot=qdot,
                 constraint_0=np.array([0, 0, 1, 0.0]))
             for i, collision_link in enumerate(self.params["collision_links"]):
                 arguments_dict["radius_body_" + collision_link] = list(self.params["collision_radii"].values())[i]

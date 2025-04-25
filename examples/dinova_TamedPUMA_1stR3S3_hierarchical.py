@@ -145,9 +145,10 @@ class example_dinova_tamedpuma_R3S3_hierarchical(ExampleGeneric):
                                                                                 )
                 x_t_propagate = np.array([copy.deepcopy(x_t_action)])
             pybullet.addUserDebugPoints(list([x_t_action[0:3]]), [[1, 0, 0]], 10, 0.1)
+
             # ----- Fabrics action ----#
-            action, _, _, _ = self.fabrics_controller.compute_action_full(q=q, ob_robot=ob_robot,
-                                                                          nr_obst=self.params["nr_obst"],
+            self.fabrics_controller.set_defaults_from_observation(ob_robot=ob_robot)
+            action, _, _, _ = self.fabrics_controller.compute_action_full(q=q, qdot=qdot,
                                                                           obstacles=self.obstacles,
                                                                           goal_pos=x_t_action,
                                                                           weight_goal_0=30)

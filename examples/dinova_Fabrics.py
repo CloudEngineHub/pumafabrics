@@ -72,8 +72,8 @@ class example_dinova_fabrics(ExampleGeneric):
             pybullet.addUserDebugPoints([goal_pos], [[1, 0, 0]], 5, 0.1)
 
             # ----- Fabrics action ----#
-            action, _, _, _ = self.fabrics_controller.compute_action_full(q=q, ob_robot=ob_robot,
-                                                                             nr_obst=self.params["nr_obst"],
+            self.fabrics_controller.set_defaults_from_observation(ob_robot=ob_robot)
+            action, _, _, _ = self.fabrics_controller.compute_action_full(q=q, qdot=qdot,
                                                                              obstacles=self.obstacles,
                                                                              goal_pos=goal_pos)
 

@@ -98,7 +98,7 @@ class example_kuka_TamedPUMA(ExampleGeneric):
 
             if self.params["bool_combined"] == True:
                 # ----- Fabrics action ----#
-                action_avoidance, M_avoidance, f_avoidance, qddot_speed = self.fabrics_controller.compute_action_avoidance(q=q, ob_robot=ob_robot)
+                action_avoidance, M_avoidance, f_avoidance, qddot_speed = self.fabrics_controller.compute_action_avoidance(q=q, qdot=qdot, obstacles=self.obstacles)
 
                 if self.params["bool_energy_regulator"] == True:
                     weight_attractor = 1.
