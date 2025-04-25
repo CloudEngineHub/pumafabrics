@@ -55,6 +55,14 @@ If you want to run the evaluation to create the results in the paper, check out 
 Be aware that we are continuing to work on this repository, for the original results of the paper, check the branch "L4DC2025".
 
 ## Citation
-Like this work, please cite our paper via IN-PROGRESS. 
+Like this work, please cite our paper via:
+```bibtex
+@article{bakker2025tamedpuma,
+  title={TamedPUMA: safe and stable imitation learning with geometric fabrics},
+  author={Bakker, Saray and P{\'e}rez-Dattari, Rodrigo and Della Santina, Cosimo and B{\"o}hmer, Wendelin and Alonso-Mora, Javier},
+  journal={arXiv preprint arXiv:2503.17432},
+  year={2025}
+}
+```
 
 
