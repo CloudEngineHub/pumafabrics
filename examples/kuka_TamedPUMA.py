@@ -40,14 +40,14 @@ class example_kuka_TamedPUMA(TamedPUMAExample):
             else:
                 obstacles = []
 
+            goal_pos = [goal_pos[i] + self.params["goal_vel"][i]*self.params["dt"] for i in range(len(goal_pos))]
+            pybullet.addUserDebugPoints([goal_pos], [[1, 0, 0]], 5, 0.1)
+
             runtime_arguments["q"] = q
             runtime_arguments["qdot"] = qdot
             runtime_arguments["positions_obstacles"] = []
             runtime_arguments["goal_pos"] = goal_pos
             runtime_arguments["obstacles"] = obstacles
-
-            goal_pos = [goal_pos[i] + self.params["goal_vel"][i]*self.params["dt"] for i in range(len(goal_pos))]
-            pybullet.addUserDebugPoints([goal_pos], [[1, 0, 0]], 5, 0.1)
             self.fabrics_controller.set_defaults_from_observation(ob_robot=ob_robot)
 
             action, self.GOAL_REACHED, dist_to_goal, self.IN_COLLISION, _, qddot_PUMA = self.run(runtime_arguments)
