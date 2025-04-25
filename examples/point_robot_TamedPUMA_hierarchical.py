@@ -5,11 +5,11 @@ from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from mpscenes.goals.goal_composition import GoalComposition
 
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from pumafabrics.puma_adapted.tools.animation import TrajectoryPlotter
+from pumafabrics.puma_extension.tools.animation import TrajectoryPlotter
 import torch
 import matplotlib.pyplot as plt
 import importlib
-from pumafabrics.puma_adapted.initializer import initialize_framework
+from pumafabrics.puma_extension.initializer import initialize_framework
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
 from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
@@ -57,7 +57,8 @@ class example_point_robot_hierarchical():
             forward_kinematics,
             time_step=dt,
             collision_geometry=collision_geometry,
-            collision_finsler=collision_finsler
+            collision_finsler=collision_finsler,
+            damper_beta =  "0.9 * (ca.tanh(-0.5 * (ca.norm_2(x) - 0.02)) + 1) * 6.5 + 0.01 + ca.fmax(0, sym('a_ex') - sym('a_le'))"
         )
         collision_links = ["base_link_y"]
         # The planner hides all the logic behind the function set_components.
@@ -109,10 +110,10 @@ class example_point_robot_hierarchical():
         params_name = '2nd_order_2D'
         x_t_init = np.array([np.append(ob['robot_0']["joint_state"]["position"][0:2], ob['robot_0']["joint_state"]["velocity"][0:2])]) # initial states
         # simulation_length = 2000
-        results_base_directory = '../pumafabrics/puma_adapted/'
+        results_base_directory = '../pumafabrics/puma_extension/'
 
         # Load parameters
-        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_extension.params.' + params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True
@@ -168,7 +169,7 @@ class example_point_robot_hierarchical():
                 q=ob_robot["joint_state"]["position"][0:dof],
                 qdot=ob_robot["joint_state"]["velocity"][0:dof],
                 x_goal_0=pos_safeMP,
-                weight_goal_0=30, #ob_robot['FullSensor']['goals'][2]['weight'],
+                weight_goal_0=1000, #ob_robot['FullSensor']['goals'][2]['weight'],
                 x_obst_0=ob_robot['FullSensor']['obstacles'][3]['position'],
                 radius_obst_0=ob_robot['FullSensor']['obstacles'][3]['size'],
                 x_obst_1=ob_robot['FullSensor']['obstacles'][4]['position'],
@@ -190,7 +191,7 @@ class example_point_robot_hierarchical():
         make_plots.plotting_q_values(q_list, dt=dt, q_start=q_list[:, 0], q_goal=np.array(goal_pos))
         return q_list
 
-def main(render=True):
+def main(render=True, n_steps=5000):
     # --- Initial parameters --- #
     mode = "acc"
     mode_NN = "2nd"
@@ -205,7 +206,7 @@ def main(render=True):
 
     # --- run example --- #
     example_class = example_point_robot_hierarchical()
-    res = example_class.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
+    res = example_class.run_point_robot_urdf(n_steps=n_steps, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
                                dt=dt, mode=mode, mode_NN=mode_NN)
     return {}
 

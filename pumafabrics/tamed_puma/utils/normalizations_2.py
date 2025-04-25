@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 import torch
-from pumafabrics.puma_adapted.agent.utils.dynamical_system_operations import normalize_state, denormalize_state
+from pumafabrics.puma_extension.agent.utils.dynamical_system_operations import normalize_state, denormalize_state
 from spatialmath import SO3, UnitQuaternion, Quaternion
 import casadi as ca
 from pumafabrics.tamed_puma.utils.denormalizations import denormalizations

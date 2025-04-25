@@ -9,7 +9,7 @@ from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 import importlib
-from pumafabrics.puma_adapted.initializer import initialize_framework
+from pumafabrics.puma_extension.initializer import initialize_framework
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 import copy
 import yaml
@@ -52,7 +52,7 @@ class example_kuka_modulation_IK_1000(ExampleGeneric):
         self.initialize_environment()
 
         # Construct classes:
-        results_base_directory = '../pumafabrics/puma_adapted/'
+        results_base_directory = '../pumafabrics/puma_extension/'
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"], end_link_name=self.params["end_links"][0])
         self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
         self.construct_fk()
@@ -68,7 +68,7 @@ class example_kuka_modulation_IK_1000(ExampleGeneric):
             self.params_name = self.params["params_name_2nd"]
 
         # Load parameters
-        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + self.params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_extension.params.' + self.params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True
@@ -200,7 +200,7 @@ class example_kuka_modulation_IK_1000(ExampleGeneric):
         }
         return results
 
-def main(render=True):
+def main(render=True, n_steps=None):
     q_init_list = [
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
     ]
@@ -209,7 +209,8 @@ def main(render=True):
     ]
 
     example_class = example_kuka_modulation_IK_1000()
-    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0], render=render)
+    example_class.overwrite_defaults(params=example_class.params, init_pos=q_init_list[0], positions_obstacles=positions_obstacles_list[0],
+                                     render=render, n_steps=n_steps)
     example_class.construct_example()
     res = example_class.run_kuka_example()
 

@@ -8,10 +8,22 @@ from urdfenvs.sensors.full_sensor import FullSensor
 from mpscenes.obstacles.sphere_obstacle import SphereObstacle
 from mpscenes.obstacles.dynamic_sphere_obstacle import DynamicSphereObstacle
 from mpscenes.goals.goal_composition import GoalComposition
+from pumafabrics.tamed_puma.create_environment.goal_defaults import goal_default
 
 class trial_environments():
     def __init__(self):
         pass
+
+    def initialize_environment_robots(self, params):
+        if params["robot_name"][0:8] == "gen3lite":
+            (self.env, self.goal) = self.initialize_environment_kinova(params=params)
+        elif params["robot_name"][0:6] == "dinova":
+            (self.env, self.goal) = self.initialize_environment_dinova(params=params)
+        elif params["robot_name"][0:4] == "iiwa":
+            (self.env, self.goal) = self.initialize_environment_kuka(params=params)
+        else:
+            print("No proper robot name provided, check your config file!")
+        return (self.env, self.goal)
 
     def initalize_environment_pointmass(self, render, mode="acc", dt=0.01, init_pos=np.array([-0.9, -0.1, 0.0]), goal_pos=[3.5, 0.5]):
         """
@@ -60,19 +72,7 @@ class trial_environments():
         }
         obst3 = SphereObstacle(name="staticObst3", content_dict=static_obst_dict)
         # Definition of the goal.
-        goal_dict = {
-            "subgoal0": {
-                "weight": 0.5,
-                "is_primary_goal": True,
-                "indices": [0, 1],
-                "parent_link": 'world',
-                "child_link": 'base_link',
-                "desired_position": goal_pos,
-                "epsilon": 0.1,
-                "type": "staticSubGoal"
-            }
-        }
-        goal = GoalComposition(name="goal", content_dict=goal_dict)
+        goal = goal_default(robot_name="pointrobot", goal_pos=goal_pos)
         env.reset(pos=pos0, vel=vel0)
         env.add_sensor(full_sensor, [0])
         env.add_goal(goal.sub_goals()[0])
@@ -177,29 +177,7 @@ class trial_environments():
         }
         obst2 = SphereObstacle(name="staticObst", content_dict=static_obst_dict)
         # Definition of the goal.
-        goal_dict = {
-            "subgoal0": {
-                "weight": 1.0,
-                "is_primary_goal": True,
-                "indices": [0, 1, 2],
-                "parent_link": "panda_link0",
-                "child_link": "panda_hand",
-                "desired_position": goal_pos,
-                "epsilon": 0.05,
-                "type": "staticSubGoal",
-            },
-            "subgoal1": {
-                "weight": 5.0,
-                "is_primary_goal": False,
-                "indices": [0, 1, 2],
-                "parent_link": "panda_link7",
-                "child_link": "panda_hand",
-                "desired_position": [0.1, 0.0, 0.0],
-                "epsilon": 0.05,
-                "type": "staticSubGoal",
-            }
-        }
-        goal = GoalComposition(name="goal", content_dict=goal_dict)
+        goal = goal_default(robot_name="panda", goal_pos=goal_pos)
         if nr_obst == 1:
             obstacles = [obst1]
         elif nr_obst == 2:
@@ -271,40 +249,8 @@ class trial_environments():
             "geometry": {"trajectory": ["-1 + t * 0.1", "-0.6", "0.4"], "radius": 0.05},
         }
         obst0_dyn = DynamicSphereObstacle(name="dynamicObst", content_dict=dynamic_obst_dict)
-            #Definition of the goal.
-        goal_dict = {
-            "subgoal0": {
-                "weight": 1.0,
-                "is_primary_goal": True,
-                "indices": [0, 1, 2],
-                "parent_link": "iiwa_link_0",
-                "child_link": end_effector_link,
-                "desired_position": goal_pos,
-                "epsilon": 0.05,
-                "type": "staticSubGoal",
-            },
-            "subgoal1": {
-                "weight": 1.,
-                "is_primary_goal": False,
-                "indices": [0, 1, 2],
-                "parent_link": "iiwa_link_7",
-                "child_link": "iiwa_link_ee_x",
-                "desired_position": [0.045, 0., 0.],
-                "epsilon": 0.05,
-                "type": "staticSubGoal",
-            },
-            "subgoal2": {
-                "weight": 1.,
-                "is_primary_goal": False,
-                "indices": [0, 1, 2],
-                "parent_link": "iiwa_link_7",
-                "child_link": end_effector_link,
-                "desired_position": [0.0, 0.0, 0.045],
-                "epsilon": 0.05,
-                "type": "staticSubGoal",
-            },
-        }
-        goal = GoalComposition(name="goal", content_dict=goal_dict)
+        #Definition of the goal.
+        goal = goal_default(robot_name=robot_name, goal_pos=goal_pos, end_effector_link=end_effector_link)
         if nr_obst == 1:
             obstacles = [obst1]
         elif nr_obst == 2:
@@ -391,40 +337,8 @@ class trial_environments():
             "geometry": {"trajectory": ["-1 + t * 0.1", "-0.6", "0.4"], "radius": 0.05},
         }
         obst0_dyn = DynamicSphereObstacle(name="dynamicObst", content_dict=dynamic_obst_dict)
-            #Definition of the goal.
-        goal_dict = {
-            "subgoal0": {
-                "weight": 3.0,
-                "is_primary_goal": True,
-                "indices": [0, 1, 2],
-                "parent_link": "kinova_base_link",
-                "child_link": end_effector_link,
-                "desired_position": goal_pos,
-                "epsilon": 0.03,
-                "type": "staticSubGoal",
-            },
-            "subgoal1": {
-                "weight": 5.,
-                "is_primary_goal": False,
-                "indices": [0, 1, 2],
-                "parent_link": "dummy_link",
-                "child_link": "tool_frame",
-                "desired_position": [0.0, 0., 0.13],
-                "epsilon": 0.03,
-                "type": "staticSubGoal",
-            },
-            "subgoal2": {
-                "weight": 5.,
-                "is_primary_goal": False,
-                "indices": [0, 1, 2],
-                "parent_link": "dummy_link",
-                "child_link": "orientation_helper_link",
-                "desired_position": [0.0, 0.10, 0.0],
-                "epsilon": 0.03,
-                "type": "staticSubGoal",
-            },
-        }
-        goal = GoalComposition(name="goal", content_dict=goal_dict)
+        #Definition of the goal.
+        goal = goal_default(robot_name=robot_name, goal_pos=goal_pos, end_effector_link=end_effector_link)
         if nr_obst == 1:
             obstacles = [obst1]
         elif nr_obst == 2:
@@ -511,48 +425,8 @@ class trial_environments():
             "geometry": {"trajectory": ["-1 + t * 0.1", "-0.6", "0.4"], "radius": 0.05},
         }
         obst0_dyn = DynamicSphereObstacle(name="dynamicObst", content_dict=dynamic_obst_dict)
-            #Definition of the goal.
-        goal_dict = {
-            "subgoal0": {
-                "weight": 1.0,
-                "is_primary_goal": True,
-                "indices": [0, 1, 2],
-                "parent_link": "base_link",
-                "child_link": end_effector_link,
-                "desired_position": goal_pos,
-                "epsilon": 0.03,
-                "type": "staticSubGoal",
-            },
-            "subgoal1": {
-                "weight": 0.,
-                "is_primary_goal": False,
-                "indices": [0, 1, 2],
-                "parent_link": "arm_dummy_link",
-                "child_link": end_effector_link,
-                "desired_position": [0., 0., 0.07],
-                "epsilon": 0.03,
-                "type": "staticSubGoal",
-            },
-            "subgoal2": {
-                "weight": 0.,
-                "is_primary_goal": False,
-                "indices": [0, 1, 2],
-                "parent_link": "arm_dummy_link",
-                "child_link": "arm_orientation_helper_link",
-                "desired_position": [0.0, 0.10, 0.0],
-                "epsilon": 0.015,
-                "type": "staticSubGoal",
-            },
-            "subgoal3": {
-                "weight": 1.0,
-                "is_primary_goal": False,
-                "indices": [2],
-                "desired_position": joint_configuration[0:1],
-                "epsilon": 0.015,
-                "type": "staticJointSpaceSubGoal",
-            }
-        }
-        goal = GoalComposition(name="goal", content_dict=goal_dict)
+        #Definition of the goal.
+        goal = goal_default(robot_name=robot_name, goal_pos=goal_pos, end_effector_link=end_effector_link, joint_configuration=joint_configuration)
         if nr_obst == 1:
             obstacles = [obst1]
         elif nr_obst == 2:

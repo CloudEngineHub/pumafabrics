@@ -148,5 +148,11 @@ class KinematicsBasics():
         pos = x_fk[:3, 3]
         rot_matrix = x_fk[:3, :3]
         quat = self.quaternion_operations.symbolic_rot_matrix_to_quaternions(rot_matrix=rot_matrix)
+
         x_pose = ca.vcat((pos, quat))
-        return x_pose
+
+        xyz_euler = self.quaternion_operations.symbolic_rot_matrix_to_euler(rot_matrix=rot_matrix)
+        x_pose_6 = ca.vcat((pos, xyz_euler))
+        xdot_fk = ca.jacobian(x_pose_6, q)
+        Jac_function = ca.Function("J", [q], [xdot_fk])
+        return x_pose, Jac_function

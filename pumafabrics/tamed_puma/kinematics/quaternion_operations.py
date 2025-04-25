@@ -83,6 +83,11 @@ class QuaternionOperations():
         quat = [quatern[3], quatern[0], quatern[1], quatern[2]]
         return quatern
 
+    def symbolic_rot_matrix_to_euler(self, rot_matrix):
+        r = sc.Rotation.from_matrix(rot_matrix)
+        euler = r.as_euler("xyz", degrees=False)
+        return euler
+
     # --------------------------- check flips of quaternions -------------------------------#
     def check_quaternion_flipped(self, quat, quat_prev):
         dist_quat = np.linalg.norm(quat - quat_prev)

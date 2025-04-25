@@ -6,11 +6,11 @@ from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
 from mpscenes.goals.goal_composition import GoalComposition
 
 from pumafabrics.tamed_puma.tamedpuma.parametrized_planner_extended import ParameterizedFabricPlannerExtended
-from pumafabrics.puma_adapted.tools.animation import TrajectoryPlotter
+from pumafabrics.puma_extension.tools.animation import TrajectoryPlotter
 import torch
 import matplotlib.pyplot as plt
 import importlib
-from pumafabrics.puma_adapted.initializer import initialize_framework
+from pumafabrics.puma_extension.initializer import initialize_framework
 from pumafabrics.tamed_puma.utils.normalizations_2 import normalization_functions
 from pumafabrics.tamed_puma.utils.plot_point_robot import plotting_functions
 from pumafabrics.tamed_puma.tamedpuma.combining_actions import combine_fabrics_safeMP
@@ -118,10 +118,10 @@ class example_point_robot_TamedPUMA_FPM():
         params_name = '2nd_order_2D'
         x_t_init = np.array([np.append(ob['robot_0']["joint_state"]["position"][0:2], ob['robot_0']["joint_state"]["velocity"][0:2])]) # initial states
         # simulation_length = 2000
-        results_base_directory = '../pumafabrics/puma_adapted/'
+        results_base_directory = '../pumafabrics/puma_extension/'
 
         # Load parameters
-        Params = getattr(importlib.import_module('pumafabrics.puma_adapted.params.' + params_name), 'Params')
+        Params = getattr(importlib.import_module('pumafabrics.puma_extension.params.' + params_name), 'Params')
         params = Params(results_base_directory)
         params.results_path += params.selected_primitives_ids + '/'
         params.load_model = True
@@ -219,7 +219,7 @@ class example_point_robot_TamedPUMA_FPM():
         make_plots.plotting_q_values(q_list, dt=dt, q_start=q_list[:, 0], q_goal=np.array(goal_pos), file_name="point_robot_q_FPM")
         return q_list
 
-def main(render=True):
+def main(render=True, n_steps=1000):
     # --- Initial parameters --- #
     mode = "acc"
     mode_NN = "2nd"
@@ -234,7 +234,7 @@ def main(render=True):
 
     # --- run example --- #
     example_class = example_point_robot_TamedPUMA_FPM()
-    res = example_class.run_point_robot_urdf(n_steps=1000, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
+    res = example_class.run_point_robot_urdf(n_steps=n_steps, env=env, goal=goal, init_pos=init_pos, goal_pos=goal_pos,
                                dt=dt, mode=mode, mode_NN=mode_NN)
     return {}
 

@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from pumafabrics.puma_adapted.background_vectorfield import create_background_vectorfield
+from pumafabrics.puma_extension.background_vectorfield import create_background_vectorfield
 import os
 
 class plotting_functions():
@@ -43,7 +43,7 @@ class plotting_functions():
         plt.savefig(self.results_path+file_name+".png")
 
 
-    def comparison_plot(self, q_list_0, q_list_1, q_list_3, q_list_4, q_goal=np.array([0.0, 0.0]), q_start=np.array([0.0, 0.0]), dt=0.01, scaling_room=None):
+    def comparison_plot(self, q_list_0, q_list_1, q_list_3, q_list_4, q_list_5=None, q_goal=np.array([0.0, 0.0]), q_start=np.array([0.0, 0.0]), dt=0.01, scaling_room=None):
         time_x = np.arange(0.0, len(q_list_0) * dt, dt)
         fig, ax = plt.subplots(1, 1)
         fig.set_size_inches(8, 4)
@@ -56,9 +56,6 @@ class plotting_functions():
         line_0, = ax.plot(q_list_0[0, :], q_list_0[1, :], "--", color="k")
         line_0.set_label("Fabrics (geometric)")
 
-        # #--- plot hierarchical safe MP + fabrics ---#
-        # ax.plot(q_list_2[0, :], q_list_2[1, :], color="m")
-
         #--- plot safeMP + fabrics
         line_3, = ax.plot(q_list_3[0, :], q_list_3[1, :], color="cyan")
         line_3.set_label("FPM (ours)")
@@ -66,6 +63,11 @@ class plotting_functions():
         #--- plot theorem III.5 ---#
         line_4, = ax.plot(q_list_4[0, :], q_list_4[1, :], color="m")
         line_4.set_label("CPM (ours)")
+
+        # #--- plot hierarchical safe MP + fabrics ---#
+        if q_list_5 is not None:
+            line_5, = ax.plot(q_list_5[0, :], q_list_5[1, :], color="g")
+            line_5.set_label("Hierarchical")
 
         # initial and final position
         start_point = ax.scatter(q_start[0], q_start[1], marker="o", color="g", zorder=3, s=100)
