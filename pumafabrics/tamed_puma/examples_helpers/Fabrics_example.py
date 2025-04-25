@@ -12,7 +12,6 @@ class FabricsExample(ExampleGeneric):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
-        self.obstacles = []
         with open("../pumafabrics/tamed_puma/config/" + file_name + ".yaml", "r") as setup_stream:
              self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
