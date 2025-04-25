@@ -1,6 +1,6 @@
 import numpy as np
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
-from pumafabrics.tamed_puma.examples_for_ROS.PUMA_3D_ModulationIK import PUMA_modulationIK
+from pumafabrics.tamed_puma.examples_helpers.PUMA_3D_ModulationIK import PUMA_modulationIK
 """
 Example of KUKA iiwa 14 running ModulationIK as a controller.
 """

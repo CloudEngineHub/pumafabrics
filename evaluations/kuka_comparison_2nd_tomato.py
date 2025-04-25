@@ -8,7 +8,7 @@ from examples.kuka_TamedPUMA import example_kuka_TamedPUMA
 from examples.kuka_PUMA_3D_ModulationIK import example_kuka_PUMA_modulationIK
 from texttable import Texttable
 import latextable
-import copy
+import copy, os
 import pickle
 from scipy.interpolate import interp1d
 from scipy import interpolate
@@ -181,12 +181,14 @@ class comparison_kuka_class():
                                 goal_pos_list=goal_pos_list, goal_vel_list=goal_vel_list, xee_demonstrations=xee_demonstrations)
 
         self.results = {self.cases[0]: results_PUMA, self.cases[1]: results_PUMA_obst, self.cases[2]: results_IK, self.cases[3]: results_fabrics, self.cases[4]: results_FPM, self.cases[5]: results_CPM}
-        with open("../pumafabrics/puma_extension/results/data_files/simulation_kuka_2nd"+network_yaml+".pkl", 'wb') as f:
+        filename = "../pumafabrics/puma_extension/results/data_files/simulation_kuka_2nd_"+network_yaml+".pkl"
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        with open("../pumafabrics/puma_extension/results/data_files/simulation_kuka_2nd_"+network_yaml+".pkl", 'wb') as f:
             pickle.dump(self.results, f)
         return self.results
 
     def KukaComparisonLoad(self):
-        file_i = open(f"../pumafabrics/puma_extension/results/data_files/simulation_kuka_2nd"+network_yaml+".pkl", 'rb')
+        file_i = open(f"../pumafabrics/puma_extension/results/data_files/simulation_kuka_2nd_"+network_yaml+".pkl", 'rb')
         results= pickle.load(file_i)
         return results
 
@@ -225,20 +227,20 @@ if __name__ == "__main__":
     # configurations based around (un-trained) real-world initial configurations to ensure physical feasibility on KUKA.
     q_init_list = [
         np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
-        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-        np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
-        np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
-        np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
-        np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
-        np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
-        np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
-        np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
-        np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
-        np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+        # np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
+        # np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
+        # np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
+        # np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+        # np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
+        # np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
+        # np.array((-0.702, 0.355, -0.016, -1.212, 0.012, -0.502, -0.010)),
+        # np.array((0.531, 1.16, 0.070, -1.665, 0.294, -1.2, -0.242)),
+        # np.array((0.07, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
+        # np.array((0.531, 0.836, 0.070, -1.665, 0.294, -0.877, -0.242)),
+        # np.array((0.51, 0.67, -0.17, -1.73, 0.25, -0.86, -0.11)),
+        # np.array((0.91, 0.79, -0.22, -1.33, 1.20, -1.76, -1.06)),
+        # np.array((0.83, 0.53, -0.11, -0.95, 1.05, -1.24, -1.45)),
+        # np.array((0.87, 0.14, -0.37, -1.81, 0.46, -1.63, -0.91)),
     ]
     positions_obstacles_list = [
         [[0.5, 0., 0.55], [0.5, 0., 10.1]],

@@ -1,6 +1,6 @@
 import numpy as np
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
-from pumafabrics.tamed_puma.examples_for_ROS.Fabrics_example import FabricsExample
+from pumafabrics.tamed_puma.examples_helpers.Fabrics_example import FabricsExample
 import pybullet
 """
 Example of the Kinova gen3-lite running Fabrics as a controller.

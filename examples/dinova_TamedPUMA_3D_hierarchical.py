@@ -3,7 +3,7 @@ import numpy as np
 import pybullet
 from pumafabrics.tamed_puma.create_environment.environments import trial_environments
 from forwardkinematics.urdfFks.generic_urdf_fk import GenericURDFFk
-from pumafabrics.tamed_puma.examples_for_ROS.TamedPUMA_hierarchical import TamedPUMAhierarchical
+from pumafabrics.tamed_puma.examples_helpers.TamedPUMA_hierarchical import TamedPUMAhierarchical
 """
 Example of dinova: dingo + kinova gen3-lite running ModulationIK.
 """

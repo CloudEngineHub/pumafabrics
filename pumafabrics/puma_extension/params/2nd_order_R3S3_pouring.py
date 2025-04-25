@@ -15,8 +15,8 @@ class Params:
     space: str = 'euclidean_sphere'  # data manifold shape
 
     """ Neural Network """
-    latent_space_dim: int = 600  # dimensionality latent space
-    neurons_hidden_layers: int = 600  # number of neurons per layer
+    latent_space_dim: int = 800  # dimensionality latent space
+    neurons_hidden_layers: int = 800  # number of neurons per layer
     batch_size: int = 300  # sampling batch size
     learning_rate: float = 0.0001  # AdamW learning rate
     weight_decay: float = 0.0000  # AdamW weight decay
