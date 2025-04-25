@@ -31,7 +31,7 @@ class iiwa(ERobot):
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
         links, name, urdf_string, urdf_filepath = self.URDF_read(
-            base_dir + '/../config/urdf/%s.urdf.xacro' % model
+            base_dir + '/../config/urdfs/%s.urdf' % model
         )
 
         super().__init__(

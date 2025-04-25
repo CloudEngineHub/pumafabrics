@@ -5,7 +5,6 @@ from pumafabrics.tamed_puma.kinematics.kinematics_kuka import KinematicsKuka
 from pumafabrics.tamed_puma.tamedpuma.energy_regulator import energy_regulation
 from pumafabrics.tamed_puma.tamedpuma.puma_controller import PUMAControl
 from pumafabrics.tamed_puma.tamedpuma.fabrics_controller import FabricsController
-from pumafabrics.tamed_puma.nullspace_control.nullspace_controller import CartesianImpedanceController
 from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 from pumafabrics.tamed_puma.utils.filters import PDController
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
@@ -42,7 +41,6 @@ class example_kuka_TamedPUMA(ExampleGeneric):
                                             kinematics=self.kuka_kinematics)
         self.pdcontroller = PDController(Kp=1.0, Kd=0.1, dt=self.params["dt"])
         self.puma_controller = PUMAControl(params=self.params, kinematics=self.kuka_kinematics)
-        self.controller_nullspace = CartesianImpedanceController(robot_name=self.params["robot_name"])
 
     def run_kuka_example(self):
         # --- parameters --- #
@@ -160,9 +158,9 @@ def main(render=True, n_steps=None):
     q_init_list = [
         np.array((0.531, 1.36, 0.070, -1.065, 0.294, -1.2, -0.242)),
     ]
-    positions_obstacles_list = [
+    positions_obstacles_list = (
         [[0.5, 0.15, 0.05], [0.5, 0.15, 0.2]],
-    ]
+    )
     speed_obstacles_list = [
         [[0., 0., 0.], [0., 0., 0.]],
     ]
