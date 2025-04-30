@@ -13,6 +13,7 @@ from pumafabrics.tamed_puma.utils.analysis_utils import UtilsAnalysis
 from pumafabrics.puma_extension.initializer import initialize_framework
 from pumafabrics.tamed_puma.modulation_ik.Modulation_ik import IKGomp
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
+import os
 
 class PUMA_modulationIK(ExampleGeneric):
     def __init__(self, file_name="kinova_ModulationIK_tomato", path_config="../pumafabrics/tamed_puma/config/"):
@@ -20,7 +21,9 @@ class PUMA_modulationIK(ExampleGeneric):
         self.GOAL_REACHED = False
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
-        with open(path_config + file_name + ".yaml", "r") as setup_stream:
+        name_base = os.path.dirname(os.path.abspath(__file__))
+        full_file_name = name_base+path_config + file_name + ".yaml"
+        with open(full_file_name, "r") as setup_stream:
              self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
@@ -98,7 +101,7 @@ class PUMA_modulationIK(ExampleGeneric):
         goal_pos = runtime_arguments["goal_pos"]
         positions_obstacles = runtime_arguments["positions_obstacles"]
         obstacles = runtime_arguments["obstacles"]
-
+        print("obstacles:", obstacles)
         # recompute translation to goal pose:
         translation_gpu, translation_cpu = self.normalizations.translation_goal(state_goal=np.array(goal_pos),
                                                                                 goal_NN=self.goal_NN)

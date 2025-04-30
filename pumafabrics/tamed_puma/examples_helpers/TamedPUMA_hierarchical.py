@@ -12,7 +12,7 @@ from pumafabrics.puma_extension.initializer import initialize_framework
 from pumafabrics.tamed_puma.create_environment.goal_defaults import goal_default
 import copy
 import yaml
-import time
+import time, os
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 
 class TamedPUMAhierarchical(ExampleGeneric):
@@ -22,7 +22,9 @@ class TamedPUMAhierarchical(ExampleGeneric):
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
         self.solver_times = []
-        with open(path_config + file_name + ".yaml", "r") as setup_stream:
+        name_base = os.path.dirname(os.path.abspath(__file__))
+        full_file_name = name_base+path_config + file_name + ".yaml"
+        with open(full_file_name, "r") as setup_stream:
              self.params = yaml.safe_load(setup_stream)
         self.params["mode_NN"] = mode_NN
         self.dof = self.params["dof"]
@@ -42,6 +44,7 @@ class TamedPUMAhierarchical(ExampleGeneric):
     def construct_example(self, with_environment=True, results_base_directory='../pumafabrics/puma_extension/'):
 
         # Construct classes:
+        self.results_base_directory=results_base_directory
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"],
                                               robot_name=self.params["robot_name"],
                                               root_link_name=self.params["root_link"],
@@ -79,7 +82,7 @@ class TamedPUMAhierarchical(ExampleGeneric):
 
         # # initial state:
         goal_pos = self.params["goal_pos"]
-        x_t_init, x_init_gpu, translation_cpu, goal_NN = self.puma_controller.initialize_PUMA(q_init=q_init, goal_pos=goal_pos, offset_orientation=self.offset_orientation)
+        x_t_init, x_init_gpu, translation_cpu, goal_NN = self.puma_controller.initialize_PUMA(q_init=q_init, goal_pos=goal_pos, offset_orientation=self.offset_orientation, results_base_directory=self.results_base_directory)
         self.dynamical_system, self.normalizations = self.puma_controller.return_classes()
 
         self.quat_prev = copy.deepcopy(x_t_init[3:7])
