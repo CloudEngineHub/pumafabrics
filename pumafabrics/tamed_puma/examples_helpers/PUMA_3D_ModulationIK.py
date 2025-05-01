@@ -101,7 +101,7 @@ class PUMA_modulationIK(ExampleGeneric):
         goal_pos = runtime_arguments["goal_pos"]
         positions_obstacles = runtime_arguments["positions_obstacles"]
         obstacles = runtime_arguments["obstacles"]
-        print("obstacles:", obstacles)
+
         # recompute translation to goal pose:
         translation_gpu, translation_cpu = self.normalizations.translation_goal(state_goal=np.array(goal_pos),
                                                                                 goal_NN=self.goal_NN)
