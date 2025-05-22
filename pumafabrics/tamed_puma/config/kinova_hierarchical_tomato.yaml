@@ -2,7 +2,7 @@
 dof: 6
 dim_task: 7
 dim_pos: 3
-robot_name: "gen3lite_2"
+robot_name: "gen3lite_1"
 root_link: "kinova_base_link"
 end_links: ["tool_frame"]
 collision_links: ["upper_wrist_link", "end_effector_link"]
