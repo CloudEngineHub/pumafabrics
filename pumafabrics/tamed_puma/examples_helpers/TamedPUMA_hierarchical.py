@@ -12,7 +12,7 @@ from pumafabrics.puma_extension.initializer import initialize_framework
 from pumafabrics.tamed_puma.create_environment.goal_defaults import goal_default
 import copy
 import yaml
-import time
+import time, os
 from pumafabrics.tamed_puma.tamedpuma.example_generic import ExampleGeneric
 
 class TamedPUMAhierarchical(ExampleGeneric):
@@ -22,7 +22,9 @@ class TamedPUMAhierarchical(ExampleGeneric):
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
         self.solver_times = []
-        with open(path_config + file_name + ".yaml", "r") as setup_stream:
+        name_base = os.path.dirname(os.path.abspath(__file__))
+        full_file_name = name_base+path_config + file_name + ".yaml"
+        with open(full_file_name, "r") as setup_stream:
              self.params = yaml.safe_load(setup_stream)
         self.params["mode_NN"] = mode_NN
         self.dof = self.params["dof"]
@@ -31,6 +33,9 @@ class TamedPUMAhierarchical(ExampleGeneric):
 
     def construct_fk(self):
         absolute_path = os.path.dirname(os.path.abspath(__file__))
+        print("self.robot_name: ", self.robot_name)
+        print("self.params['root_link']: ", self.params["root_link"])
+        print("self.params['end_links']: ", self.params["end_links"])
         with open(absolute_path + "/../config/urdfs/"+self.robot_name+".urdf", "r", encoding="utf-8") as file:
             urdf = file.read()
         self.forward_kinematics = GenericURDFFk(
@@ -42,6 +47,7 @@ class TamedPUMAhierarchical(ExampleGeneric):
     def construct_example(self, with_environment=True, results_base_directory='../pumafabrics/puma_extension/'):
 
         # Construct classes:
+        self.results_base_directory=results_base_directory
         self.kuka_kinematics = KinematicsKuka(dt=self.params["dt"],
                                               robot_name=self.params["robot_name"],
                                               root_link_name=self.params["root_link"],
@@ -79,7 +85,7 @@ class TamedPUMAhierarchical(ExampleGeneric):
 
         # # initial state:
         goal_pos = self.params["goal_pos"]
-        x_t_init, x_init_gpu, translation_cpu, goal_NN = self.puma_controller.initialize_PUMA(q_init=q_init, goal_pos=goal_pos, offset_orientation=self.offset_orientation)
+        x_t_init, x_init_gpu, translation_cpu, goal_NN = self.puma_controller.initialize_PUMA(q_init=q_init, goal_pos=goal_pos, offset_orientation=self.offset_orientation, results_base_directory=self.results_base_directory)
         self.dynamical_system, self.normalizations = self.puma_controller.return_classes()
 
         self.quat_prev = copy.deepcopy(x_t_init[3:7])
@@ -100,12 +106,14 @@ class TamedPUMAhierarchical(ExampleGeneric):
         # --- end-effector states and normalized states --- #
         x_t, xee_orientation, _ = self.kuka_kinematics.get_state_task(q, self.quat_prev, mode_NN=self.params["mode_NN"], qdot=qdot)
         self.quat_prev = copy.deepcopy(xee_orientation)
+        # print("x_t: ", x_t)
+        # print("q: ", q)
 
         # --- action by NN --- #
         time0 = time.perf_counter()
 
         # get one action further away to avoid small drag
-        x_t_propagate = x_t
+        x_t_propagate = copy.deepcopy(x_t)
         for z in range(50):
             x_t_action, transition_info = self.puma_controller.request_PUMA(q=q,
                                                                             qdot=qdot,
@@ -122,17 +130,16 @@ class TamedPUMAhierarchical(ExampleGeneric):
         # ----- Fabrics action ----#
         action, _, _, _ = self.fabrics_controller.compute_action_full(q=q, qdot=qdot,
                                                                       obstacles=obstacles,
-                                                                      goal_pos=x_t_action,
-                                                                      weight_goal_0=30,
+                                                                      goal_pos=x_t_action[0:3],
+                                                                      weight_goal_0=5,
                                                                       goal_orient=xee_orientation,
                                                                       weight_goal_1=1,
                                                                       weight_goal_2=1)
 
         self.solver_times.append(time.perf_counter() - time0)
         action = np.clip(action, -1 * np.array(self.params["vel_limits"]), np.array(self.params["vel_limits"]))
-
         self.check_goal_reached(x_ee=x_t[0][0:3], x_goal=goal_pos)
         self.IN_COLLISION = self.utils_analysis.check_distance_collision(q=q, obstacles=obstacles, parent_link=self.params["root_link"])
         self.GOAL_REACHED, error = self.utils_analysis.check_goal_reaching(q, self.quat_prev, x_goal=goal_pos)
-
+        # print("x_t_action: ", x_t_action)
         return action, self.GOAL_REACHED, error, self.IN_COLLISION, x_t_action

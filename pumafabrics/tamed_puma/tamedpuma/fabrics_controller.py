@@ -22,6 +22,15 @@ class FabricsController:
         self.weight_goal_0 = ob_robot['FullSensor']['goals'][2 + nr_obst]['weight']
         self.weight_goal_1 = ob_robot['FullSensor']['goals'][3 + nr_obst]['weight']
         self.weight_goal_2 = ob_robot['FullSensor']['goals'][4 + nr_obst]['weight']
+        
+    def set_defaults_from_goal_config(self, goal_config):
+        goal = goal_config._config
+        self.x_goal_1_x = goal['subgoal1']["desired_position"]
+        self.x_goal_2_z = goal['subgoal2']["desired_position"]
+        self.goal_pos = goal['subgoal0']["desired_position"]
+        self.weight_goal_0 = goal['subgoal0']["weight"]
+        self.weight_goal_1 = goal['subgoal1']["weight"]
+        self.weight_goal_2 = goal['subgoal2']["weight"]
 
     def set_defaults_from_goal_config(self, goal_config):
         self.x_goal_1_x = goal_config['subgoal1']["desired_position"]

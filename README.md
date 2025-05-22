@@ -27,6 +27,14 @@ poetry update
 pip install -r requirements.txt
 ```
 
+### Cuda version issues
+If you have issues with torch's CUDA version, e.g the cuda version is incompatible wtth your GPU, uninstall torch and install the correct version, for example for CUDA 11.8:
+```bash
+# tested with cuda 11.8
+pip uninstall torch torchvision
+pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cu118
+```
+
 ## Steps to run an example
 ### Training a DNN
 To run any example, an appropriate DNN should be trained. 

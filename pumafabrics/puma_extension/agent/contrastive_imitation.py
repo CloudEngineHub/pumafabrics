@@ -9,7 +9,7 @@ import os
 
 class ContrastiveImitation:
     """
-    Computes CONDOR losses and optimizes Neural Network
+    Computes CONDOR lossesf and optimizes Neural Network
     """
     def __init__(self, data, params):
         # Params file parameters
@@ -94,7 +94,6 @@ class ContrastiveImitation:
             except:
                 current_dir = os.path.dirname(os.path.abspath(__file__))
                 self.model.load_state_dict(torch.load(current_dir + self.results_path + 'model'), strict=False)
-
         # Initialize latent goals
         self.model.update_goals_latent_space(self.goals_tensor)
 
