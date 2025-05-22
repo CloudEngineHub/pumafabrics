@@ -5,7 +5,7 @@ from pumafabrics.tamed_puma.examples_helpers.PUMA_3D_ModulationIK import PUMA_mo
 Example of KUKA iiwa 14 running ModulationIK as a controller.
 """
 class example_kuka_PUMA_modulationIK(PUMA_modulationIK):
-    def __init__(self, file_name="kuka_ModulationIK_tomato", path_config="../pumafabrics/tamed_puma/config/"):
+    def __init__(self, file_name="kuka_ModulationIK_tomato", path_config="/../config/"):
         super().__init__(file_name=file_name, path_config=path_config)
 
     def initialize_environment(self):

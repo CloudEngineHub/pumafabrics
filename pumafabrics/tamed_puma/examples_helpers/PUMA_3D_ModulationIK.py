@@ -22,9 +22,9 @@ class PUMA_modulationIK(ExampleGeneric):
         self.IN_COLLISION = False
         self.time_to_goal = float("nan")
         name_base = os.path.dirname(os.path.abspath(__file__))
-        full_file_name = name_base+path_config + file_name + ".yaml"
+        full_file_name = name_base + path_config + file_name + ".yaml"
         with open(full_file_name, "r") as setup_stream:
-             self.params = yaml.safe_load(setup_stream)
+            self.params = yaml.safe_load(setup_stream)
         self.dof = self.params["dof"]
         self.robot_name = self.params["robot_name"]
         self.solver_times = []

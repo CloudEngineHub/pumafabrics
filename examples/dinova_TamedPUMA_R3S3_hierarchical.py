@@ -6,7 +6,7 @@ from pumafabrics.tamed_puma.examples_helpers.TamedPUMA_hierarchical import Tamed
 Example of dinova gen3-lite running ModulationIK.
 """
 class example_dinova_tamedpuma_R3S3_hierarchical(TamedPUMAhierarchical):
-    def __init__(self, file_name="dinova_hierarchical_tomato", path_config="../pumafabrics/tamed_puma/config/", mode_NN="1st"):
+    def __init__(self, file_name="dinova_hierarchical_tomato", path_config="/../config/", mode_NN="1st"):
         super().__init__(file_name=file_name, path_config=path_config, mode_NN=mode_NN)
 
     def initialize_environment(self):
