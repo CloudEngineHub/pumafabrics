@@ -61,7 +61,7 @@ class plotting_functions():
         line_3.set_label("FPM (ours)")
 
         #--- plot theorem III.5 ---#
-        line_4, = ax.plot(q_list_4[0, :], q_list_4[1, :], color="m")
+        line_4, = ax.plot(q_list_4[0, :], q_list_4[1, :], color='tab:orange')
         line_4.set_label("CPM (ours)")
 
         # #--- plot hierarchical safe MP + fabrics ---#
@@ -76,10 +76,10 @@ class plotting_functions():
         end_point.set_label("Target")
 
         # obstacles
-        obstacle_1 = plt.Circle((0.0, -6.5), radius=0.9, color="r")
+        obstacle_1 = plt.Circle((0.0, -6.5), radius=0.9, color=[0.4, 0.2, 0.6, 1.])
         ax.add_artist(obstacle_1)
         obstacle_1.set_label("Obstacles")
-        obstacle_1 = plt.Circle((-2.0, -4.0), radius=1.2, color="r")
+        obstacle_1 = plt.Circle((-2.0, -4.0), radius=1.2, color=[0.4, 0.2, 0.6, 1.])
         ax.add_artist(obstacle_1)
         # obstacle_1 = plt.Circle((5.0, -3.0), radius=1.0, color="lightgray")
         # ax.add_artist(obstacle_1)
@@ -91,7 +91,7 @@ class plotting_functions():
         ax.grid()
         # ax.set_xlim(scaling_room["x"][0], scaling_room["x"][1])
         # ax.set_ylim(scaling_room["y"][0], scaling_room["y"][1])
-        ax.set_xlim(-5.5, 10.2)
+        ax.set_xlim(-5.5, 8.2)
         ax.set_ylim(-10.5, 7.2)
         ax.set(xlabel="x [m]", ylabel="y [m]") #, title="Trajectories of the proposed methods on a point-mass example", size=20)
         ax.legend(loc="upper left", fontsize=9.5)

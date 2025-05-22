@@ -106,7 +106,7 @@ class TamedPUMAhierarchical(ExampleGeneric):
 
         # get one action further away to avoid small drag
         x_t_propagate = x_t
-        for z in range(2):
+        for z in range(50):
             x_t_action, transition_info = self.puma_controller.request_PUMA(q=q,
                                                                             qdot=qdot,
                                                                             x_t=x_t_propagate,

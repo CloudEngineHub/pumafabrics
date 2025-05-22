@@ -23,6 +23,14 @@ class FabricsController:
         self.weight_goal_1 = ob_robot['FullSensor']['goals'][3 + nr_obst]['weight']
         self.weight_goal_2 = ob_robot['FullSensor']['goals'][4 + nr_obst]['weight']
 
+    def set_defaults_from_goal_config(self, goal_config):
+        self.x_goal_1_x = goal_config['subgoal1']["desired_position"]
+        self.x_goal_2_z = goal_config['subgoal2']["desired_position"]
+        self.goal_pos = goal_config['subgoal0']["desired_position"]
+        self.weight_goal_0 = goal_config['subgoal0']["weight"]
+        self.weight_goal_1 = goal_config['subgoal1']["weight"]
+        self.weight_goal_2 = goal_config['subgoal2']["weight"]
+
     def construct_fk(self):
         absolute_path = os.path.dirname(os.path.abspath(__file__))
         with open(absolute_path + "/../config/urdfs/"+self.params["robot_name"]+".urdf", "r", encoding="utf-8") as file:
