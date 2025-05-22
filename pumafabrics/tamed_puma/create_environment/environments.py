@@ -56,19 +56,19 @@ class trial_environments():
         static_obst_dict = {
             "type": "sphere",
             "geometry": {"position": [0.0, -6.6, 0.0], "radius": 0.7},
-            "rgba": [1.0, 0.0, 0.0, 1.0],
+            "rgba": [0.4, 0.2, 0.6, 1.],
         }
         obst1 = SphereObstacle(name="staticObst1", content_dict=static_obst_dict)
         static_obst_dict = {
             "type": "sphere",
             "geometry": {"position": [-2.0, -4.0, 0.0], "radius": 1.0}, #-2.0, 2.0 [-2.0, -5.0
-            "rgba": [0.0, 0.0, 1.0, 1.0],
+            "rgba": [0.4, 0.2, 0.6, 1.],
         }
         obst2 = SphereObstacle(name="staticObst2", content_dict=static_obst_dict)
         static_obst_dict = {
             "type": "sphere",
             "geometry": {"position": [5.0, -3.0, 0.0], "radius": 1.0},
-            "rgba": [0.0, 0.0, 1.0, 1.0],
+            "rgba": [0.4, 0.2, 0.6, 1.],
         }
         obst3 = SphereObstacle(name="staticObst3", content_dict=static_obst_dict)
         # Definition of the goal.
@@ -233,7 +233,7 @@ class trial_environments():
             "geometry": {"trajectory": [str(positions_obstacles[0][0]) + "+t*" + str(speed_obstacles[0][0]),
                                         str(positions_obstacles[0][1]) + "+t*" + str(speed_obstacles[0][1]),
                                         str(positions_obstacles[0][2]) + "+t*" + str(speed_obstacles[0][2])], "radius": 0.05},
-            "rgba": [1, 0, 0, 1]
+            "rgba": [0.4, 0.2, 0.6, 1.]
             # todo: IMPORTANT when z=0.5: fabrics becomes unstable/local minima
         }
         obst1 = DynamicSphereObstacle(name="staticObst", content_dict=static_obst_dict)
@@ -241,12 +241,13 @@ class trial_environments():
             static_obst_dict = {
                 "type": "sphere",
                 "geometry": {"position": positions_obstacles[1], "radius": 0.05},
-                "rgba": [1, 0, 0, 1]
+                "rgba": [0.4, 0.2, 0.6, 1.]
             }
             obst2 = SphereObstacle(name="staticObst", content_dict=static_obst_dict)
         dynamic_obst_dict = {
             "type": "sphere",
             "geometry": {"trajectory": ["-1 + t * 0.1", "-0.6", "0.4"], "radius": 0.05},
+            "rgba": [0.4, 0.2, 0.6, 1.]
         }
         obst0_dyn = DynamicSphereObstacle(name="dynamicObst", content_dict=dynamic_obst_dict)
         #Definition of the goal.

@@ -115,9 +115,6 @@ class TamedPUMAhierarchical(ExampleGeneric):
         # get one action further away to avoid small drag
         x_t_propagate = copy.deepcopy(x_t)
         for z in range(50):
-            # print("q: ", q)
-            # print("qdot: ", qdot)
-            qdot = np.zeros(self.params["dof"])
             x_t_action, transition_info = self.puma_controller.request_PUMA(q=q,
                                                                             qdot=qdot,
                                                                             x_t=x_t_propagate,
